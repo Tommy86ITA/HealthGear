@@ -1,3 +1,4 @@
+using System.Globalization;
 using HealthGear.Data;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
@@ -12,6 +13,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+// Configurazione della cultura italiana per il formato data
+var cultureInfo = new CultureInfo("it-IT");
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 app.UseStaticFiles();
 app.UseRouting();

@@ -1,0 +1,95 @@
+@model Maintenance
+
+<h2>Modifica Manutenzione</h2>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId" />
+
+    <div class="form-group">
+        <label asp-for="MaintenanceDate" class="control-label">Data di Manutenzione</label>
+        <input asp-for="MaintenanceDate"
+               class="form-control"
+               type="date"
+               id="maintenanceDate"
+               max="@DateTime.Today.ToString("yyyy-MM-dd")"
+               required />
+        <span asp-validation-for="MaintenanceDate" class="text-danger" id="dateErrorMessage"></span>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var dateInput = document.getElementById("maintenanceDate");
+            var errorMessage = document.getElementById("dateErrorMessage");
+            var today = new Date().toISOString().split('T')[0];  // Otteniamo la data odierna in formato YYYY-MM-DD
+            dateInput.setAttribute("max", today);  // Impostiamo il limite massimo nel datepicker
+
+            function validateDate() {
+                var selectedDate = new Date(dateInput.value);
+                var maxDate = new Date(today);
+
+                if (!dateInput.value) {
+                    errorMessage.textContent = "Il campo data è obbligatorio.";
+                    dateInput.classList.add("is-invalid");
+                    return false;
+                }
+
+                if (selectedDate > maxDate) {
+                    errorMessage.textContent = "La data di manutenzione non può essere futura. Inserisci una data valida.";
+                    dateInput.classList.add("is-invalid");
+                    return false;
+                } else {
+                    errorMessage.textContent = "";
+                    dateInput.classList.remove("is-invalid");
+                    return true;
+                }
+            }
+
+            dateInput.addEventListener("input", function () {
+                validateDate();
+            });
+
+            document.querySelector("form").addEventListener("submit", function (e) {
+                if (!validateDate()) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+
+    <div class="form-group">
+        <label asp-for="Description" class="control-label">Descrizione</label>
+        <textarea asp-for="Description" class="form-control"
+                  placeholder="Inserisci una descrizione dettagliata"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
+        <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required />
+        <span asp-validation-for="PerformedBy" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="MaintenanceType" class="control-label">Tipo di Manutenzione</label>
+        <select asp-for="MaintenanceType" class="form-control" required>
+            <option value="Ordinaria">Ordinaria</option>
+            <option value="Straordinaria">Straordinaria</option>
+            <option value="Correttiva">Correttiva</option>
+        </select>
+        <span asp-validation-for="MaintenanceType" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Allega Documenti</label>
+        <input type="file" name="files" class="form-control" multiple />
+    </div>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Salva</button>
+        <a asp-action="Index" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-secondary">Annulla</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

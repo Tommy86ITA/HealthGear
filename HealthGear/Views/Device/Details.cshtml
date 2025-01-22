@@ -4,48 +4,126 @@
 
 <div class="border p-3 bg-light">
     <dl class="row">
-        <dt class="col-sm-2 font-weight-bold">Nome</dt>
-        <dd class="col-sm-10">@Model.Name</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Nome</dt>
+            <dd class="col-sm-10">@Model.Name</dd>
+        </div>
 
-        <dt class="col-sm-2 font-weight-bold">Marca</dt>
-        <dd class="col-sm-10">@Model.Brand</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Marca</dt>
+            <dd class="col-sm-10">@Model.Brand</dd>
+        </div>
 
-        <dt class="col-sm-2 font-weight-bold">Modello</dt>
-        <dd class="col-sm-10">@Model.Model</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Modello</dt>
+            <dd class="col-sm-10">@Model.Model</dd>
+        </div>
 
-        <dt class="col-sm-2 font-weight-bold">Numero di serie</dt>
-        <dd class="col-sm-10">@Model.SerialNumber</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Numero di serie</dt>
+            <dd class="col-sm-10">@Model.SerialNumber</dd>
+        </div>
 
-        <dt class="col-sm-2 font-weight-bold">Ubicazione</dt>
-        <dd class="col-sm-10">@Model.Location</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Ubicazione</dt>
+            <dd class="col-sm-10">@Model.Location</dd>
+        </div>
 
-        <dt class="col-sm-2 font-weight-bold">Certificazione CE</dt>
-        <dd class="col-sm-10">@(Model.CertificationCE ? "Sì" : "No")</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Prossima manutenzione</dt>
+            <dd class="col-sm-10">
+                @{
+                    var daysUntilNextMaintenance = Model.NextMaintenance.HasValue
+                        ? (Model.NextMaintenance.Value - DateTime.Today).Days
+                        : -1;
+                }
+                @if (!Model.NextMaintenance.HasValue)
+                {
+                    <span class="text-danger">Non disponibile</span>
+                }
+                else if (daysUntilNextMaintenance < 0)
+                {
+                    <i class="fas fa-wrench text-danger" title="Scaduta"></i>
+                }
+                else if (daysUntilNextMaintenance <= 60)
+                {
+                    <i class="fas fa-wrench text-warning" title="In scadenza"></i>
+                }
+                else
+                {
+                    <i class="fas fa-wrench text-success" title="Valida"></i>
+                }
+            </dd>
+        </div>
 
-        <dt class="col-sm-2 font-weight-bold">Manuale disponibile</dt>
-        <dd class="col-sm-10">@(Model.ManualAvailable ? "Sì" : "No")</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Prossima verifica elettrica</dt>
+            <dd class="col-sm-10">
+                @{
+                    var daysUntilNextElectricalTest = Model.NextElectricalTest.HasValue
+                        ? (Model.NextElectricalTest.Value - DateTime.Today).Days
+                        : -1;
+                }
+                @if (!Model.NextElectricalTest.HasValue)
+                {
+                    <span class="text-danger">Non disponibile</span>
+                }
+                else if (daysUntilNextElectricalTest < 0)
+                {
+                    <i class="fas fa-bolt text-danger" title="Scaduta"></i>
+                }
+                else if (daysUntilNextElectricalTest <= 60)
+                {
+                    <i class="fas fa-bolt text-warning" title="In scadenza"></i>
+                }
+                else
+                {
+                    <i class="fas fa-bolt text-success" title="Valida"></i>
+                }
+            </dd>
+        </div>
 
-        <dt class="col-sm-2 font-weight-bold">Ultima manutenzione</dt>
-        <dd class="col-sm-10">@(Model.MaintenanceDate?.ToShortDateString() ?? "Non disponibile")</dd>
-
-        <dt class="col-sm-2 font-weight-bold">Prossima manutenzione</dt>
-        <dd class="col-sm-10">@(Model.NextMaintenance?.ToShortDateString() ?? "Non disponibile")</dd>
-
-        <dt class="col-sm-2 font-weight-bold">Prossima verifica elettrica</dt>
-        <dd class="col-sm-10">@(Model.NextElectricalTest?.ToShortDateString() ?? "Non disponibile")</dd>
-
-        <dt class="col-sm-2 font-weight-bold">Note</dt>
-        <dd class="col-sm-10">@(!string.IsNullOrEmpty(Model.Notes) ? Model.Notes : "Nessuna nota")</dd>
+        <div class="border-bottom pb-2 mb-3">
+            <dt class="col-sm-2 font-weight-bold">Note</dt>
+            <dd class="col-sm-10">@(!string.IsNullOrEmpty(Model.Notes) ? Model.Notes : "Nessuna nota")</dd>
+        </div>
     </dl>
 </div>
+
+<h3>Gestione Manutenzioni</h3>
+
+<a asp-controller="Maintenance" asp-action="Create" asp-route-deviceId="@Model.Id" class="btn btn-primary">
+    Aggiungi Manutenzione
+</a>
 
 <div class="mt-4">
     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Modifica</a>
     <a asp-action="Index" class="btn btn-secondary">Torna alla lista</a>
-    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
-        <button type="submit" class="btn btn-danger"
-                onclick="return confirm('Sei sicuro di voler eliminare questo dispositivo? Questa azione non può essere annullata.')">
-            Elimina
-        </button>
-    </form>
+
+    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal">
+        Elimina
+    </button>
+</div>
+
+<!-- Modal di conferma eliminazione -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Conferma Eliminazione</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Chiudi">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Sei sicuro di voler eliminare questo dispositivo? Questa azione non può essere annullata.
+            </div>
+            <div class="modal-footer">
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                    <button type="submit" class="btn btn-danger">Conferma Eliminazione</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+            </div>
+        </div>
+    </div>
 </div>

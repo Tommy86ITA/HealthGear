@@ -28,9 +28,9 @@
 </div>
 
 <form asp-action="Delete" method="post">
-    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Id"/>
 
-    <button type="submit" class="btn btn-danger" 
+    <button type="submit" class="btn btn-danger"
             onclick="return confirm('Sei sicuro di voler eliminare questo dispositivo? Questa azione non può essere annullata.')">
         Elimina
     </button>
@@ -38,5 +38,5 @@
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

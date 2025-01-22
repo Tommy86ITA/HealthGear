@@ -1,9 +1,7 @@
 using HealthGear.Data;
 using HealthGear.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
 namespace HealthGear.Controllers;
 
@@ -51,7 +49,6 @@ public class DeviceController : Controller
 
         try
         {
-            device.CalcolaProssimeDate();
             _context.Devices.Add(device);
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Dispositivo aggiunto con successo!";
@@ -93,7 +90,6 @@ public class DeviceController : Controller
 
         try
         {
-            device.CalcolaProssimeDate();
             _context.Devices.Update(device);
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Modifiche salvate con successo!";
@@ -101,7 +97,8 @@ public class DeviceController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Errore durante il salvataggio delle modifiche al dispositivo: {SerialNumber}", device.SerialNumber);
+            _logger.LogError(ex, "Errore durante il salvataggio delle modifiche al dispositivo: {SerialNumber}",
+                device.SerialNumber);
             ModelState.AddModelError("", "Si è verificato un errore. Riprova più tardi.");
             return View(device);
         }
@@ -123,7 +120,8 @@ public class DeviceController : Controller
         return View(device);
     }
 
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
+    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {

@@ -1,0 +1,39 @@
+@using System.Globalization
+@model IEnumerable<Maintenance>
+
+<h2>Elenco Manutenzioni</h2>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Data</th>
+        <th>Descrizione</th>
+        <th>Eseguito da</th>
+        <th>Azioni</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var maintenance in Model)
+    {
+        <tr>
+            <td>@(maintenance.MaintenanceDate?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+            <td>@maintenance.Description</td>
+            <td>@maintenance.PerformedBy</td>
+            <td>
+                <a asp-action="Details" asp-route-id="@maintenance.Id" class="btn btn-info btn-sm">Dettagli</a>
+                <a asp-action="Edit" asp-route-id="@maintenance.Id" class="btn btn-warning btn-sm">Modifica</a>
+                <a asp-action="Delete" asp-route-id="@maintenance.Id" class="btn btn-danger btn-sm"
+                   onclick="return confirm('Sei sicuro di voler eliminare questa manutenzione?');">Elimina</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<a asp-action="Create" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-primary mt-3">
+    Aggiungi Manutenzione
+</a>
+
+<a asp-controller="Device" asp-action="Details" asp-route-id="@ViewBag.DeviceId" class="btn btn-secondary mt-3">
+    Torna al Dispositivo
+</a>

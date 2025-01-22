@@ -12,6 +12,11 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Device> Devices { get; set; }
 
+    public DbSet<Maintenance> Maintenances { get; set; }
+    public DbSet<MaintenanceSettings> MaintenanceSettings { get; set; }
+
+    public DbSet<MaintenanceDocument> MaintenanceDocuments { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

@@ -1,17 +1,16 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HealthGear.Models;
 
 public class Device
 {
-    [Key]
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
 
     [Required(ErrorMessage = "Il nome del dispositivo è obbligatorio.")]
     public required string Name { get; set; }
 
-    [Required(ErrorMessage = "La marca è obbligatoria.")]
-    [MinLength(2, ErrorMessage = "La marca deve contenere almeno 2 caratteri.")]
+    [Required(ErrorMessage = "Il produttore è obbligatorio.")]
     public required string Brand { get; set; }
 
     [Required(ErrorMessage = "Il modello è obbligatorio.")]
@@ -20,63 +19,65 @@ public class Device
     [Required(ErrorMessage = "Il numero di serie è obbligatorio.")]
     public required string SerialNumber { get; set; }
 
-    [Required(ErrorMessage = "L'ubicazione è obbligatoria.")]
-    [MinLength(5, ErrorMessage = "L'ubicazione deve contenere almeno 5 caratteri.")]
-    public required string Location { get; set; }
+    public string? Location { get; set; } // Facoltativa
 
-    public bool CertificationCE { get; set; }
-    public bool ManualAvailable { get; set; }
+    [Required(ErrorMessage = "La tipologia del dispositivo è obbligatoria.")]
+    public required string DeviceType { get; set; } // Radiogeno, Ecografico, Cardiologico, Altro
 
     [DataType(DataType.Date)]
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
-    public DateTime? MaintenanceDate { get; set; }
+    [Required(ErrorMessage = "La data di collaudo è obbligatoria.")]
+    public required DateTime DataCollaudo { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime? NextMaintenance { get; set; }
+    [Required(ErrorMessage = "La data della prima verifica elettrica è obbligatoria.")]
+    public required DateTime FirstElectricalTest { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime? ElectricalTestDate { get; set; }
-
-    [DataType(DataType.Date)]
-    public DateTime? NextElectricalTest { get; set; }
-
-    [DataType(DataType.Date)]
-    public DateTime? PhysicalInspectionDate { get; set; }
-
-    [DataType(DataType.Date)]
-    public DateTime? NextPhysicalInspection { get; set; }
+    public DateTime? FirstPhysicalInspection { get; set; } // Solo per apparecchiature radiogene
 
     public string? Notes { get; set; }
 
-    [Required(ErrorMessage = "La categoria è obbligatoria.")]
-    public required string Category { get; set; } = "Generico";
+    // Proprietà deprecate per mantenere compatibilità con le vecchie view
+    [NotMapped] public bool CertificationCE { get; set; } = false;
 
-    public void CalcolaProssimeDate()
+    [NotMapped] public bool ManualAvailable { get; set; } = false;
+
+    [NotMapped] public DateTime? MaintenanceDate => DataCollaudo;
+
+    // Calcoli automatici delle scadenze
+    [NotMapped]
+    public DateTime? NextMaintenance
     {
-        if (!MaintenanceDate.HasValue)
-            return;
-
-        switch (Category?.ToLower())
+        get
         {
-            case "radiogeno" when Name.ToLower() == "mammografo":
-                NextPhysicalInspection = MaintenanceDate.Value.AddMonths(6);
-                break;
-            case "radiogeno":
-                NextPhysicalInspection = MaintenanceDate.Value.AddYears(1);
-                break;
-            default:
-                NextPhysicalInspection = MaintenanceDate.Value.AddYears(1);
-                break;
+            if (Maintenances != null && Maintenances.Any(m => m.MaintenanceType == "Ordinaria"))
+            {
+                var lastOrdinaryMaintenance = Maintenances
+                    .Where(m => m.MaintenanceType == "Ordinaria")
+                    .Max(m => m.MaintenanceDate);
+                return lastOrdinaryMaintenance != null ? lastOrdinaryMaintenance.Value.AddYears(1) : null;
+            }
+            return DataCollaudo != default ? DataCollaudo.AddYears(1) : null;
         }
-
-        NextMaintenance = MaintenanceDate.Value.AddYears(1);
-        NextElectricalTest = MaintenanceDate.Value.AddYears(2);
     }
 
-    public static ValidationResult? ValidateMaintenanceDate(DateTime? date, ValidationContext context)
+    [NotMapped]
+    public DateTime? NextElectricalTest => FirstElectricalTest != default
+        ? FirstElectricalTest.AddYears(2)
+        : null;
+
+    [NotMapped]
+    public DateTime? NextPhysicalInspection
     {
-        if (date.HasValue && date.Value < DateTime.Today)
-            return new ValidationResult("La data di manutenzione non può essere nel passato.");
-        return ValidationResult.Success;
+        get
+        {
+            if (DeviceType.ToLower() == "radiogeno" && FirstPhysicalInspection.HasValue)
+                return Model.ToLower().Contains("mammografo")
+                    ? FirstPhysicalInspection.Value.AddMonths(6)
+                    : FirstPhysicalInspection.Value.AddYears(1);
+            return null;
+        }
     }
+
+    public ICollection<Maintenance> Maintenances { get; set; } = new List<Maintenance>();
 }
