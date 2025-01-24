@@ -62,12 +62,11 @@ public class MaintenanceController : Controller
         _logger.LogInformation("Creazione nuova manutenzione per il dispositivo {DeviceId}", maintenance.DeviceId);
 
         if (ModelState.IsValid)
-        {
             try
             {
                 if (maintenance.MaintenanceDate.HasValue)
                 {
-                    DateTime parsedDate = maintenance.MaintenanceDate.Value;
+                    var parsedDate = maintenance.MaintenanceDate.Value;
 
                     if (maintenance.MaintenanceType == "Ordinaria")
                     {
@@ -76,7 +75,8 @@ public class MaintenanceController : Controller
                         {
                             device.DataCollaudo = parsedDate;
                             _context.Update(device);
-                            _logger.LogInformation("Data di collaudo aggiornata per il dispositivo {DeviceId}", device.Id);
+                            _logger.LogInformation("Data di collaudo aggiornata per il dispositivo {DeviceId}",
+                                device.Id);
                         }
                     }
                 }
@@ -112,10 +112,12 @@ public class MaintenanceController : Controller
 
                         _context.MaintenanceDocuments.Add(document);
                     }
+
                     await _context.SaveChangesAsync();
                 }
 
-                _logger.LogInformation("Manutenzione creata con successo per il dispositivo {DeviceId}", maintenance.DeviceId);
+                _logger.LogInformation("Manutenzione creata con successo per il dispositivo {DeviceId}",
+                    maintenance.DeviceId);
                 return RedirectToAction("Index", new { deviceId = maintenance.DeviceId });
             }
             catch (Exception ex)
@@ -123,7 +125,6 @@ public class MaintenanceController : Controller
                 _logger.LogError("Errore durante la creazione della manutenzione: {Message}", ex.Message);
                 ModelState.AddModelError("", "Si è verificato un errore durante il salvataggio.");
             }
-        }
 
         ViewBag.DeviceId = maintenance.DeviceId;
         return View(maintenance);
@@ -167,7 +168,7 @@ public class MaintenanceController : Controller
     }
 
     // Eliminazione confermata della manutenzione
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {

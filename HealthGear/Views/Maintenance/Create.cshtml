@@ -3,7 +3,7 @@
 <h2>Aggiungi Manutenzione</h2>
 
 <form asp-action="Create" method="post" enctype="multipart/form-data">
-    <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId" />
+    <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId"/>
 
     <div class="form-group">
         <label asp-for="MaintenanceDate" class="control-label">Data di Manutenzione</label>
@@ -12,7 +12,7 @@
                type="date"
                id="maintenanceDate"
                max="@DateTime.Today.ToString("yyyy-MM-dd")"
-               required />
+               required/>
         <span asp-validation-for="MaintenanceDate" class="text-danger" id="dateErrorMessage"></span>
     </div>
 
@@ -65,7 +65,7 @@
 
     <div class="form-group">
         <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
-        <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required />
+        <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required/>
         <span asp-validation-for="PerformedBy" class="text-danger"></span>
     </div>
 
@@ -81,7 +81,7 @@
 
     <div class="form-group">
         <label class="control-label">Allega Documenti</label>
-        <input type="file" name="files" class="form-control" multiple />
+        <input type="file" name="files" class="form-control" multiple/>
     </div>
 
     <div class="form-group mt-3">
@@ -91,5 +91,5 @@
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

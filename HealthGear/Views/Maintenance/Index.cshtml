@@ -24,7 +24,8 @@
                 <a asp-action="Edit" asp-route-id="@maintenance.Id" class="btn btn-warning btn-sm">Modifica</a>
 
                 <!-- Pulsante per aprire il modal di conferma eliminazione -->
-                <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal-@maintenance.Id">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal-@maintenance.Id">
                     Elimina
                 </button>
 
@@ -34,20 +35,21 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">Conferma Eliminazione</h5>
-                                <button type="button" class="close" data-dismiss="modal">
-                                    <span>&times;</span>
-                                </button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                Sei sicuro di voler eliminare la manutenzione eseguita da <strong>@maintenance.PerformedBy</strong>
+                                Sei sicuro di voler eliminare la manutenzione eseguita da
+                                <strong>@maintenance.PerformedBy</strong>
                                 il <strong>@maintenance.MaintenanceDate?.ToString("dd/MM/yyyy")</strong>?
                                 <p class="text-danger">Questa azione non può essere annullata.</p>
                             </div>
                             <div class="modal-footer">
-                                <form asp-action="DeleteConfirmed" asp-route-id="@maintenance.Id" method="post">
-                                    <input type="hidden" asp-for="@maintenance.DeviceId"/>
+                                <form asp-controller="Maintenance" asp-action="DeleteConfirmed"
+                                      asp-route-id="@maintenance.Id" method="post">
                                     <button type="submit" class="btn btn-danger">Conferma Eliminazione</button>
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -67,19 +69,12 @@
     Torna al Dispositivo
 </a>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.modal').on('shown.bs.modal', function () {
+                $(this).find('.modal-title').focus();
+            });
+        });
+    </script>
 }

@@ -16,11 +16,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Views\PhysicalInspection\Create.cshtml" />
-      <AdditionalFiles Include="Views\PhysicalInspection\Delete.cshtml" />
-      <AdditionalFiles Include="Views\PhysicalInspection\Details.cshtml" />
-      <AdditionalFiles Include="Views\PhysicalInspection\Edit.cshtml" />
-      <AdditionalFiles Include="Views\PhysicalInspection\Index.cshtml" />
+        <AdditionalFiles Include="Views\PhysicalInspection\Create.cshtml"/>
+        <AdditionalFiles Include="Views\PhysicalInspection\Delete.cshtml"/>
+        <AdditionalFiles Include="Views\PhysicalInspection\Details.cshtml"/>
+        <AdditionalFiles Include="Views\PhysicalInspection\Edit.cshtml"/>
+        <AdditionalFiles Include="Views\PhysicalInspection\Index.cshtml"/>
     </ItemGroup>
 
 </Project>

@@ -3,17 +3,17 @@
 <h2>Aggiungi Verifica Elettrica</h2>
 
 <form asp-action="Create" method="post">
-    <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId" />
+    <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId"/>
 
     <div class="form-group">
         <label asp-for="TestDate" class="control-label">Data della Verifica</label>
-        <input asp-for="TestDate" class="form-control" type="date" required />
+        <input asp-for="TestDate" class="form-control" type="date" required/>
         <span asp-validation-for="TestDate" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
-        <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required />
+        <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required/>
         <span asp-validation-for="PerformedBy" class="text-danger"></span>
     </div>
 
@@ -33,7 +33,7 @@
 
     <div class="form-group">
         <label class="control-label">Allega Documenti</label>
-        <input type="file" name="files" class="form-control" multiple />
+        <input type="file" name="files" class="form-control" multiple/>
     </div>
 
     <div class="form-group mt-3">
@@ -43,5 +43,5 @@
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

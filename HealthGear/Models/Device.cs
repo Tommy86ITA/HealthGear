@@ -57,6 +57,7 @@ public class Device
                     .Max(m => m.MaintenanceDate);
                 return lastOrdinaryMaintenance != null ? lastOrdinaryMaintenance.Value.AddYears(1) : null;
             }
+
             return DataCollaudo != default ? DataCollaudo.AddYears(1) : null;
         }
     }

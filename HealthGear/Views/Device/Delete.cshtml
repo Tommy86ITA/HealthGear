@@ -2,7 +2,8 @@
 
 <h2 class="text-danger">Eliminazione Dispositivo</h2>
 
-<p>Attenzione: L'eliminazione di questo dispositivo comporterà la rimozione di tutte le informazioni correlate, inclusi dati di manutenzione, verifiche elettriche e controlli fisici. Questa azione è irreversibile.</p>
+<p>Attenzione: L'eliminazione di questo dispositivo comporterà la rimozione di tutte le informazioni correlate, inclusi
+    dati di manutenzione, verifiche elettriche e controlli fisici. Questa azione è irreversibile.</p>
 
 <div class="border p-3">
     <dl class="row">
@@ -21,11 +22,12 @@
 </div>
 
 <form asp-action="Delete" method="post" onsubmit="return validateDeletion()">
-    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Id"/>
 
     <div class="form-group mt-3">
         <label for="confirmDeviceName">Per confermare, digita il nome del dispositivo:</label>
-        <input type="text" id="confirmDeviceName" class="form-control" placeholder="Inserisci il nome esatto del dispositivo" required />
+        <input type="text" id="confirmDeviceName" class="form-control"
+               placeholder="Inserisci il nome esatto del dispositivo" required/>
     </div>
 
     <button type="submit" id="deleteButton" class="btn btn-danger mt-3" disabled>Elimina</button>
@@ -44,7 +46,7 @@
             return true;
         }
 
-        document.getElementById("confirmDeviceName").addEventListener("input", function() {
+        document.getElementById("confirmDeviceName").addEventListener("input", function () {
             var deleteButton = document.getElementById("deleteButton");
             deleteButton.disabled = this.value !== "@Model.Name";
         });

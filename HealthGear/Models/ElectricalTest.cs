@@ -5,14 +5,12 @@ namespace HealthGear.Models;
 
 public class ElectricalTest
 {
-    [Key]
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
 
     [Required(ErrorMessage = "Il dispositivo è obbligatorio.")]
     public int DeviceId { get; set; }
 
-    [ForeignKey("DeviceId")]
-    public Device? Device { get; set; }
+    [ForeignKey("DeviceId")] public Device? Device { get; set; }
 
     [Required(ErrorMessage = "La data della verifica è obbligatoria.")]
     [DataType(DataType.Date)]
@@ -23,7 +21,7 @@ public class ElectricalTest
     public string PerformedBy { get; set; }
 
     [Required(ErrorMessage = "L'esito della verifica è obbligatorio.")]
-    public bool Passed { get; set; }  // True = Superato, False = Non Superato
+    public bool Passed { get; set; } // True = Superato, False = Non Superato
 
     public string? Notes { get; set; }
 

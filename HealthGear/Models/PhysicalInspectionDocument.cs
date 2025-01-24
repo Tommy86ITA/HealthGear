@@ -5,14 +5,11 @@ namespace HealthGear.Models;
 
 public class PhysicalInspectionDocument
 {
-    [Key]
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
 
-    [Required]
-    public int PhysicalInspectionId { get; set; }
+    [Required] public int PhysicalInspectionId { get; set; }
 
-    [ForeignKey("PhysicalInspectionId")]
-    public PhysicalInspection? PhysicalInspection { get; set; }
+    [ForeignKey("PhysicalInspectionId")] public PhysicalInspection? PhysicalInspection { get; set; }
 
     [Required(ErrorMessage = "Il nome del file è obbligatorio.")]
     [MaxLength(255, ErrorMessage = "Il nome del file non può superare i 255 caratteri.")]

@@ -21,7 +21,7 @@ public class ElectricalTestController : Controller
     public async Task<IActionResult> Index(int deviceId)
     {
         _logger.LogInformation("Caricamento elenco verifiche elettriche per il dispositivo {DeviceId}", deviceId);
-        
+
         var tests = await _context.ElectricalTests
             .Where(e => e.DeviceId == deviceId)
             .Include(e => e.Device)
@@ -54,23 +54,17 @@ public class ElectricalTestController : Controller
         _logger.LogInformation("Ricevuta richiesta di creazione per DeviceId: {DeviceId}", electricalTest.DeviceId);
 
         if (!ModelState.IsValid)
-        {
             foreach (var key in ModelState.Keys)
-            {
-                foreach (var error in ModelState[key].Errors)
-                {
-                    _logger.LogWarning("Errore su {Key}: {ErrorMessage}", key, error.ErrorMessage);
-                }
-            }
-        }
+            foreach (var error in ModelState[key].Errors)
+                _logger.LogWarning("Errore su {Key}: {ErrorMessage}", key, error.ErrorMessage);
 
         if (ModelState.IsValid)
-        {
             try
             {
                 _context.Add(electricalTest);
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Verifica elettrica salvata con successo per DeviceId: {DeviceId}", electricalTest.DeviceId);
+                _logger.LogInformation("Verifica elettrica salvata con successo per DeviceId: {DeviceId}",
+                    electricalTest.DeviceId);
                 return RedirectToAction(nameof(Index), new { deviceId = electricalTest.DeviceId });
             }
             catch (Exception ex)
@@ -78,7 +72,6 @@ public class ElectricalTestController : Controller
                 _logger.LogError("Errore durante il salvataggio della verifica: {Message}", ex.Message);
                 ModelState.AddModelError("", "Errore durante il salvataggio.");
             }
-        }
 
         ViewBag.DeviceId = electricalTest.DeviceId;
         return View(electricalTest);
@@ -105,20 +98,18 @@ public class ElectricalTestController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, ElectricalTest electricalTest)
     {
-        _logger.LogInformation("Modifica richiesta per ID: {TestId}, DeviceId: {DeviceId}", id, electricalTest.DeviceId);
+        _logger.LogInformation("Modifica richiesta per ID: {TestId}, DeviceId: {DeviceId}", id,
+            electricalTest.DeviceId);
 
-        if (id != electricalTest.Id)
-        {
-            return NotFound();
-        }
+        if (id != electricalTest.Id) return NotFound();
 
         if (ModelState.IsValid)
-        {
             try
             {
                 _context.Update(electricalTest);
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Verifica elettrica aggiornata con successo per DeviceId: {DeviceId}", electricalTest.DeviceId);
+                _logger.LogInformation("Verifica elettrica aggiornata con successo per DeviceId: {DeviceId}",
+                    electricalTest.DeviceId);
                 return RedirectToAction(nameof(Index), new { deviceId = electricalTest.DeviceId });
             }
             catch (DbUpdateConcurrencyException ex)
@@ -126,7 +117,6 @@ public class ElectricalTestController : Controller
                 _logger.LogError("Errore di concorrenza: {Message}", ex.Message);
                 ModelState.AddModelError("", "Un altro utente ha modificato questo record. Riprova.");
             }
-        }
 
         ViewBag.DeviceId = electricalTest.DeviceId;
         return View(electricalTest);
@@ -148,7 +138,8 @@ public class ElectricalTestController : Controller
     }
 
     // POST: ElectricalTest/Delete/5
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
+    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
@@ -165,17 +156,14 @@ public class ElectricalTestController : Controller
         TempData["ErrorMessage"] = "Verifica elettrica non trovata.";
         return RedirectToAction(nameof(Index));
     }
-    
+
     public async Task<IActionResult> Details(int id)
     {
         var test = await _context.ElectricalTests
             .FirstOrDefaultAsync(m => m.Id == id);
-    
-        if (test == null)
-        {
-            return NotFound();
-        }
-    
+
+        if (test == null) return NotFound();
+
         return View(test);
     }
 }

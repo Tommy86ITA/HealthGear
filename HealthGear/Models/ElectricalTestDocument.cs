@@ -5,18 +5,13 @@ namespace HealthGear.Models;
 
 public class ElectricalTestDocument
 {
-    [Key]
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
 
-    [Required]
-    public int ElectricalTestId { get; set; }
+    [Required] public int ElectricalTestId { get; set; }
 
-    [ForeignKey("ElectricalTestId")]
-    public ElectricalTest ElectricalTest { get; set; }
+    [ForeignKey("ElectricalTestId")] public ElectricalTest ElectricalTest { get; set; }
 
-    [Required]
-    public string FileName { get; set; }
+    [Required] public string FileName { get; set; }
 
-    [Required]
-    public string FilePath { get; set; }
+    [Required] public string FilePath { get; set; }
 }

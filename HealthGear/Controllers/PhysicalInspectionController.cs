@@ -63,10 +63,7 @@ public class PhysicalInspectionController : Controller
             .Include(p => p.Documents)
             .FirstOrDefaultAsync(m => m.Id == id);
 
-        if (inspection == null)
-        {
-            return NotFound();
-        }
+        if (inspection == null) return NotFound();
 
         return View(inspection);
     }
@@ -75,10 +72,7 @@ public class PhysicalInspectionController : Controller
     public async Task<IActionResult> Edit(int id)
     {
         var inspection = await _context.PhysicalInspections.FindAsync(id);
-        if (inspection == null)
-        {
-            return NotFound();
-        }
+        if (inspection == null) return NotFound();
         return View(inspection);
     }
 
@@ -87,10 +81,7 @@ public class PhysicalInspectionController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, PhysicalInspection physicalInspection)
     {
-        if (id != physicalInspection.Id)
-        {
-            return NotFound();
-        }
+        if (id != physicalInspection.Id) return NotFound();
 
         if (ModelState.IsValid)
         {
@@ -98,6 +89,7 @@ public class PhysicalInspectionController : Controller
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { deviceId = physicalInspection.DeviceId });
         }
+
         return View(physicalInspection);
     }
 
@@ -105,15 +97,13 @@ public class PhysicalInspectionController : Controller
     public async Task<IActionResult> Delete(int id)
     {
         var inspection = await _context.PhysicalInspections.FindAsync(id);
-        if (inspection == null)
-        {
-            return NotFound();
-        }
+        if (inspection == null) return NotFound();
         return View(inspection);
     }
 
     // POST: PhysicalInspection/Delete/5
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
+    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
@@ -123,6 +113,7 @@ public class PhysicalInspectionController : Controller
             _context.PhysicalInspections.Remove(inspection);
             await _context.SaveChangesAsync();
         }
+
         return RedirectToAction(nameof(Index), new { deviceId = inspection.DeviceId });
     }
 }
