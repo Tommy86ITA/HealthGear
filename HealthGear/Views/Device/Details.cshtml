@@ -90,11 +90,20 @@
     </dl>
 </div>
 
-<h3>Gestione Manutenzioni</h3>
+<h3>Gestione Manutenzioni e Verifiche</h3>
 
 <a asp-controller="Maintenance" asp-action="Create" asp-route-deviceId="@Model.Id" class="btn btn-primary">
     Aggiungi Manutenzione
 </a>
+
+<a asp-controller="ElectricalTest" asp-action="Create" asp-route-deviceId="@Model.Id" class="btn btn-info">
+    Gestisci Verifiche Elettriche
+</a>
+
+<a asp-controller="PhysicalInspection" asp-action="Create" asp-route-deviceId="@Model.Id" class="btn btn-success">
+    Gestisci Controlli Fisici
+</a>
+
 
 <div class="mt-4">
     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Modifica</a>

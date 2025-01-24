@@ -1,0 +1,33 @@
+@model HealthGear.Models.Maintenance
+
+<h2>Dettagli Manutenzione</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Informazioni Manutenzione</h4>
+        <p><strong>Data:</strong> @(Model.MaintenanceDate?.ToString("dd/MM/yyyy") ?? "N/A")</p>
+        <p><strong>Tipo di Manutenzione:</strong> @Model.MaintenanceType</p>
+        <p><strong>Eseguito da:</strong> @Model.PerformedBy</p>
+        <p><strong>Note:</strong> @(string.IsNullOrEmpty(Model.Notes) ? "Nessuna nota disponibile" : Model.Notes)</p>
+    </div>
+</div>
+
+@if (Model.Documents != null && Model.Documents.Any())
+{
+    <h4>Documenti Allegati</h4>
+    <ul class="list-group mb-3">
+        @foreach (var doc in Model.Documents)
+        {
+            <li class="list-group-item">
+                <a href="@doc.FilePath" target="_blank">@doc.FileName</a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p class="text-muted">Nessun documento allegato.</p>
+}
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Modifica</a>
+<a asp-action="Index" asp-route-deviceId="@Model.DeviceId" class="btn btn-secondary">Torna all'elenco</a>

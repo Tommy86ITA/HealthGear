@@ -1,0 +1,39 @@
+@using System.Globalization
+@model IEnumerable<ElectricalTest>
+
+<h2>Elenco Verifiche Elettriche</h2>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Data</th>
+        <th>Esito</th>
+        <th>Eseguito da</th>
+        <th>Azioni</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var test in Model)
+    {
+        <tr>
+            <td>@(test.TestDate.ToString("dd/MM/yyyy"))</td>
+            <td>@(test.Passed ? "Superato" : "Non Superato")</td>
+            <td>@test.PerformedBy</td>
+            <td>
+                <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-info btn-sm">Dettagli</a>
+                <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-warning btn-sm">Modifica</a>
+                <a asp-action="Delete" asp-route-id="@test.Id" class="btn btn-danger btn-sm"
+                   onclick="return confirm('Sei sicuro di voler eliminare questa verifica elettrica?');">Elimina</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<a asp-action="Create" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-primary mt-3">
+    Aggiungi Verifica Elettrica
+</a>
+
+<a asp-controller="Device" asp-action="Details" asp-route-id="@ViewBag.DeviceId" class="btn btn-secondary mt-3">
+    Torna al Dispositivo
+</a>

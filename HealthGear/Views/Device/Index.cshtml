@@ -113,8 +113,7 @@
             <td>
                 <a asp-action="Details" asp-route-id="@device.Id" class="btn btn-info btn-sm">Dettagli</a>
                 <a asp-action="Edit" asp-route-id="@device.Id" class="btn btn-warning btn-sm">Modifica</a>
-                <a asp-action="Delete" asp-route-id="@device.Id" class="btn btn-danger btn-sm"
-                   onclick="return confirm('Sei sicuro di voler eliminare questo dispositivo?');">Elimina</a>
+                <a asp-action="Delete" asp-route-id="@device.Id" class="btn btn-danger btn-sm">Elimina</a>
             </td>
         </tr>
     }

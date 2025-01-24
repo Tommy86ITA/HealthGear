@@ -15,4 +15,12 @@
         <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <AdditionalFiles Include="Views\PhysicalInspection\Create.cshtml" />
+      <AdditionalFiles Include="Views\PhysicalInspection\Delete.cshtml" />
+      <AdditionalFiles Include="Views\PhysicalInspection\Details.cshtml" />
+      <AdditionalFiles Include="Views\PhysicalInspection\Edit.cshtml" />
+      <AdditionalFiles Include="Views\PhysicalInspection\Index.cshtml" />
+    </ItemGroup>
+
 </Project>

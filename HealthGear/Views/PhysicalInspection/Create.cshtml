@@ -1,0 +1,47 @@
+@model PhysicalInspection
+
+<h2>Aggiungi Controllo Fisico</h2>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId" />
+
+    <div class="form-group">
+        <label asp-for="InspectionDate" class="control-label">Data del Controllo</label>
+        <input asp-for="InspectionDate" class="form-control" type="date" required />
+        <span asp-validation-for="InspectionDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
+        <input asp-for="PerformedBy" class="form-control" placeholder="Nome dell'Esperto Qualificato" required />
+        <span asp-validation-for="PerformedBy" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Passed" class="control-label">Esito</label>
+        <select asp-for="Passed" class="form-control" required>
+            <option value="true">Superato</option>
+            <option value="false">Non Superato</option>
+        </select>
+        <span asp-validation-for="Passed" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Notes" class="control-label">Note</label>
+        <textarea asp-for="Notes" class="form-control" placeholder="Aggiungi eventuali note"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Allega Documenti</label>
+        <input type="file" name="files" class="form-control" multiple />
+    </div>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Salva</button>
+        <a asp-action="Index" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-secondary">Annulla</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

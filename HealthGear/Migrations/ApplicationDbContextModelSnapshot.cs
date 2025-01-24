@@ -66,6 +66,60 @@ namespace HealthGear.Migrations
                     b.ToTable("Devices");
                 });
 
+            modelBuilder.Entity("HealthGear.Models.ElectricalTest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Passed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PerformedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("TestDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
+
+                    b.ToTable("ElectricalTests");
+                });
+
+            modelBuilder.Entity("HealthGear.Models.ElectricalTestDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ElectricalTestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ElectricalTestId");
+
+                    b.ToTable("ElectricalTestDocuments");
+                });
+
             modelBuilder.Entity("HealthGear.Models.Maintenance", b =>
                 {
                     b.Property<int>("Id")
@@ -154,6 +208,87 @@ namespace HealthGear.Migrations
                     b.ToTable("MaintenanceSettings");
                 });
 
+            modelBuilder.Entity("HealthGear.Models.PhysicalInspection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("InspectionDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Passed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PerformedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
+
+                    b.ToTable("PhysicalInspections");
+                });
+
+            modelBuilder.Entity("HealthGear.Models.PhysicalInspectionDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PhysicalInspectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PhysicalInspectionId");
+
+                    b.ToTable("PhysicalInspectionDocuments");
+                });
+
+            modelBuilder.Entity("HealthGear.Models.ElectricalTest", b =>
+                {
+                    b.HasOne("HealthGear.Models.Device", "Device")
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Device");
+                });
+
+            modelBuilder.Entity("HealthGear.Models.ElectricalTestDocument", b =>
+                {
+                    b.HasOne("HealthGear.Models.ElectricalTest", "ElectricalTest")
+                        .WithMany("Documents")
+                        .HasForeignKey("ElectricalTestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ElectricalTest");
+                });
+
             modelBuilder.Entity("HealthGear.Models.Maintenance", b =>
                 {
                     b.HasOne("HealthGear.Models.Device", "Device")
@@ -176,12 +311,44 @@ namespace HealthGear.Migrations
                     b.Navigation("Maintenance");
                 });
 
+            modelBuilder.Entity("HealthGear.Models.PhysicalInspection", b =>
+                {
+                    b.HasOne("HealthGear.Models.Device", "Device")
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Device");
+                });
+
+            modelBuilder.Entity("HealthGear.Models.PhysicalInspectionDocument", b =>
+                {
+                    b.HasOne("HealthGear.Models.PhysicalInspection", "PhysicalInspection")
+                        .WithMany("Documents")
+                        .HasForeignKey("PhysicalInspectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PhysicalInspection");
+                });
+
             modelBuilder.Entity("HealthGear.Models.Device", b =>
                 {
                     b.Navigation("Maintenances");
                 });
 
+            modelBuilder.Entity("HealthGear.Models.ElectricalTest", b =>
+                {
+                    b.Navigation("Documents");
+                });
+
             modelBuilder.Entity("HealthGear.Models.Maintenance", b =>
+                {
+                    b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("HealthGear.Models.PhysicalInspection", b =>
                 {
                     b.Navigation("Documents");
                 });

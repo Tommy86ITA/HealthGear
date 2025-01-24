@@ -1,0 +1,39 @@
+@using System.Globalization
+@model IEnumerable<PhysicalInspection>
+
+<h2>Elenco Controlli Fisici</h2>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Data</th>
+        <th>Esito</th>
+        <th>Eseguito da</th>
+        <th>Azioni</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var inspection in Model)
+    {
+        <tr>
+            <td>@(inspection.InspectionDate.ToString("dd/MM/yyyy"))</td>
+            <td>@(inspection.Passed ? "Superato" : "Non Superato")</td>
+            <td>@inspection.PerformedBy</td>
+            <td>
+                <a asp-action="Details" asp-route-id="@inspection.Id" class="btn btn-info btn-sm">Dettagli</a>
+                <a asp-action="Edit" asp-route-id="@inspection.Id" class="btn btn-warning btn-sm">Modifica</a>
+                <a asp-action="Delete" asp-route-id="@inspection.Id" class="btn btn-danger btn-sm"
+                   onclick="return confirm('Sei sicuro di voler eliminare questo controllo fisico?');">Elimina</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<a asp-action="Create" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-primary mt-3">
+    Aggiungi Controllo Fisico
+</a>
+
+<a asp-controller="Device" asp-action="Details" asp-route-id="@ViewBag.DeviceId" class="btn btn-secondary mt-3">
+    Torna al Dispositivo
+</a>
