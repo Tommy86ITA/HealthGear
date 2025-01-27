@@ -5,7 +5,7 @@
 <div class="card">
     <div class="card-body">
         <h4 class="card-title">Informazioni Manutenzione</h4>
-        <p><strong>Data:</strong> @(Model.MaintenanceDate?.ToString("dd/MM/yyyy") ?? "N/A")</p>
+        <p><strong>Data:</strong> @(Model.MaintenanceDate.ToString("dd/MM/yyyy") ?? "N/A")</p>
         <p><strong>Tipo di Manutenzione:</strong> @Model.MaintenanceType</p>
         <p><strong>Eseguito da:</strong> @Model.PerformedBy</p>
         <p><strong>Note:</strong> @(string.IsNullOrEmpty(Model.Notes) ? "Nessuna nota disponibile" : Model.Notes)</p>

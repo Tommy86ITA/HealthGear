@@ -17,153 +17,209 @@ public class ElectricalTestController : Controller
         _logger = logger;
     }
 
-    // GET: ElectricalTest
+    // Visualizzazione dell'elenco delle verifiche elettriche per un dispositivo
     public async Task<IActionResult> Index(int deviceId)
     {
-        _logger.LogInformation("Caricamento elenco verifiche elettriche per il dispositivo {DeviceId}", deviceId);
+        _logger.LogInformation("Caricamento verifiche elettriche per il dispositivo {DeviceId}", deviceId);
 
-        var tests = await _context.ElectricalTests
+        var electricalTests = await _context.ElectricalTests
             .Where(e => e.DeviceId == deviceId)
             .Include(e => e.Device)
+            .Include(e => e.Documents)
             .ToListAsync();
 
-        ViewBag.DeviceId = deviceId;
-        return View(tests);
-    }
-
-    // GET: ElectricalTest/Create
-    public IActionResult Create(int deviceId)
-    {
-        _logger.LogInformation("Accesso alla pagina di creazione per il dispositivo {DeviceId}", deviceId);
-
-        if (deviceId == 0)
+        if (!electricalTests.Any())
         {
-            TempData["ErrorMessage"] = "ID dispositivo non valido.";
-            return RedirectToAction("Index", "Device");
+            TempData["ElectricalTestErrorMessage"] = "Nessuna verifica elettrica disponibile.";
         }
 
         ViewBag.DeviceId = deviceId;
-        return View();
+        return View(electricalTests);
     }
 
-    // POST: ElectricalTest/Create
+    // Visualizzazione del form per creare una nuova verifica elettrica
+    public IActionResult Create(int deviceId)
+    {
+        _logger.LogInformation("Apertura della pagina di creazione per il dispositivo {DeviceId}", deviceId);
+
+        ViewBag.DeviceId = deviceId;
+        return View(new ElectricalTest
+        {
+            DeviceId = deviceId,
+            TestDate = DateTime.Today,
+            PerformedBy = string.Empty,
+            Passed = false
+        });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ElectricalTest electricalTest)
+    public async Task<IActionResult> Create(ElectricalTest electricalTest, List<IFormFile> files)
     {
-        _logger.LogInformation("Ricevuta richiesta di creazione per DeviceId: {DeviceId}", electricalTest.DeviceId);
-
-        if (!ModelState.IsValid)
-            foreach (var key in ModelState.Keys)
-            foreach (var error in ModelState[key].Errors)
-                _logger.LogWarning("Errore su {Key}: {ErrorMessage}", key, error.ErrorMessage);
+        _logger.LogInformation("Creazione nuova verifica elettrica per il dispositivo {DeviceId}", electricalTest.DeviceId);
 
         if (ModelState.IsValid)
+        {
             try
             {
-                _context.Add(electricalTest);
+                _context.ElectricalTests.Add(electricalTest);
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Verifica elettrica salvata con successo per DeviceId: {DeviceId}",
-                    electricalTest.DeviceId);
-                return RedirectToAction(nameof(Index), new { deviceId = electricalTest.DeviceId });
+
+                // Se la verifica elettrica è stata superata, aggiorniamo la scadenza nel dispositivo
+                if (electricalTest.Passed)
+                {
+                    var device = await _context.Devices.FindAsync(electricalTest.DeviceId);
+                    if (device != null)
+                    {
+                        device.AggiornaProssimaVerificaElettrica(electricalTest.TestDate);
+                        _context.Update(device);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                // Gestione degli allegati caricati
+                if (files != null && files.Any())
+                {
+                    var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+                    Directory.CreateDirectory(uploadsPath);
+
+                    foreach (var file in files)
+                    {
+                        var filePath = Path.Combine(uploadsPath, file.FileName);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        var document = new ElectricalTestDocument
+                        {
+                            ElectricalTestId = electricalTest.Id,
+                            FileName = file.FileName,
+                            FilePath = $"/uploads/{file.FileName}"
+                        };
+
+                        _context.ElectricalTestDocuments.Add(document);
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                TempData["SuccessMessage"] = "La verifica elettrica è stata aggiunta con successo.";
+                return RedirectToAction("Index", new { deviceId = electricalTest.DeviceId });
             }
             catch (Exception ex)
             {
-                _logger.LogError("Errore durante il salvataggio della verifica: {Message}", ex.Message);
-                ModelState.AddModelError("", "Errore durante il salvataggio.");
+                _logger.LogError("Errore durante la creazione della verifica elettrica: {Message}", ex.Message);
+                ModelState.AddModelError("", "Si è verificato un errore durante il salvataggio.");
             }
+        }
 
         ViewBag.DeviceId = electricalTest.DeviceId;
         return View(electricalTest);
     }
 
-    // GET: ElectricalTest/Edit/5
-    public async Task<IActionResult> Edit(int id)
+    // Visualizzazione dei dettagli di una verifica elettrica
+    public async Task<IActionResult> Details(int id)
     {
-        _logger.LogInformation("Accesso alla pagina di modifica per il test ID: {TestId}", id);
+        _logger.LogInformation("Caricamento dettagli verifica elettrica per ID: {Id}", id);
 
-        var test = await _context.ElectricalTests.FindAsync(id);
-        if (test == null)
+        var electricalTest = await _context.ElectricalTests
+            .Include(e => e.Device)
+            .Include(e => e.Documents)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (electricalTest == null)
         {
-            _logger.LogWarning("Verifica elettrica con ID {TestId} non trovata", id);
+            _logger.LogWarning("Verifica elettrica con ID {Id} non trovata.", id);
             return NotFound();
         }
 
-        ViewBag.DeviceId = test.DeviceId;
-        return View(test);
+        return View(electricalTest);
     }
 
-    // POST: ElectricalTest/Edit/5
+    // Modifica di una verifica elettrica esistente
+    public async Task<IActionResult> Edit(int id)
+    {
+        _logger.LogInformation("Apertura della pagina di modifica per verifica elettrica ID: {Id}", id);
+
+        var electricalTest = await _context.ElectricalTests.FindAsync(id);
+
+        if (electricalTest == null)
+        {
+            _logger.LogWarning("Verifica elettrica con ID {Id} non trovata.", id);
+            return NotFound();
+        }
+
+        return View(electricalTest);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, ElectricalTest electricalTest)
+    public async Task<IActionResult> Edit(int id, ElectricalTest electricalTest, List<IFormFile> files)
     {
-        _logger.LogInformation("Modifica richiesta per ID: {TestId}, DeviceId: {DeviceId}", id,
-            electricalTest.DeviceId);
-
-        if (id != electricalTest.Id) return NotFound();
+        if (id != electricalTest.Id)
+        {
+            _logger.LogWarning("Tentativo di modifica con ID non corrispondente: {Id}", id);
+            return NotFound();
+        }
 
         if (ModelState.IsValid)
+        {
             try
             {
                 _context.Update(electricalTest);
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Verifica elettrica aggiornata con successo per DeviceId: {DeviceId}",
-                    electricalTest.DeviceId);
-                return RedirectToAction(nameof(Index), new { deviceId = electricalTest.DeviceId });
+
+                if (electricalTest.Passed)
+                {
+                    var device = await _context.Devices.FindAsync(electricalTest.DeviceId);
+                    if (device != null)
+                    {
+                        device.AggiornaProssimaVerificaElettrica(electricalTest.TestDate);
+                        _context.Update(device);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                TempData["SuccessMessage"] = "La verifica elettrica è stata aggiornata con successo.";
+                return RedirectToAction("Index", new { deviceId = electricalTest.DeviceId });
             }
-            catch (DbUpdateConcurrencyException ex)
+            catch (DbUpdateConcurrencyException)
             {
-                _logger.LogError("Errore di concorrenza: {Message}", ex.Message);
-                ModelState.AddModelError("", "Un altro utente ha modificato questo record. Riprova.");
+                if (!_context.ElectricalTests.Any(e => e.Id == electricalTest.Id))
+                {
+                    _logger.LogWarning("Verifica elettrica con ID {Id} non trovata durante l'aggiornamento.", id);
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
             }
+        }
 
         ViewBag.DeviceId = electricalTest.DeviceId;
         return View(electricalTest);
     }
 
-    // GET: ElectricalTest/Delete/5
-    public async Task<IActionResult> Delete(int id)
-    {
-        _logger.LogInformation("Richiesta di eliminazione per il test ID: {TestId}", id);
-
-        var test = await _context.ElectricalTests.FindAsync(id);
-        if (test == null)
-        {
-            _logger.LogWarning("Verifica elettrica con ID {TestId} non trovata", id);
-            return NotFound();
-        }
-
-        return View(test);
-    }
-
-    // POST: ElectricalTest/Delete/5
+    // Eliminazione di una verifica elettrica
     [HttpPost]
-    [ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var test = await _context.ElectricalTests.FindAsync(id);
-        if (test != null)
+        _logger.LogInformation("Eliminazione della verifica elettrica con ID: {Id}", id);
+
+        var electricalTest = await _context.ElectricalTests.FindAsync(id);
+        if (electricalTest == null)
         {
-            _context.ElectricalTests.Remove(test);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Verifica elettrica con ID {TestId} eliminata", id);
-            return RedirectToAction(nameof(Index), new { deviceId = test.DeviceId });
+            TempData["ErrorMessage"] = "Errore: verifica elettrica non trovata.";
+            return RedirectToAction("Index");
         }
 
-        _logger.LogWarning("Tentativo di eliminazione fallito per ID {TestId}", id);
-        TempData["ErrorMessage"] = "Verifica elettrica non trovata.";
-        return RedirectToAction(nameof(Index));
-    }
+        _context.ElectricalTests.Remove(electricalTest);
+        await _context.SaveChangesAsync();
 
-    public async Task<IActionResult> Details(int id)
-    {
-        var test = await _context.ElectricalTests
-            .FirstOrDefaultAsync(m => m.Id == id);
-
-        if (test == null) return NotFound();
-
-        return View(test);
+        TempData["SuccessMessage"] = "La verifica elettrica è stata eliminata con successo.";
+        return RedirectToAction("Index", new { deviceId = electricalTest.DeviceId });
     }
 }

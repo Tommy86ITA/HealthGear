@@ -8,7 +8,7 @@
 </div>
 
 <div class="mb-3">
-    <strong>Data:</strong> @(Model.MaintenanceDate?.ToString("dd/MM/yyyy") ?? "N/A") <br/>
+    <strong>Data:</strong> @(Model.MaintenanceDate == default ? "N/A" : Model.MaintenanceDate.ToString("dd/MM/yyyy")) <br/>
     <strong>Descrizione:</strong> @Model.Description <br/>
     <strong>Eseguito da:</strong> @Model.PerformedBy <br/>
     <strong>Tipo:</strong> @Model.MaintenanceType <br/>

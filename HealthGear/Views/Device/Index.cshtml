@@ -2,6 +2,14 @@
 
 <h2>Elenco Dispositivi</h2>
 
+@if (TempData["DeviceErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> @TempData["DeviceErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <table class="table">
     <thead>
     <tr>
@@ -9,7 +17,6 @@
         <th>Produttore</th>
         <th>Modello</th>
         <th>Numero di Serie</th>
-        <th>Tipologia</th>
         <th>Stato Manutenzione</th>
         <th>Stato Verifica Elettrica</th>
         <th>Stato Controllo Fisico</th>
@@ -24,7 +31,6 @@
             <td>@device.Brand</td>
             <td>@device.Model</td>
             <td>@device.SerialNumber</td>
-            <td>@device.DeviceType</td>
 
             <!-- Stato manutenzione -->
             <td>
@@ -111,13 +117,21 @@
             </td>
 
             <td>
-                <a asp-action="Details" asp-route-id="@device.Id" class="btn btn-info btn-sm">Dettagli</a>
-                <a asp-action="Edit" asp-route-id="@device.Id" class="btn btn-warning btn-sm">Modifica</a>
-                <a asp-action="Delete" asp-route-id="@device.Id" class="btn btn-danger btn-sm">Elimina</a>
+                <a asp-action="Details" asp-route-id="@device.Id" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i> Dettagli
+                </a>
+                <a asp-action="Edit" asp-route-id="@device.Id" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Modifica
+                </a>
+                <a asp-action="Delete" asp-route-id="@device.Id" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i> Elimina
+                </a>
             </td>
         </tr>
     }
     </tbody>
 </table>
 
-<a asp-action="Create" class="btn btn-primary">Aggiungi Nuovo Dispositivo</a>
+<a asp-action="Create" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Aggiungi Nuovo Dispositivo
+</a>

@@ -2,8 +2,11 @@
 
 <h2>Modifica Manutenzione</h2>
 
-<form asp-action="Create" method="post" enctype="multipart/form-data">
-    <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId" />
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="DeviceId" />
+
+    <div asp-validation-summary="All" class="text-danger"></div>
 
     <div class="form-group">
         <label asp-for="MaintenanceDate" class="control-label">Data di Manutenzione</label>
@@ -34,7 +37,7 @@
                 }
 
                 if (selectedDate > maxDate) {
-                    errorMessage.textContent = "La data di manutenzione non può essere futura. Inserisci una data valida.";
+                    errorMessage.textContent = "La data di manutenzione non può essere futura.";
                     dateInput.classList.add("is-invalid");
                     return false;
                 } else {
@@ -57,21 +60,29 @@
     </script>
 
     <div class="form-group">
-        <label asp-for="Description" class="control-label">Descrizione</label>
-        <textarea asp-for="Description" class="form-control"
-                  placeholder="Inserisci una descrizione dettagliata"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
+        <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
+        <input asp-for="PerformedBy"
+               class="form-control"
+               placeholder="Nome del tecnico"
+               required 
+               maxlength="100"/>
+        <span asp-validation-for="PerformedBy" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
-        <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required />
-        <span asp-validation-for="PerformedBy" class="text-danger"></span>
+        <label asp-for="Description" class="control-label">Descrizione</label>
+        <textarea asp-for="Description"
+                  class="form-control"
+                  placeholder="Inserisci una descrizione dettagliata"
+                  rows="3"
+                  required></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="MaintenanceType" class="control-label">Tipo di Manutenzione</label>
         <select asp-for="MaintenanceType" class="form-control" required>
+            <option value="">-- Seleziona il tipo di manutenzione --</option>
             <option value="Ordinaria">Ordinaria</option>
             <option value="Straordinaria">Straordinaria</option>
             <option value="Correttiva">Correttiva</option>
@@ -80,16 +91,58 @@
     </div>
 
     <div class="form-group">
-        <label class="control-label">Allega Documenti</label>
-        <input type="file" name="files" class="form-control" multiple />
+        <label class="control-label">Allega Documenti (PDF, JPG, PNG, max 5MB)</label>
+        <input type="file" id="fileInput" name="files" class="form-control" multiple accept=".pdf, .jpg, .png"/>
+        <small class="form-text text-muted">Puoi caricare più file contemporaneamente.</small>
+        <span id="fileErrorMessage" class="text-danger"></span>
     </div>
 
+    <script>
+        document.getElementById("fileInput").addEventListener("change", function () {
+            var fileInput = document.getElementById("fileInput");
+            var errorMessage = document.getElementById("fileErrorMessage");
+            var allowedExtensions = /(\.pdf|\.jpg|\.png)$/i;
+            var maxSizeInMB = 5;
+            var isValid = true;
+
+            for (let i = 0; i < fileInput.files.length; i++) {
+                let file = fileInput.files[i];
+                if (!allowedExtensions.exec(file.name)) {
+                    errorMessage.textContent = "Formato file non valido. Carica solo PDF, JPG o PNG.";
+                    fileInput.value = "";
+                    isValid = false;
+                }
+                if (file.size > maxSizeInMB * 1024 * 1024) {
+                    errorMessage.textContent = "Ogni file non deve superare i 5MB.";
+                    fileInput.value = "";
+                    isValid = false;
+                }
+            }
+
+            if (isValid) {
+                errorMessage.textContent = "";
+            }
+        });
+    </script>
+
     <div class="form-group mt-3">
-        <button type="submit" class="btn btn-primary">Salva</button>
-        <a asp-action="Index" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-secondary">Annulla</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salva
+        </button>
+        <a asp-action="Index" asp-route-deviceId="@Model.DeviceId" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Annulla
+        </a>
     </div>
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
+
+    <script>
+        $(document).ready(function () {
+            $('form').on('submit', function () {
+                $('button[type="submit"]').prop('disabled', true);
+            });
+        });
+    </script>
 }

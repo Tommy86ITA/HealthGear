@@ -20,6 +20,13 @@ public class DeviceController : Controller
     public async Task<IActionResult> Index()
     {
         var devices = await _context.Devices.ToListAsync();
+
+        if (!devices.Any())
+        {
+            _logger.LogWarning("Nessun dispositivo trovato.");
+            TempData["DeviceErrorMessage"] = "Nessun dispositivo disponibile.";
+        }
+
         return View(devices);
     }
 

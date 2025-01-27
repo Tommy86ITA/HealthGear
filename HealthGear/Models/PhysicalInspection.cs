@@ -16,8 +16,8 @@ public class PhysicalInspection
     [DataType(DataType.Date)]
     public DateTime InspectionDate { get; set; }
 
-    [Required(ErrorMessage = "Il nome del tecnico è obbligatorio.")]
-    [StringLength(100, ErrorMessage = "Il nome del tecnico non può superare i 100 caratteri.")]
+    [Required(ErrorMessage = "Il nome dell'Esperto Qualificato è obbligatorio.")]
+    [MinLength(3, ErrorMessage = "Inserisci almeno 3 caratteri.")]
     public string PerformedBy { get; set; }
 
     [Required(ErrorMessage = "L'esito della verifica è obbligatorio.")]

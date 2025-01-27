@@ -6,20 +6,23 @@ namespace HealthGear.Models;
 
 public class Maintenance
 {
-    [Key] public int Id { get; set; }
+    [Key] 
+    public int Id { get; set; }
 
-    [Required] public int DeviceId { get; set; }
+    [Required(ErrorMessage = "L'ID del dispositivo è obbligatorio.")]
+    public int DeviceId { get; set; }
 
-    [ForeignKey("DeviceId")] public Device? Device { get; set; }
+    [ForeignKey("DeviceId")] 
+    public Device? Device { get; set; }
 
     [Display(Name = "Data di Manutenzione")]
     [DataType(DataType.Date)]
     [Required(ErrorMessage = "La data della manutenzione è obbligatoria.")]
     [CustomValidation(typeof(Maintenance), nameof(ValidateMaintenanceDate))]
-    public DateTime? MaintenanceDate { get; set; }
-
+    public DateTime MaintenanceDate { get; set; }
 
     [Required(ErrorMessage = "La descrizione della manutenzione è obbligatoria.")]
+    [StringLength(500, ErrorMessage = "La descrizione non può superare i 500 caratteri.")]
     public required string Description { get; set; }
 
     public string? Notes { get; set; }
@@ -35,13 +38,15 @@ public class Maintenance
     // Relazione con i documenti allegati alla manutenzione
     public ICollection<MaintenanceDocument> Documents { get; set; } = new List<MaintenanceDocument>();
 
-    public static ValidationResult? ValidateMaintenanceDate(string date, ValidationContext context)
+    /// <summary>
+    /// Validazione personalizzata per impedire l'inserimento di date future.
+    /// </summary>
+    public static ValidationResult? ValidateMaintenanceDate(DateTime date, ValidationContext context)
     {
-        if (DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None,
-                out var parsedDate))
-            if (parsedDate > DateTime.Today)
-                return new ValidationResult("Non è possibile selezionare una data futura.");
-
+        if (date > DateTime.Today)
+        {
+            return new ValidationResult("Non è possibile selezionare una data futura.");
+        }
         return ValidationResult.Success;
     }
 }

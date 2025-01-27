@@ -3,7 +3,8 @@ using HealthGear.Data;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 
-Batteries.Init(); // Necessario per evitare l'errore di runtime
+// Inizializzazione necessaria per evitare errori di runtime con SQLite
+Batteries.Init();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Aggiunta dei servizi MVC con supporto per le viste Razor
 builder.Services.AddControllersWithViews();
 
-// Configurazione logging
+// Configurazione del logging
 builder.Services.AddLogging(logging =>
 {
     logging.ClearProviders();
@@ -28,7 +29,7 @@ var cultureInfo = new CultureInfo("it-IT");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-// Gestione degli errori
+// Gestione degli errori basata sull'ambiente
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -36,27 +37,25 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+    app.UseHsts(); // Abilita HSTS per una maggiore sicurezza
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseHttpsRedirection();  // Forza l'uso di HTTPS
+app.UseStaticFiles();       // Abilita la gestione dei file statici (CSS, JS, immagini)
 
-app.UseRouting();
+app.UseRouting();  // Abilita il sistema di routing
 
-// Definizione esplicita delle rotte
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllerRoute(
-        "default",
-        "{controller=Home}/{action=Index}/{id?}");
-});
+// Registrazione delle rotte con approccio consigliato (evita ASP0014)
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
 
-// Verifica che il database esista
+// Verifica che il database esista e crealo se necessario
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.EnsureCreated();
+    dbContext.Database.EnsureCreated();  // Crea il database se non esiste
 }
 
 app.Run();
