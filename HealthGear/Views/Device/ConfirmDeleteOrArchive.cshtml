@@ -1,0 +1,57 @@
+@model Device
+
+@{
+    ViewData["Title"] = "Conferma Eliminazione o Archiviazione";
+    var hasInterventions = Model.Interventions != null && Model.Interventions.Any();
+}
+
+<h2 class="mb-4">Conferma Eliminazione o Archiviazione</h2>
+
+<div class="alert alert-warning">
+    <p>Sei sicuro di voler eliminare o archiviare il dispositivo <strong>@Model.Name</strong>?</p>
+
+    @if (hasInterventions)
+    {
+        <p>Questo dispositivo ha interventi registrati. Non può essere eliminato direttamente, ma può essere archiviato
+            con lo stato <strong>"Dismesso"</strong>.</p>
+    }
+    else
+    {
+        <p>Questa azione è definitiva e non può essere annullata.</p>
+    }
+</div>
+
+<form asp-action="DeleteOrArchiveConfirmed" method="post">
+    <input type="hidden" asp-for="Id"/>
+
+    @if (hasInterventions)
+    {
+        <button type="submit" name="action" value="archive" class="btn btn-warning">
+            📁 Archivia Dispositivo
+        </button>
+    }
+    else
+    {
+        <div class="mb-3">
+            <label for="confirmDeleteInput" class="form-label">Per confermare, digita il nome del dispositivo:</label>
+            <input type="text" id="confirmDeleteInput" class="form-control" placeholder="@Model.Name"
+                   oninput="validateDeleteInput()"/>
+        </div>
+
+        <button type="submit" name="action" value="delete" id="deleteConfirmButton" class="btn btn-danger" disabled>
+            ❌ Elimina Dispositivo
+        </button>
+    }
+
+    <a asp-action="Index" class="btn btn-secondary">↩️ Annulla</a>
+</form>
+
+@section Scripts {
+    <script>
+        function validateDeleteInput() {
+            var input = document.getElementById("confirmDeleteInput").value;
+            var confirmButton = document.getElementById("deleteConfirmButton");
+            confirmButton.disabled = input.trim() !== "@Model.Name";
+        }
+    </script>
+}

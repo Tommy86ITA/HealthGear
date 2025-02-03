@@ -25,7 +25,7 @@ public class PhysicalInspection
 
     public string? Notes { get; set; }
 
-    public ICollection<PhysicalInspectionDocument> Documents { get; set; } = new List<PhysicalInspectionDocument>();
+    public virtual ICollection<FileDocument> Documents { get; set; } = new List<FileDocument>();
 
     // Metodo per calcolare la prossima scadenza in base alla tipologia del dispositivo
     public DateTime CalculateNextInspectionDate()

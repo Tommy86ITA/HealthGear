@@ -1,24 +1,30 @@
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Globalization;
 
 namespace HealthGear.Controllers;
 
 public class MaintenanceController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly DeadlineService _deadlineService;
+    private readonly FileService _fileService;
     private readonly ILogger<MaintenanceController> _logger;
 
-    public MaintenanceController(ApplicationDbContext context, ILogger<MaintenanceController> logger)
+    public MaintenanceController(ApplicationDbContext context, ILogger<MaintenanceController> logger,
+        FileService fileService, DeadlineService deadlineService)
     {
         _context = context;
         _logger = logger;
+        _fileService = fileService;
+        _deadlineService = deadlineService;
     }
 
-    // Visualizzazione dell'elenco delle manutenzioni per un dispositivo
+    /// <summary>
+    ///     Visualizza l'elenco delle manutenzioni per un determinato dispositivo.
+    /// </summary>
     public async Task<IActionResult> Index(int deviceId)
     {
         _logger.LogInformation("Caricamento manutenzioni per il dispositivo {DeviceId}", deviceId);
@@ -26,20 +32,22 @@ public class MaintenanceController : Controller
         var maintenances = await _context.Maintenances
             .Where(m => m.DeviceId == deviceId)
             .Include(m => m.Device)
-            .Include(m => m.Documents)
+            .Include(m => m.Documents) // Ora sono FileDocument
             .ToListAsync();
 
         if (!maintenances.Any())
         {
             _logger.LogWarning("Nessuna manutenzione trovata per il dispositivo {DeviceId}", deviceId);
-            TempData["MaintenanceErrorMessage"] = "Nessuna manutenzione disponibile per questo dispositivo.";
+            TempData["ErrorMessage"] = "Nessuna manutenzione disponibile per questo dispositivo.";
         }
 
         ViewBag.DeviceId = deviceId;
         return View(maintenances);
     }
 
-    // Visualizzazione del form per creare una nuova manutenzione
+    /// <summary>
+    ///     Mostra il form per la creazione di una nuova manutenzione.
+    /// </summary>
     public IActionResult Create(int deviceId)
     {
         _logger.LogInformation("Apertura della pagina di creazione per il dispositivo {DeviceId}", deviceId);
@@ -55,168 +63,85 @@ public class MaintenanceController : Controller
         });
     }
 
+    /// <summary>
+    ///     Elabora la creazione di una nuova manutenzione.
+    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Maintenance maintenance, List<IFormFile> files)
     {
         _logger.LogInformation("Creazione nuova manutenzione per il dispositivo {DeviceId}", maintenance.DeviceId);
 
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            try
+            ViewBag.DeviceId = maintenance.DeviceId;
+            return View(maintenance);
+        }
+
+        try
+        {
+            _context.Maintenances.Add(maintenance);
+            await _context.SaveChangesAsync();
+
+            var device = await _context.Devices.FindAsync(maintenance.DeviceId);
+            if (device != null && maintenance.MaintenanceType == "Ordinaria")
             {
-                _context.Maintenances.Add(maintenance);
+                device.LastMaintenanceDate = maintenance.MaintenanceDate;
+                _context.Update(device);
                 await _context.SaveChangesAsync();
-
-                // Aggiorna la scadenza della prossima manutenzione ordinaria se necessario
-                if (maintenance.MaintenanceType == "Ordinaria")
-                {
-                    var device = await _context.Devices.FindAsync(maintenance.DeviceId);
-                    if (device != null)
-                    {
-                        device.AggiornaProssimaManutenzione(maintenance.MaintenanceDate);
-                        _context.Update(device);
-                        await _context.SaveChangesAsync();
-                    }
-                }
-
-                // Gestione degli allegati caricati
-                if (files != null && files.Any())
-                {
-                    var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-                    Directory.CreateDirectory(uploadsPath);
-
-                    foreach (var file in files)
-                    {
-                        var filePath = Path.Combine(uploadsPath, file.FileName);
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        var document = new MaintenanceDocument
-                        {
-                            MaintenanceId = maintenance.Id,
-                            FileName = file.FileName,
-                            FilePath = $"/uploads/{file.FileName}"
-                        };
-
-                        _context.MaintenanceDocuments.Add(document);
-                    }
-
-                    await _context.SaveChangesAsync();
-                }
-
-                TempData["SuccessMessage"] = "Manutenzione creata con successo.";
-                return RedirectToAction("Index", new { deviceId = maintenance.DeviceId });
             }
-            catch (Exception ex)
+
+            // Salvataggio file con FileService
+            if (files != null && files.Any())
             {
-                _logger.LogError("Errore durante la creazione della manutenzione: {Message}", ex.Message);
-                ModelState.AddModelError("", "Si è verificato un errore durante il salvataggio.");
-            }
-        }
-
-        ViewBag.DeviceId = maintenance.DeviceId;
-        return View(maintenance);
-    }
-
-    // Visualizzazione dei dettagli di una manutenzione
-    public async Task<IActionResult> Details(int id)
-    {
-        _logger.LogInformation("Caricamento dettagli manutenzione per ID: {Id}", id);
-
-        var maintenance = await _context.Maintenances
-            .Include(m => m.Device)
-            .Include(m => m.Documents)
-            .FirstOrDefaultAsync(m => m.Id == id);
-
-        if (maintenance == null)
-        {
-            _logger.LogWarning("Manutenzione con ID {Id} non trovata.", id);
-            return NotFound();
-        }
-
-        return View(maintenance);
-    }
-
-    // Visualizzazione della pagina di modifica della manutenzione
-    public async Task<IActionResult> Edit(int id)
-    {
-        _logger.LogInformation("Apertura della pagina di modifica per manutenzione ID: {Id}", id);
-
-        var maintenance = await _context.Maintenances.FindAsync(id);
-        if (maintenance == null)
-        {
-            _logger.LogWarning("Manutenzione con ID {Id} non trovata.", id);
-            return NotFound();
-        }
-
-        return View(maintenance);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Maintenance maintenance, List<IFormFile> files)
-    {
-        if (id != maintenance.Id)
-        {
-            _logger.LogWarning("Tentativo di modifica con ID non corrispondente: {Id}", id);
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(maintenance);
+                var savedFiles =
+                    await _fileService.SaveFilesAsync(files, maintenance.Id, "Maintenance", device?.Name ?? "Unknown");
+                _context.FileDocuments.AddRange(savedFiles);
                 await _context.SaveChangesAsync();
-
-                if (maintenance.MaintenanceType == "Ordinaria")
-                {
-                    var device = await _context.Devices.FindAsync(maintenance.DeviceId);
-                    if (device != null)
-                    {
-                        device.AggiornaProssimaManutenzione(maintenance.MaintenanceDate);
-                        _context.Update(device);
-                        await _context.SaveChangesAsync();
-                    }
-                }
-
-                TempData["SuccessMessage"] = "Manutenzione aggiornata con successo.";
-                return RedirectToAction("Index", new { deviceId = maintenance.DeviceId });
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Maintenances.Any(m => m.Id == maintenance.Id))
-                {
-                    _logger.LogWarning("Manutenzione con ID {Id} non trovata durante l'aggiornamento.", id);
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            TempData["SuccessMessage"] = "Manutenzione creata con successo.";
+            return RedirectToAction("Index", new { deviceId = maintenance.DeviceId });
         }
-
-        ViewBag.DeviceId = maintenance.DeviceId;
-        return View(maintenance);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore durante la creazione della manutenzione.");
+            ModelState.AddModelError("", "Si è verificato un errore durante il salvataggio.");
+            ViewBag.DeviceId = maintenance.DeviceId;
+            return View(maintenance);
+        }
     }
 
-    // Eliminazione della manutenzione
+    /// <summary>
+    ///     Elimina una manutenzione e i file associati.
+    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         _logger.LogInformation("Eliminazione della manutenzione con ID: {Id}", id);
 
-        var maintenance = await _context.Maintenances.FindAsync(id);
+        var maintenance = await _context.Maintenances
+            .Include(m => m.Documents) // Ora sono FileDocument
+            .FirstOrDefaultAsync(m => m.Id == id);
+
         if (maintenance == null)
         {
             _logger.LogWarning("Manutenzione con ID {Id} non trovata.", id);
-            TempData["MaintenanceErrorMessage"] = "Errore: la manutenzione non è stata trovata.";
+            TempData["ErrorMessage"] = "Errore: la manutenzione non è stata trovata.";
             return RedirectToAction("Index");
+        }
+
+        // Rimuove i file associati con FileService
+        if (maintenance.Documents.Any())
+        {
+            foreach (var document in maintenance.Documents)
+            {
+                await _fileService.DeleteFileAsync(document.FilePath);
+                _context.FileDocuments.Remove(document);
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         _context.Maintenances.Remove(maintenance);

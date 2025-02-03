@@ -1,6 +1,6 @@
 @model ElectricalTest
 
-<h2>Modifica Verifica Elettrica</h2>
+<h2 class="mb-4">Modifica Verifica Elettrica</h2>
 
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
@@ -8,50 +8,168 @@
 
     <div asp-validation-summary="All" class="text-danger"></div>
 
-    <div class="form-group">
-        <label asp-for="TestDate" class="control-label">Data della Verifica</label>
-        <input asp-for="TestDate" class="form-control" type="date" placeholder="gg/mm/aaaa" pattern="\d{4}-\d{2}-\d{2}" required />
-        <span asp-validation-for="TestDate" class="text-danger"></span>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="TestDate" class="control-label">Data della Verifica</label>
+                <input asp-for="TestDate" class="form-control" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                <span asp-validation-for="TestDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
+                <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required maxlength="100" />
+                <span asp-validation-for="PerformedBy" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <label asp-for="Passed" class="control-label">Esito</label>
+                <select asp-for="Passed" class="form-control" required>
+                    <option value="true" selected="@(Model.Passed == true ? "selected" : null)">Superato</option>
+                    <option value="false" selected="@(Model.Passed == false ? "selected" : null)">Non Superato</option>
+                </select>
+                <span asp-validation-for="Passed" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <label asp-for="Notes" class="control-label">Note</label>
+                <textarea asp-for="Notes" class="form-control" placeholder="Aggiungi eventuali note" rows="3"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Sezione Upload File -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="control-label">Allega Documenti (max 100 MB)</label>
+                <input type="file" id="fileUploadInput" name="files" class="form-control" multiple />
+                <button type="button" id="uploadButton" class="btn btn-primary mt-2">
+                    <i class="fas fa-upload"></i> Carica
+                </button>
+                <small class="form-text text-muted">Puoi caricare più file contemporaneamente. Ogni file deve essere inferiore a 100 MB.</small>
+                <span id="fileErrorMessage" class="text-danger"></span>
+                <div id="loadingMessage" class="text-info mt-2" style="display: none;">Caricamento in corso...</div>
+                <ul id="fileList" class="list-group mt-2">
+                    @foreach (var file in Model.Documents)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="@file.FilePath" target="_blank">@file.FileName</a>
+                            <button type="button" class="btn btn-danger btn-sm deleteFileButton" data-file="@file.FileName">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
-        <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required />
-        <span asp-validation-for="PerformedBy" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Passed" class="control-label">Esito</label>
-<select asp-for="Passed" class="form-control" required>
-    <option value="true" selected="@(Model.Passed == true ? "selected" : null)">Superato</option>
-    <option value="false" selected="@(Model.Passed == false ? "selected" : null)">Non Superato</option>
-</select>
-        <span asp-validation-for="Passed" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Notes" class="control-label">Note</label>
-        <textarea asp-for="Notes" class="form-control" placeholder="Aggiungi eventuali note"></textarea>
-        <span asp-validation-for="Notes" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label class="control-label">Carica documenti aggiuntivi</label>
-        <input type="file" name="files" class="form-control" multiple />
-    </div>
-
-    <div class="form-group mt-3">
-        <button type="submit" class="btn btn-primary">Salva</button>
-        <a asp-action="Index" asp-route-deviceId="@Model.DeviceId" class="btn btn-secondary">Annulla</a>
+    <div class="form-group mt-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salva
+        </button>
+        <a asp-action="Index" asp-route-deviceId="@Model.DeviceId" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Annulla
+        </a>
     </div>
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
     <script>
-        $(document).ready(function () {
-            $('input[type="date"]').on('change', function () {
-                console.log("Data selezionata:", $(this).val());
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("🚀 DOM completamente caricato!");
+
+            const uploadButton = document.getElementById("uploadButton");
+            const fileInput = document.getElementById("fileUploadInput");
+            const fileList = document.getElementById("fileList");
+            const errorMessage = document.getElementById("fileErrorMessage");
+            const loadingMessage = document.getElementById("loadingMessage");
+            const uploadedFiles = new Set(@Html.Raw(Json.Serialize(Model.Documents.Select(d => d.FileName)))); 
+            const maxSizeInMB = 100;
+
+            uploadButton.addEventListener("click", async function () {
+                console.log("✅ Pulsante Carica cliccato!");
+
+                if (!fileInput.files.length) {
+                    errorMessage.textContent = "⚠️ Nessun file selezionato.";
+                    console.warn("⚠️ Nessun file selezionato!");
+                    return;
+                }
+
+                errorMessage.textContent = "";
+                loadingMessage.style.display = "block";
+
+                const formData = new FormData();
+
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                    if (file.size > maxSizeInMB * 1024 * 1024) {
+                        errorMessage.textContent = `❌ Il file ${file.name} supera i ${maxSizeInMB} MB.`;
+                        loadingMessage.style.display = "none";
+                        console.error(`❌ Il file ${file.name} è troppo grande (${fileSizeInMB} MB)`);
+                        return;
+                    }
+
+                    if (uploadedFiles.has(file.name)) {
+                        console.warn(`⚠️ Il file ${file.name} è già stato caricato.`);
+                        continue;
+                    }
+
+                    uploadedFiles.add(file.name);
+                    formData.append("files", file);
+                }
+
+                try {
+                    console.log("🚀 Invio richiesta fetch...");
+                    const response = await fetch("/File/Upload", {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+                    loadingMessage.style.display = "none";
+
+                    if (result.success) {
+                        errorMessage.textContent = "✅ Caricamento completato con successo!";
+                        errorMessage.classList.remove("text-danger");
+                        errorMessage.classList.add("text-success");
+
+                        for (let file of fileInput.files) {
+                            const listItem = document.createElement("li");
+                            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+
+                            const fileText = document.createElement("a");
+                            fileText.href = `/uploads/${file.name}`;
+                            fileText.textContent = file.name;
+                            fileText.target = "_blank";
+
+                            const removeButton = document.createElement("button");
+                            removeButton.classList.add("btn", "btn-sm", "btn-danger");
+                            removeButton.innerHTML = `<i class="fas fa-trash"></i>`;
+                            removeButton.type = "button";
+
+                            removeButton.onclick = async () => {
+                                const deleteResponse = await fetch(`/File/Delete?fileName=${encodeURIComponent(file.name)}`, { method: "DELETE" });
+                                const deleteResult = await deleteResponse.json();
+                                if (deleteResult.success) {
+                                    uploadedFiles.delete(file.name);
+                                    listItem.remove();
+                                } else {
+                                    console.error("❌ Errore durante l'eliminazione:", deleteResult.message);
+                                }
+                            };
+
+                            listItem.appendChild(fileText);
+                            listItem.appendChild(removeButton);
+                            fileList.appendChild(listItem);
+                        }
+                    }
+                } catch (error) {
+                    console.error("⛔ Errore durante il caricamento:", error);
+                    errorMessage.textContent = "⛔ Errore imprevisto durante il caricamento.";
+                }
             });
         });
     </script>

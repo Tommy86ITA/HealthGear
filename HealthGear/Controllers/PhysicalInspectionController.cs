@@ -1,20 +1,23 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using HealthGear.Data;
 using HealthGear.Models;
-using Microsoft.Extensions.Logging;
+using HealthGear.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Controllers;
 
 public class PhysicalInspectionController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly FileService _fileService;
     private readonly ILogger<PhysicalInspectionController> _logger;
 
-    public PhysicalInspectionController(ApplicationDbContext context, ILogger<PhysicalInspectionController> logger)
+    public PhysicalInspectionController(ApplicationDbContext context, ILogger<PhysicalInspectionController> logger,
+        FileService fileService)
     {
         _context = context;
         _logger = logger;
+        _fileService = fileService;
     }
 
     // GET: PhysicalInspection/Index
@@ -25,13 +28,10 @@ public class PhysicalInspectionController : Controller
         var inspections = await _context.PhysicalInspections
             .Where(p => p.DeviceId == deviceId)
             .Include(p => p.Device)
-            .Include(p => p.Documents)
             .ToListAsync();
 
         if (!inspections.Any())
-        {
             TempData["PhysicalInspectionErrorMessage"] = "Nessun controllo fisico disponibile per questo dispositivo.";
-        }
 
         ViewBag.DeviceId = deviceId;
         return View(inspections);
@@ -57,10 +57,10 @@ public class PhysicalInspectionController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PhysicalInspection physicalInspection, List<IFormFile> files)
     {
-        _logger.LogInformation("Creazione nuovo controllo fisico per il dispositivo {DeviceId}", physicalInspection.DeviceId);
+        _logger.LogInformation("Creazione nuovo controllo fisico per il dispositivo {DeviceId}",
+            physicalInspection.DeviceId);
 
         if (ModelState.IsValid)
-        {
             try
             {
                 _context.Add(physicalInspection);
@@ -75,30 +75,12 @@ public class PhysicalInspectionController : Controller
                     await _context.SaveChangesAsync();
                 }
 
-                // Gestione degli allegati caricati
+                // Salvataggio dei file associati alla manutenzione usando FileService
                 if (files != null && files.Any())
                 {
-                    var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-                    Directory.CreateDirectory(uploadsPath);
-
-                    foreach (var file in files)
-                    {
-                        var filePath = Path.Combine(uploadsPath, file.FileName);
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        var document = new PhysicalInspectionDocument
-                        {
-                            PhysicalInspectionId = physicalInspection.Id,
-                            FileName = file.FileName,
-                            FilePath = $"/uploads/{file.FileName}"
-                        };
-
-                        _context.PhysicalInspectionDocuments.Add(document);
-                    }
-
+                    var savedFiles = await _fileService.SaveFilesAsync(files, physicalInspection.Id,
+                        "PhysicalInspection", device?.Name ?? "Unknown");
+                    _context.FileDocuments.AddRange(savedFiles);
                     await _context.SaveChangesAsync();
                 }
 
@@ -110,7 +92,6 @@ public class PhysicalInspectionController : Controller
                 _logger.LogError("Errore durante la creazione del controllo fisico: {Message}", ex.Message);
                 ModelState.AddModelError("", "Si è verificato un errore durante il salvataggio.");
             }
-        }
 
         ViewBag.DeviceId = physicalInspection.DeviceId;
         return View(physicalInspection);
@@ -135,7 +116,7 @@ public class PhysicalInspectionController : Controller
     // POST: PhysicalInspection/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, PhysicalInspection physicalInspection)
+    public async Task<IActionResult> Edit(int id, PhysicalInspection physicalInspection, List<IFormFile> files)
     {
         if (id != physicalInspection.Id)
         {
@@ -144,7 +125,6 @@ public class PhysicalInspectionController : Controller
         }
 
         if (ModelState.IsValid)
-        {
             try
             {
                 _context.Update(physicalInspection);
@@ -159,21 +139,23 @@ public class PhysicalInspectionController : Controller
                     await _context.SaveChangesAsync();
                 }
 
+                // Salvataggio dei file aggiornati
+                if (files != null && files.Any())
+                {
+                    var savedFiles = await _fileService.SaveFilesAsync(files, physicalInspection.Id,
+                        "PhysicalInspection", device?.Name ?? "Unknown");
+                    _context.FileDocuments.AddRange(savedFiles);
+                    await _context.SaveChangesAsync();
+                }
+
                 TempData["SuccessMessage"] = "Il controllo fisico è stato aggiornato con successo.";
                 return RedirectToAction(nameof(Index), new { deviceId = physicalInspection.DeviceId });
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!_context.PhysicalInspections.Any(e => e.Id == physicalInspection.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                _logger.LogError("Errore durante la modifica del controllo fisico: {Message}", ex.Message);
+                ModelState.AddModelError("", "Si è verificato un errore durante il salvataggio.");
             }
-        }
 
         return View(physicalInspection);
     }
@@ -185,13 +167,22 @@ public class PhysicalInspectionController : Controller
     {
         _logger.LogInformation("Eliminazione del controllo fisico con ID: {Id}", id);
 
-        var inspection = await _context.PhysicalInspections.FindAsync(id);
+        var inspection = await _context.PhysicalInspections.Include(p => p.Documents)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (inspection == null)
         {
             _logger.LogWarning("Controllo fisico con ID {Id} non trovato.", id);
             TempData["ErrorMessage"] = "Errore: il controllo fisico non è stato trovato.";
             return RedirectToAction(nameof(Index));
         }
+
+        // Eliminazione dei file associati tramite FileService
+        if (inspection.Documents.Any())
+            foreach (var document in inspection.Documents)
+            {
+                await _fileService.DeleteFileAsync(document.FilePath);
+                _context.FileDocuments.Remove(document);
+            }
 
         _context.PhysicalInspections.Remove(inspection);
         await _context.SaveChangesAsync();

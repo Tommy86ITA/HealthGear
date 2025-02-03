@@ -1,19 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Globalization;
 
 namespace HealthGear.Models;
 
 public class Maintenance
 {
-    [Key] 
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
 
     [Required(ErrorMessage = "L'ID del dispositivo è obbligatorio.")]
     public int DeviceId { get; set; }
 
-    [ForeignKey("DeviceId")] 
-    public Device? Device { get; set; }
+    [ForeignKey("DeviceId")] public Device? Device { get; set; }
 
     [Display(Name = "Data di Manutenzione")]
     [DataType(DataType.Date)]
@@ -35,18 +32,15 @@ public class Maintenance
     [MaxLength(50, ErrorMessage = "Il tipo di manutenzione non può superare i 50 caratteri.")]
     public required string MaintenanceType { get; set; } // Es. Ordinaria, Straordinaria
 
-    // Relazione con i documenti allegati alla manutenzione
-    public ICollection<MaintenanceDocument> Documents { get; set; } = new List<MaintenanceDocument>();
+    // **Usiamo `FileDocument` invece di `MaintenanceDocument`**
+    public ICollection<FileDocument> Documents { get; set; } = new List<FileDocument>();
 
     /// <summary>
-    /// Validazione personalizzata per impedire l'inserimento di date future.
+    ///     Validazione personalizzata per impedire l'inserimento di date future.
     /// </summary>
     public static ValidationResult? ValidateMaintenanceDate(DateTime date, ValidationContext context)
     {
-        if (date > DateTime.Today)
-        {
-            return new ValidationResult("Non è possibile selezionare una data futura.");
-        }
+        if (date > DateTime.Today) return new ValidationResult("Non è possibile selezionare una data futura.");
         return ValidationResult.Success;
     }
 }

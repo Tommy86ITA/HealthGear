@@ -1,0 +1,56 @@
+@model HealthGear.Models.Intervention
+@using HealthGear.Helpers
+
+@{
+    ViewData["Title"] = "Dettagli Intervento";
+}
+
+<h2 class="mb-4">
+    @Html.Raw(InterventionHelper.GetInterventionIcon(Model))
+    Dettagli Intervento
+</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Data</th>
+        <td>@Model.Date.ToShortDateString()</td>
+    </tr>
+    <tr>
+        <th>Tipo intervento</th>
+        <td>@InterventionHelper.GetInterventionDisplayName(Model)</td>
+    </tr>
+    <tr>
+        <th>Eseguito da</th>
+        <td>@Model.PerformedBy</td>
+    </tr>
+    <tr>
+        <th>Esito</th>
+        <td>
+            @if (Model.Passed.HasValue)
+            {
+                <span class="badge @(Model.Passed.Value ? "bg-success" : "bg-danger")">
+                    @(Model.Passed.Value ? "Superato" : "Non Superato")
+                </span>
+            }
+            else
+            {
+                <span class="text-muted">N/A</span>
+            }
+        </td>
+    </tr>
+    <tr>
+        <th>Note</th>
+        <td>@Model.Notes</td>
+    </tr>
+</table>
+
+<div class="mt-4 d-flex justify-content-between">
+    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@Model.Id" asp-route-returnUrl="@Context.Request.Path"
+       class="btn btn-warning">
+        <i class="fas fa-edit"></i> Modifica
+    </a>
+    
+    <a href="@ViewBag.ReturnUrl" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Torna all'elenco
+    </a>
+</div>

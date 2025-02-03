@@ -1,134 +1,175 @@
 @model Maintenance
 
-<h2>Aggiungi Manutenzione</h2>
+<h2 class="mb-4">Aggiungi Manutenzione</h2>
 
 <form asp-action="Create" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="DeviceId" value="@ViewBag.DeviceId"/>
 
-    <div class="form-group">
-        <label asp-for="MaintenanceDate" class="control-label">Data di Manutenzione</label>
-        <input asp-for="MaintenanceDate"
-               class="form-control"
-               type="date"
-               id="maintenanceDate"
-               max="@DateTime.Today.ToString("yyyy-MM-dd")"
-               required
-               placeholder="Seleziona la data"/>
-        <span asp-validation-for="MaintenanceDate" class="text-danger" id="dateErrorMessage"></span>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="MaintenanceDate" class="control-label">Data di Manutenzione</label>
+                <input asp-for="MaintenanceDate" class="form-control" type="date"
+                       max="@DateTime.Today.ToString("yyyy-MM-dd")" required/>
+                <span asp-validation-for="MaintenanceDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <label asp-for="Description" class="control-label">Descrizione</label>
+                <textarea asp-for="Description" class="form-control" placeholder="Inserisci una descrizione dettagliata"
+                          rows="3" required></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <label asp-for="MaintenanceType" class="control-label">Tipo di Manutenzione</label>
+                <select asp-for="MaintenanceType" class="form-control" required>
+                    <option value="Ordinaria">Ordinaria</option>
+                    <option value="Straordinaria">Straordinaria</option>
+                    <option value="Correttiva">Correttiva</option>
+                </select>
+                <span asp-validation-for="MaintenanceType" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
+                <input asp-for="PerformedBy" class="form-control" placeholder="Nome del tecnico" required
+                       maxlength="100"/>
+                <span asp-validation-for="PerformedBy" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Sezione Upload File -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="control-label">Allega Documenti (max 100 MB)</label>
+                <input type="file" id="fileUploadInput" name="files" class="form-control" multiple/>
+                <button type="button" id="uploadButton" class="btn btn-primary mt-2">
+                    <i class="fas fa-upload"></i> Carica
+                </button>
+                <small class="form-text text-muted">Puoi caricare più file contemporaneamente. Ogni file deve essere
+                    inferiore a 100 MB.</small>
+                <span id="fileErrorMessage" class="text-danger"></span>
+                <div id="loadingMessage" class="text-info mt-2" style="display: none;">Caricamento in corso...</div>
+                <ul id="fileList" class="list-group mt-2"></ul>
+            </div>
+        </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var dateInput = document.getElementById("maintenanceDate");
-            var errorMessage = document.getElementById("dateErrorMessage");
-            var today = new Date().toISOString().split('T')[0];  // Otteniamo la data odierna in formato YYYY-MM-DD
-            dateInput.setAttribute("max", today);  // Impostiamo il limite massimo nel datepicker
-
-            function validateDate() {
-                var selectedDate = new Date(dateInput.value);
-                var maxDate = new Date(today);
-
-                if (!dateInput.value) {
-                    errorMessage.textContent = "Il campo data è obbligatorio.";
-                    dateInput.classList.add("is-invalid");
-                    return false;
-                }
-
-                if (selectedDate > maxDate) {
-                    errorMessage.textContent = "La data di manutenzione non può essere futura. Inserisci una data valida.";
-                    dateInput.classList.add("is-invalid");
-                    return false;
-                } else {
-                    errorMessage.textContent = "";
-                    dateInput.classList.remove("is-invalid");
-                    return true;
-                }
-            }
-
-            dateInput.addEventListener("input", function () {
-                validateDate();
-            });
-
-            document.querySelector("form").addEventListener("submit", function (e) {
-                if (!validateDate()) {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
-
-    <div class="form-group">
-        <label asp-for="Description" class="control-label">Descrizione</label>
-        <textarea asp-for="Description"
-                  class="form-control"
-                  placeholder="Inserisci una descrizione dettagliata"
-                  rows="3"
-                  required></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="PerformedBy" class="control-label">Eseguito da</label>
-        <input asp-for="PerformedBy"
-               class="form-control"
-               placeholder="Nome del tecnico"
-               required
-               maxlength="100"/>
-        <span asp-validation-for="PerformedBy" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="MaintenanceType" class="control-label">Tipo di Manutenzione</label>
-        <select asp-for="MaintenanceType" class="form-control" required>
-            <option value="">-- Seleziona il tipo di manutenzione --</option>
-            <option value="Ordinaria">Ordinaria</option>
-            <option value="Straordinaria">Straordinaria</option>
-            <option value="Correttiva">Correttiva</option>
-        </select>
-        <span asp-validation-for="MaintenanceType" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label class="control-label">Allega Documenti (PDF, JPG, PNG, max 5MB)</label>
-        <input type="file" id="fileInput" name="files" class="form-control" multiple accept=".pdf, .jpg, .png"/>
-        <small class="form-text text-muted">Puoi caricare più file contemporaneamente.</small>
-        <span id="fileErrorMessage" class="text-danger"></span>
-    </div>
-
-    <script>
-        document.getElementById("fileInput").addEventListener("change", function () {
-            var fileInput = document.getElementById("fileInput");
-            var errorMessage = document.getElementById("fileErrorMessage");
-            var allowedExtensions = /(\.pdf|\.jpg|\.png)$/i;
-            var maxSizeInMB = 5;
-            var isValid = true;
-
-            for (let i = 0; i < fileInput.files.length; i++) {
-                let file = fileInput.files[i];
-                if (!allowedExtensions.exec(file.name)) {
-                    errorMessage.textContent = "Formato file non valido. Carica solo PDF, JPG o PNG.";
-                    fileInput.value = "";
-                    isValid = false;
-                }
-                if (file.size > maxSizeInMB * 1024 * 1024) {
-                    errorMessage.textContent = "Ogni file non deve superare i 5MB.";
-                    fileInput.value = "";
-                    isValid = false;
-                }
-            }
-
-            if (isValid) {
-                errorMessage.textContent = "";
-            }
-        });
-    </script>
-
-    <div class="form-group mt-3">
-        <button type="submit" class="btn btn-primary">Salva</button>
-        <a asp-action="Index" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-secondary">Annulla</a>
+    <div class="form-group mt-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salva
+        </button>
+        <a asp-action="Index" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Annulla
+        </a>
     </div>
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial"/>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("🚀 DOM completamente caricato!");
+
+            const uploadButton = document.getElementById("uploadButton");
+            const fileInput = document.getElementById("fileUploadInput");
+            const fileList = document.getElementById("fileList");
+            const errorMessage = document.getElementById("fileErrorMessage");
+            const loadingMessage = document.getElementById("loadingMessage");
+            const uploadedFiles = new Set();
+            const maxSizeInMB = 100;
+
+            // **Gestione Upload File**
+            uploadButton.addEventListener("click", async function () {
+                console.log("✅ Pulsante Carica cliccato!");
+
+                if (!fileInput.files.length) {
+                    errorMessage.textContent = "⚠️ Nessun file selezionato.";
+                    console.warn("⚠️ Nessun file selezionato!");
+                    return;
+                }
+
+                errorMessage.textContent = "";
+                loadingMessage.style.display = "block";
+
+                const formData = new FormData();
+
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                    if (file.size > maxSizeInMB * 1024 * 1024) {
+                        errorMessage.textContent = `❌ Il file ${file.name} supera i ${maxSizeInMB} MB.`;
+                        loadingMessage.style.display = "none";
+                        console.error(`❌ Il file ${file.name} è troppo grande (${fileSizeInMB} MB)`);
+                        return;
+                    }
+
+                    if (uploadedFiles.has(file.name)) {
+                        console.warn(`⚠️ Il file ${file.name} è già stato caricato.`);
+                        continue;
+                    }
+
+                    uploadedFiles.add(file.name);
+                    formData.append("files", file);
+                }
+
+                try {
+                    console.log("🚀 Invio richiesta fetch...");
+                    const response = await fetch("/File/Upload", {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+                    loadingMessage.style.display = "none";
+
+                    if (result.success) {
+                        errorMessage.textContent = "✅ Caricamento completato con successo!";
+                        errorMessage.classList.remove("text-danger");
+                        errorMessage.classList.add("text-success");
+
+                        for (let file of fileInput.files) {
+                            const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                            const listItem = document.createElement("li");
+                            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+
+                            const fileText = document.createElement("a");
+                            fileText.href = `/uploads/${file.name}`;
+                            fileText.textContent = `${file.name} (${fileSizeInMB} MB)`;
+                            fileText.target = "_blank";
+
+                            const removeButton = document.createElement("button");
+                            removeButton.classList.add("btn", "btn-sm", "btn-danger");
+                            removeButton.innerHTML = `<i class="fas fa-trash"></i>`;
+                            removeButton.type = "button"; // Evita redirect
+
+                            removeButton.onclick = async (event) => {
+                                event.preventDefault(); // Evita il redirect accidentale
+
+                                const deleteResponse = await fetch(`/File/Delete?fileName=${encodeURIComponent(file.name)}`, {method: "DELETE"});
+                                const deleteResult = await deleteResponse.json();
+                                if (deleteResult.success) {
+                                    uploadedFiles.delete(file.name);
+                                    listItem.remove();
+                                } else {
+                                    console.error("❌ Errore durante l'eliminazione:", deleteResult.message);
+                                }
+                            };
+
+                            listItem.appendChild(fileText);
+                            listItem.appendChild(removeButton);
+                            fileList.appendChild(listItem);
+                        }
+                    }
+                } catch (error) {
+                    console.error("⛔ Errore durante il caricamento:", error);
+                    loadingMessage.style.display = "none";
+                    errorMessage.textContent = "⛔ Errore imprevisto durante il caricamento.";
+                    errorMessage.classList.remove("text-success");
+                    errorMessage.classList.add("text-danger");
+                }
+            });
+        });
+    </script>
 }

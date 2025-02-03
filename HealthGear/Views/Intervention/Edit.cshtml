@@ -1,0 +1,120 @@
+@model Intervention
+
+@{
+    ViewData["Title"] = "Modifica Intervento";
+}
+
+<h2 class="mb-4">✏️ Modifica Intervento</h2>
+
+<form asp-action="Edit" method="post" class="row g-3">
+    <input type="hidden" asp-for="Id"/>
+    <input type="hidden" asp-for="DeviceId"/>
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl"/>
+
+    <!-- Data dell'intervento -->
+    <div class="col-md-6">
+        <label asp-for="Date" class="form-label fw-bold">Data</label>
+        <input asp-for="Date" class="form-control" type="date" required/>
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <!-- Tipo di Intervento (Disabilitato per evitare modifiche) -->
+    <div class="col-md-6">
+        <label asp-for="Type" class="form-label fw-bold">Tipo Intervento</label>
+<select asp-for="Type" class="form-select" disabled>
+    <option value="Maintenance" selected="@(Model.Type == InterventionType.Maintenance ? "selected" : null)">Manutenzione</option>
+    <option value="ElectricalTest" selected="@(Model.Type == InterventionType.ElectricalTest ? "selected" : null)">Verifica Elettrica</option>
+    @if ((ViewBag.SupportsPhysicalInspection as bool?) ?? false)
+    {
+        <option value="PhysicalInspection" selected="@(Model.Type == InterventionType.PhysicalInspection ? "selected" : null)">Controllo Fisico Sanitario</option>
+    }
+</select>
+        <input type="hidden" asp-for="Type" /> <!-- Necessario per mantenere il valore al submit -->
+        <span asp-validation-for="Type" class="text-danger"></span>
+    </div>
+
+    <!-- Categoria Manutenzione (visibile solo per "Maintenance") -->
+    <div class="col-md-6" id="maintenanceCategoryContainer" style="display: none;">
+        <label asp-for="MaintenanceCategory" class="form-label fw-bold">Categoria Manutenzione</label>
+        <select asp-for="MaintenanceCategory" asp-items="Html.GetEnumSelectList<MaintenanceType>()" class="form-select">
+            <option value="">-- Seleziona una categoria --</option>
+        </select>
+        <span asp-validation-for="MaintenanceCategory" class="text-danger"></span>
+    </div>
+
+    <!-- Esito (visibile solo per "ElectricalTest" e "PhysicalInspection") -->
+    <div class="col-md-6" id="passedContainer" style="display: none;">
+        <label asp-for="Passed" class="form-label fw-bold">Esito</label>
+        <select asp-for="Passed" class="form-select">
+            <option value="">-- Seleziona un esito --</option>
+            <option value="true" selected="@(Model.Passed == true ? "selected" : null)">Superato</option>
+            <option value="false" selected="@(Model.Passed == false ? "selected" : null)">Non Superato</option>
+        </select>
+        <span asp-validation-for="Passed" class="text-danger"></span>
+    </div>
+
+    <!-- Nome dell'operatore -->
+    <div class="col-md-6">
+        <label asp-for="PerformedBy" class="form-label fw-bold">Eseguito da</label>
+        <input asp-for="PerformedBy" class="form-control" placeholder="Inserisci il nome dell'operatore" required/>
+        <span asp-validation-for="PerformedBy" class="text-danger"></span>
+    </div>
+
+    <!-- Note -->
+    <div class="col-12">
+        <label asp-for="Notes" class="form-label fw-bold">Note</label>
+        <textarea asp-for="Notes" class="form-control" placeholder="Inserisci la descrizione dell'intervento..."></textarea>
+        <span asp-validation-for="Notes" class="text-danger"></span>
+    </div>
+
+    <!-- Pulsanti -->
+    <div class="col-12 d-flex justify-content-between mt-4">
+        <button type="submit" class="btn btn-primary">
+            💾 Salva Modifiche
+        </button>
+        <a asp-action="Details" asp-controller="Device" asp-route-id="@Model.DeviceId" class="btn btn-secondary">
+            ❌ Annulla
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+    <script>
+        function toggleFields() {
+            var typeElement = document.getElementById("Type");
+            var maintenanceContainer = document.getElementById("maintenanceCategoryContainer");
+            var passedContainer = document.getElementById("passedContainer");
+
+            if (!typeElement || !maintenanceContainer || !passedContainer) {
+                console.error("Uno degli elementi non è stato trovato nel DOM.");
+                return;
+            }
+
+            var selectedValue = typeElement.value;
+            console.log("Tipo selezionato:", selectedValue);
+
+            // Mostra la categoria manutenzione solo se è "Maintenance"
+            maintenanceContainer.style.display = (selectedValue === "Maintenance") ? "block" : "none";
+
+            // Mostra l'esito solo se è "ElectricalTest" o "PhysicalInspection"
+            if (selectedValue === "ElectricalTest" || selectedValue === "PhysicalInspection") {
+                passedContainer.style.display = "block";
+            } else {
+                passedContainer.style.display = "none";
+                document.getElementById("Passed").value = ""; // Reset del campo esito
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleFields(); // Assicura che il valore iniziale sia rispettato
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelector("form").addEventListener("submit", function () {
+                console.log("🔄 Form inviato!");
+            });
+        });
+    </script>
+}

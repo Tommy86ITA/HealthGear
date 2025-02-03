@@ -1,145 +1,138 @@
 using HealthGear.Data;
+using HealthGear.Helpers;
 using HealthGear.Models;
+using HealthGear.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Controllers;
 
-public class DeviceController : Controller
+[Route("Device")]
+public class DeviceController(ApplicationDbContext context, DeadlineService deadlineService) : Controller
 {
-    private readonly ApplicationDbContext _context;
-    private readonly ILogger<DeviceController> _logger;
-
-    public DeviceController(ApplicationDbContext context, ILogger<DeviceController> logger)
-    {
-        _context = context;
-        _logger = logger;
-    }
-
-    // Visualizza l'elenco dei dispositivi
+    // GET: /Device
+    [HttpGet("")]
+    [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
-        var devices = await _context.Devices.ToListAsync();
-
-        if (!devices.Any())
-        {
-            _logger.LogWarning("Nessun dispositivo trovato.");
-            TempData["DeviceErrorMessage"] = "Nessun dispositivo disponibile.";
-        }
-
-        return View(devices);
+        var devices = await context.Devices.Include(d => d.Interventions).ToListAsync();
+        return View("List", devices);
     }
 
-    // Visualizza il form per aggiungere un dispositivo
+    // GET: /Device/Details/{id}
+    [HttpGet("Details/{id:int}")]
+    public async Task<IActionResult> Details(int id)
+    {
+        var device = await context.Devices
+            .Include(d => d.Interventions) // 🔥 Carica gli interventi
+            .ThenInclude(i => i.Attachments) // 🔥 Carica anche gli allegati, se presenti
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (device == null) return NotFound();
+        return View("ViewDetails", device);
+    }
+
+    // GET: /Device/Add
+    [HttpGet("Add")]
     public IActionResult Create()
     {
-        return View();
+        return View("Add");
     }
 
-    [HttpPost]
+    // POST: /Device/Add
+    [HttpPost("Add")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Device device)
     {
-        _logger.LogInformation("Chiamato metodo Create per dispositivo: {SerialNumber}", device.SerialNumber);
+        if (!ModelState.IsValid) return View("Add", device);
 
-        if (await _context.Devices.AnyAsync(d => d.SerialNumber == device.SerialNumber))
-        {
-            ModelState.AddModelError("SerialNumber", "Esiste già un dispositivo con questo numero di serie.");
-            return View(device);
-        }
+        context.Add(device);
+        await context.SaveChangesAsync();
+        await deadlineService.UpdateNextDueDatesAsync(device);
 
-        if (!ModelState.IsValid)
-        {
-            _logger.LogWarning("ModelState non valido per il dispositivo: {@Device}", device);
-            return View(device);
-        }
-
-        try
-        {
-            _context.Devices.Add(device);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Dispositivo aggiunto con successo!";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Errore durante il salvataggio del dispositivo: {SerialNumber}", device.SerialNumber);
-            ModelState.AddModelError("", "Si è verificato un errore. Riprova più tardi.");
-            return View(device);
-        }
+        return RedirectToAction(nameof(Index));
     }
 
-    // Visualizza il form per modificare un dispositivo
+    // GET: /Device/Modify/{id}
+    [HttpGet("Modify/{id:int}")]
     public async Task<IActionResult> Edit(int id)
     {
-        var device = await _context.Devices.FindAsync(id);
+        var device = await context.Devices.FindAsync(id);
         if (device == null) return NotFound();
-        return View(device);
+        return View("Modify", device);
     }
 
-    [HttpPost]
+    // POST: /Device/Modify/{id}
+    [HttpPost("Modify/{id:int}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, Device device)
     {
-        if (id != device.Id) return NotFound();
+        if (id != device.Id) return BadRequest();
+        if (!ModelState.IsValid) return View("Modify", device);
 
-        if (await _context.Devices.AnyAsync(d => d.SerialNumber == device.SerialNumber && d.Id != device.Id))
-        {
-            ModelState.AddModelError("SerialNumber", "Esiste già un dispositivo con questo numero di serie.");
-            return View(device);
-        }
-
-        if (!ModelState.IsValid)
-        {
-            _logger.LogWarning("ModelState non valido per il dispositivo: {@Device}", device);
-            return View(device);
-        }
-
-        try
-        {
-            _context.Devices.Update(device);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Modifiche salvate con successo!";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Errore durante il salvataggio delle modifiche al dispositivo: {SerialNumber}",
-                device.SerialNumber);
-            ModelState.AddModelError("", "Si è verificato un errore. Riprova più tardi.");
-            return View(device);
-        }
-    }
-
-    // Visualizza i dettagli di un dispositivo
-    public async Task<IActionResult> Details(int id)
-    {
-        var device = await _context.Devices.FindAsync(id);
-        if (device == null) return NotFound();
-        return View(device);
-    }
-
-    // Conferma la rimozione di un dispositivo
-    public async Task<IActionResult> Delete(int id)
-    {
-        var device = await _context.Devices.FindAsync(id);
-        if (device == null) return NotFound();
-        return View(device);
-    }
-
-    [HttpPost]
-    [ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        var device = await _context.Devices.FindAsync(id);
-        if (device != null)
-        {
-            _context.Devices.Remove(device);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Dispositivo eliminato con successo!";
-        }
+        context.Update(device);
+        await context.SaveChangesAsync();
+        await deadlineService.UpdateNextDueDatesAsync(device);
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // GET: /Device/ConfirmDeleteOrArchive/{id}
+    [HttpGet("ConfirmDeleteOrArchive/{id:int}")]
+    public async Task<IActionResult> ConfirmDeleteOrArchive(int id)
+    {
+        var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
+        if (device == null) return NotFound();
+
+        return View("ConfirmDeleteOrArchive", device);
+    }
+
+    // POST: /Device/ArchiveDevice/{id}
+    [HttpPost("ArchiveDevice/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ArchiveDevice(int id)
+    {
+        var device = await context.Devices.FindAsync(id);
+        if (device == null) return NotFound();
+
+        device.Status = DeviceStatus.Dismesso;
+        await context.SaveChangesAsync();
+
+        return RedirectToAction("Index");
+    }
+
+// POST: /Device/DeleteConfirmed/{id}
+    [HttpPost("DeleteConfirmed/{id:int}")]
+    public async Task<IActionResult> DeleteConfirmed(int id, [FromBody] ConfirmDeleteModel data)
+    {
+        if (data == null || string.IsNullOrWhiteSpace(data.ConfirmName))
+            return BadRequest(new { success = false, message = "Richiesta non valida. Dati mancanti." });
+
+        var device = await context.Devices.FindAsync(id);
+        if (device == null) return NotFound(new { success = false, message = "Dispositivo non trovato." });
+
+        if (data.ConfirmName != device.Name)
+            return BadRequest(new { success = false, message = "Il nome non corrisponde. Riprova." });
+
+        context.Devices.Remove(device);
+        await context.SaveChangesAsync();
+
+        return Json(new { success = true });
+    }
+
+    // GET: /Device/ConfirmDelete/{id}
+    [HttpGet("ConfirmDelete/{id:int}")]
+    public async Task<IActionResult> ConfirmDelete(int id)
+    {
+        var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
+        if (device == null) return NotFound();
+
+        if (device.Interventions.Any())
+            // Se ha interventi, reindirizza alla pagina di conferma completa
+            return RedirectToAction("ConfirmDeleteOrArchive", new { id });
+
+        // Se non ha interventi, mostra solo il modal di conferma
+        var html = await this.RenderViewToStringAsync("_ConfirmDelete", device);
+        return Json(new { success = true, html });
     }
 }

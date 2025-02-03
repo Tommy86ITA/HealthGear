@@ -3,7 +3,7 @@
 <h2>Conferma Eliminazione</h2>
 
 <h4>Sei sicuro di voler eliminare questo controllo fisico?</h4>
-<hr />
+<hr/>
 
 <dl class="row">
     <dt class="col-sm-2">Data del Controllo:</dt>
@@ -17,8 +17,8 @@
 </dl>
 
 <form asp-action="Delete" method="post">
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="DeviceId" />
+    <input type="hidden" asp-for="Id"/>
+    <input type="hidden" asp-for="DeviceId"/>
 
     <button type="submit" class="btn btn-danger">Elimina</button>
     <a asp-action="Index" asp-route-deviceId="@Model.DeviceId" class="btn btn-secondary">Annulla</a>

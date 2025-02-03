@@ -1,0 +1,62 @@
+@model Device
+
+<!-- Modal per Eliminazione o Archiviazione -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Gestione Dispositivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage"></p>
+                <input type="text" id="confirmDeviceName" class="form-control"
+                       placeholder="Digita il nome del dispositivo per confermare" oninput="validateDeleteInput()">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="deleteForm" method="post">
+                    <button type="submit" class="btn btn-danger" id="deleteConfirmButton" disabled>Elimina</button>
+                </form>
+                <form id="archiveForm" method="post">
+                    <button type="submit" class="btn btn-warning d-none" id="archiveConfirmButton">Archivia come
+                        Dismesso
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal(deviceId, deviceName, hasInterventions) {
+        document.getElementById('confirmDeviceName').value = '';
+        document.getElementById('deleteConfirmButton').disabled = true;
+
+        var deleteForm = document.getElementById('deleteForm');
+        var archiveForm = document.getElementById('archiveForm');
+        var deleteButton = document.getElementById('deleteConfirmButton');
+        var archiveButton = document.getElementById('archiveConfirmButton');
+        var message = document.getElementById('deleteMessage');
+
+        if (hasInterventions) {
+            message.innerHTML = `Il dispositivo "<strong>${deviceName}</strong>" ha interventi registrati e non può essere eliminato. Puoi solo archiviarlo come "Dismesso".`;
+            deleteForm.classList.add("d-none");
+            archiveForm.classList.remove("d-none");
+            archiveForm.action = "/Device/Archive/" + deviceId;
+        } else {
+            message.innerHTML = `Sei sicuro di voler eliminare il dispositivo "<strong>${deviceName}</strong>"? Questa azione non può essere annullata.`;
+            deleteForm.classList.remove("d-none");
+            archiveForm.classList.add("d-none");
+            deleteForm.action = "/Device/DeleteConfirmed/" + deviceId;
+        }
+
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    function validateDeleteInput() {
+        var input = document.getElementById('confirmDeviceName').value;
+        var expectedName = document.getElementById('deviceNamePlaceholder').innerText;
+        document.getElementById('deleteConfirmButton').disabled = (input.trim() !== expectedName);
+    }
+</script>

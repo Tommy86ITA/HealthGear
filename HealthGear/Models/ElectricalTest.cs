@@ -7,23 +7,21 @@ public class ElectricalTest
 {
     [Key] public int Id { get; set; }
 
-    [Required(ErrorMessage = "Il dispositivo è obbligatorio.")]
-    public int DeviceId { get; set; }
+    [Required] public int DeviceId { get; set; }
 
-    [ForeignKey("DeviceId")] public Device? Device { get; set; }
+    [ForeignKey("DeviceId")] public virtual Device Device { get; set; } = null!;
 
-    [Required(ErrorMessage = "La data della verifica è obbligatoria.")]
-    [DataType(DataType.Date)]
-    public DateTime TestDate { get; set; }
-
-    [Required(ErrorMessage = "Il nome del tecnico è obbligatorio.")]
-    [StringLength(100, ErrorMessage = "Il nome del tecnico non può superare i 100 caratteri.")]
-    public string PerformedBy { get; set; }
+    [Required] [DataType(DataType.Date)] public DateTime TestDate { get; set; }
 
     [Required(ErrorMessage = "L'esito della verifica è obbligatorio.")]
     public bool Passed { get; set; } // True = Superato, False = Non Superato
 
+    [Required] [StringLength(255)] public string PerformedBy { get; set; } = null!;
+
     public string? Notes { get; set; }
 
-    public ICollection<ElectricalTestDocument> Documents { get; set; } = new List<ElectricalTestDocument>();
+    /// <summary>
+    ///     Documenti allegati, ora utilizzando il modello unificato FileDocument
+    /// </summary>
+    public virtual ICollection<FileDocument> Documents { get; set; } = new List<FileDocument>();
 }

@@ -16,11 +16,51 @@
     </ItemGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="Views\PhysicalInspection\Create.cshtml"/>
-        <AdditionalFiles Include="Views\PhysicalInspection\Delete.cshtml"/>
-        <AdditionalFiles Include="Views\PhysicalInspection\Details.cshtml"/>
-        <AdditionalFiles Include="Views\PhysicalInspection\Edit.cshtml"/>
-        <AdditionalFiles Include="Views\PhysicalInspection\Index.cshtml"/>
+        <Compile Remove="Models\PhysicalInspection.cs"/>
+        <Compile Remove="Models\ElectricalTest.cs"/>
+        <Compile Remove="Models\Maintenance.cs"/>
+        <Compile Remove="Controllers\MaintenanceController.cs"/>
+        <Compile Remove="Controllers\PhysicalInspectionController.cs"/>
+        <Compile Remove="Controllers\ElectricalTestController.cs"/>
+        <Compile Remove="Views\ElectricalTest\**"/>
+        <Compile Remove="Views\Maintenance\**"/>
+        <Compile Remove="Views\PhysicalInspection\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Remove="Views\ElectricalTest\**"/>
+        <EmbeddedResource Remove="Views\Maintenance\**"/>
+        <EmbeddedResource Remove="Views\PhysicalInspection\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Remove="Views\ElectricalTest\**"/>
+        <Content Remove="Views\Maintenance\**"/>
+        <Content Remove="Views\PhysicalInspection\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Views\ElectricalTest\**"/>
+        <None Remove="Views\Maintenance\**"/>
+        <None Remove="Views\PhysicalInspection\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Create.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Delete.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Details.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Edit.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Index.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Create.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Delete.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Details.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Edit.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Index.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Create.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Delete.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Details.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Edit.cshtml"/>
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Index.cshtml"/>
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,105 @@
+@{
+    var fieldName = ViewData["FieldName"]?.ToString() ?? "files";
+    var maxSizeInMB = ViewData["MaxFileSizeMB"] is int size ? size : 100;
+}
+
+<div class="form-group">
+    <label class="control-label">@ViewData["FileLabel"]</label>
+    <input type="file" id="@fieldName" name="@fieldName" class="form-control" multiple/>
+    <button type="button" id="uploadButton-@fieldName" class="btn btn-primary mt-2">Carica</button>
+    <small class="form-text text-muted">@ViewData["FileHelpText"]</small>
+    <span id="fileErrorMessage-@fieldName" class="text-danger"></span>
+    <div id="loadingMessage-@fieldName" class="text-info mt-2" style="display: none;">Caricamento in corso...</div>
+    <ul id="fileList-@fieldName" class="list-group mt-2"></ul>
+</div>
+
+@section Scripts {
+    <script>
+        console.log("🚀 DOM completamente caricato!");
+
+        document.addEventListener("click", function (event) {
+            if (event.target && event.target.id === "uploadButton-@fieldName") {
+                console.log("✅ Delegato: Pulsante Carica cliccato!");
+
+                const fileInput = document.getElementById("@fieldName");
+                const errorMessage = document.getElementById("fileErrorMessage-@fieldName");
+                const fileList = document.getElementById("fileList-@fieldName");
+                const loadingMessage = document.getElementById("loadingMessage-@fieldName");
+                const maxSizeInMB = @maxSizeInMB;
+
+                console.log("📁 Controllo input file...");
+                if (!fileInput.files.length) {
+                    errorMessage.textContent = "⚠️ Nessun file selezionato.";
+                    console.warn("⚠️ Nessun file selezionato!");
+                    return;
+                }
+
+                errorMessage.textContent = "";
+                fileList.innerHTML = "";
+                loadingMessage.style.display = "block";
+
+                const formData = new FormData();
+
+                console.log(`📂 ${fileInput.files.length} file selezionati.`);
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                    console.log(`📄 File: ${file.name}, Dimensione: ${fileSizeInMB} MB`);
+
+                    if (file.size > maxSizeInMB * 1024 * 1024) {
+                        errorMessage.textContent = `❌ Il file ${file.name} supera i ${maxSizeInMB} MB.`;
+                        loadingMessage.style.display = "none";
+                        console.error(`❌ Il file ${file.name} è troppo grande (${fileSizeInMB} MB)`);
+                        return;
+                    }
+
+                    formData.append("@fieldName", file);
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `${file.name} (${fileSizeInMB} MB)`;
+                    listItem.classList.add("list-group-item", "text-success");
+                    fileList.appendChild(listItem);
+                }
+
+                console.log("📡 Preparazione della richiesta fetch...");
+                console.log("📡 Endpoint: /File/Upload");
+
+                try {
+                    console.log("🚀 Invio richiesta fetch...");
+                    fetch("/File/Upload", {
+                        method: "POST",
+                        body: formData,
+                    })
+                        .then(response => response.json())
+                        .then(result => {
+                            loadingMessage.style.display = "none";
+                            if (result.success) {
+                                errorMessage.textContent = "✅ Caricamento completato con successo!";
+                                errorMessage.classList.remove("text-danger");
+                                errorMessage.classList.add("text-success");
+                                console.log("✅ Caricamento completato con successo!");
+                            } else {
+                                errorMessage.textContent = "❌ Errore durante il caricamento dei file.";
+                                errorMessage.classList.remove("text-success");
+                                errorMessage.classList.add("text-danger");
+                                console.error("❌ Errore ricevuto dal server:", result);
+                            }
+                        })
+                        .catch(error => {
+                            console.error("⛔ Errore durante il caricamento:", error);
+                            loadingMessage.style.display = "none";
+                            errorMessage.textContent = "⛔ Errore imprevisto durante il caricamento.";
+                            errorMessage.classList.remove("text-success");
+                            errorMessage.classList.add("text-danger");
+                        });
+                } catch (error) {
+                    console.error("⛔ Errore durante il caricamento:", error);
+                    loadingMessage.style.display = "none";
+                    errorMessage.textContent = "⛔ Errore imprevisto durante il caricamento.";
+                    errorMessage.classList.remove("text-success");
+                    errorMessage.classList.add("text-danger");
+                }
+            }
+        });
+    </script>
+}

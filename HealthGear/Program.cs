@@ -1,5 +1,6 @@
 using System.Globalization;
 using HealthGear.Data;
+using HealthGear.Services;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 
@@ -14,6 +15,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Aggiunta dei servizi MVC con supporto per le viste Razor
 builder.Services.AddControllersWithViews();
+
+// Aggiunta del servizio di gestione dei file
+builder.Services.AddScoped<FileService>();
+
+// Aggiunta del servizio di calcolo delle scadenze
+builder.Services.AddScoped<DeadlineService>();
 
 // Configurazione del logging
 builder.Services.AddLogging(logging =>
@@ -40,22 +47,29 @@ else
     app.UseHsts(); // Abilita HSTS per una maggiore sicurezza
 }
 
-app.UseHttpsRedirection();  // Forza l'uso di HTTPS
-app.UseStaticFiles();       // Abilita la gestione dei file statici (CSS, JS, immagini)
+app.UseHttpsRedirection(); // Forza l'uso di HTTPS
+app.UseStaticFiles(); // Abilita la gestione dei file statici (CSS, JS, immagini)
 
-app.UseRouting();  // Abilita il sistema di routing
+app.UseRouting(); // Abilita il sistema di routing
 
 // Registrazione delle rotte con approccio consigliato (evita ASP0014)
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}"
+    "device",
+    "Device/{action=Index}/{id?}",
+    new { controller = "Device" }
+);
+
+// Route per la home page (HomeController)
+app.MapControllerRoute(
+    "default",
+    "{controller=Home}/{action=Index}/{id?}"
 );
 
 // Verifica che il database esista e crealo se necessario
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.EnsureCreated();  // Crea il database se non esiste
+    dbContext.Database.EnsureCreated(); // Crea il database se non esiste
 }
 
 app.Run();
