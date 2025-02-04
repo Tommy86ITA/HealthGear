@@ -18,7 +18,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         // ✅ Controlliamo se il dispositivo esiste
         var device = await context.Devices
             .Where(d => d.Id == deviceId)
-            .Select(d => new { d.Id, d.Name })
+            .Select(d => new { d.Id, d.Name, d.Brand, d.Model, d.SerialNumber }) // ✅ Aggiunti i campi mancanti
             .FirstOrDefaultAsync();
 
         if (device == null) return NotFound("Dispositivo non trovato.");
@@ -80,6 +80,12 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         ViewBag.DateTo = dateTo?.ToString("yyyy-MM-dd");
         ViewBag.DeviceId = device.Id;
         ViewBag.DeviceName = device.Name;
+        
+        // Dati per comporre il titolo della pagina
+        ViewBag.DeviceName = device.Name;
+        ViewBag.DeviceBrand = device.Brand;
+        ViewBag.DeviceModel = device.Model;
+        ViewBag.DeviceSerialNumber = device.SerialNumber;
 
         return View("~/Views/InterventionHistory/List.cshtml", interventions);
     }

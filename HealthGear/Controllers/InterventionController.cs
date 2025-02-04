@@ -1,23 +1,40 @@
+#region
+
 using HealthGear.Data;
 using HealthGear.Helpers;
 using HealthGear.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+#endregion
+
 namespace HealthGear.Controllers;
 
 [Route("Intervention")]
 public class InterventionController(ApplicationDbContext context) : Controller
 {
-    // 🔍 GET: /Intervention/Index/{deviceId}
-    // Mostra la lista degli interventi per un dispositivo specifico
+// 🔍 GET: /Intervention/Index/{deviceId}
+// Mostra la lista degli interventi per un dispositivo specifico
     [HttpGet("Index/{deviceId:int}")]
     public async Task<IActionResult> Index(int deviceId)
     {
+        // ✅ Recupera il dispositivo dal database con tutte le informazioni necessarie
+        var device = await context.Devices
+            .Where(d => d.Id == deviceId)
+            .Select(d => new { d.Id, d.Name, d.Brand, d.Model, d.SerialNumber })
+            .FirstOrDefaultAsync();
+
+        if (device == null) return NotFound("Dispositivo non trovato.");
+
+        // ✅ Recupera la lista degli interventi
         var interventions = await context.Interventions
             .Where(i => i.DeviceId == deviceId)
             .OrderByDescending(i => i.Date)
             .ToListAsync();
+
+        // ✅ Passiamo i dati alla ViewBag per il titolo della pagina
+        ViewBag.DeviceId = device.Id;
+        ViewBag.DeviceName = $"{device.Name} {device.Brand} {device.Model} (S/N: {device.SerialNumber})";
 
         return View("~/Views/InterventionHistory/List.cshtml", interventions);
     }
@@ -54,8 +71,13 @@ public class InterventionController(ApplicationDbContext context) : Controller
         if (!ModelState.IsValid) return View("Create", intervention);
 
         // 🛠 Reset dei campi opzionali in base al tipo di intervento
-        intervention.MaintenanceCategory = intervention.Type == InterventionType.Maintenance ? intervention.MaintenanceCategory : null;
-        intervention.Passed = intervention.Type is InterventionType.ElectricalTest or InterventionType.PhysicalInspection ? intervention.Passed : null;
+        intervention.MaintenanceCategory = intervention.Type == InterventionType.Maintenance
+            ? intervention.MaintenanceCategory
+            : null;
+        intervention.Passed =
+            intervention.Type is InterventionType.ElectricalTest or InterventionType.PhysicalInspection
+                ? intervention.Passed
+                : null;
 
         // 💾 Salviamo l'intervento
         context.Interventions.Add(intervention);
@@ -67,18 +89,42 @@ public class InterventionController(ApplicationDbContext context) : Controller
         await context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Intervento aggiunto con successo!";
+
+        if (!string.IsNullOrEmpty(Request.Headers["Referer"]) &&
+            Request.Headers.Referer.ToString().Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectToAction("List", "InterventionHistory", new { deviceId });
+        }
+
+// ✅ Altrimenti, torniamo ai dettagli del dispositivo
         return RedirectToAction("Details", "Device", new { id = deviceId });
     }
-    
-    // ✏️ GET: /Intervention/Details/{id}
+
+    // ✨ GET: /Intervention/Details/{id}
     [HttpGet("Details/{id:int}")]
-    public async Task<IActionResult> Details(int id)
+    public async Task<IActionResult> Details(int id, string? returnUrl = null)
     {
         var intervention = await context.Interventions
             .Include(i => i.Device)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (intervention == null) return NotFound();
+
+        // ✅ Se returnUrl è nullo, proviamo a dedurre la provenienza dall'header Referer
+        if (string.IsNullOrEmpty(returnUrl))
+        {
+            var referer = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(referer))
+            {
+                if (referer.Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase))
+                    returnUrl = Url.Action("List", "InterventionHistory", new { deviceId = intervention.DeviceId });
+                else
+                    returnUrl = Url.Action("Details", "Device", new { id = intervention.DeviceId });
+            }
+        }
+
+        // ✅ Se ancora null, fallback alla pagina dei dettagli del dispositivo
+        ViewBag.ReturnUrl = returnUrl ?? Url.Action("Details", "Device", new { id = intervention.DeviceId });
 
         return View("Details", intervention);
     }
@@ -87,21 +133,23 @@ public class InterventionController(ApplicationDbContext context) : Controller
     [HttpGet("Edit/{id:int}")]
     public async Task<IActionResult> Edit(int id, string? returnUrl = null)
     {
-        var intervention = await context.Interventions.FindAsync(id);
+        var intervention = await context.Interventions
+            .Include(i => i.Device) // 🔹 Assicuriamoci di caricare il dispositivo
+            .FirstOrDefaultAsync(i => i.Id == id);
+
         if (intervention == null) return NotFound();
 
-        ViewBag.SupportsPhysicalInspection = await context.Devices
-            .Where(d => d.Id == intervention.DeviceId)
-            .Select(d => d.DeviceType == DeviceType.Radiologico || d.DeviceType == DeviceType.Mammografico)
-            .FirstOrDefaultAsync();
-
-        // Se returnUrl è nullo, torniamo alla lista completa degli interventi del dispositivo
-        ViewBag.ReturnUrl = returnUrl ?? Url.Action("Index", "Intervention", new { deviceId = intervention.DeviceId });
+        ViewBag.SupportsPhysicalInspection =
+            intervention.Device?.DeviceType is DeviceType.Radiologico or DeviceType.Mammografico;
+        ViewBag.DeviceName =
+            intervention.Device?.Name ?? "Dispositivo Sconosciuto"; // ✅ Passiamo il nome del dispositivo
+        ViewBag.ReturnUrl =
+            returnUrl ?? Url.Action("List", "InterventionHistory", new { deviceId = intervention.DeviceId });
 
         return View("Edit", intervention);
     }
 
-    // 📝 POST: /Intervention/Edit/{id}
+// 📝 POST: /Intervention/Edit/{id}
     [HttpPost("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, Intervention intervention, string? returnUrl = null)
@@ -109,7 +157,10 @@ public class InterventionController(ApplicationDbContext context) : Controller
         if (id != intervention.Id) return BadRequest();
         if (!ModelState.IsValid) return View("Edit", intervention);
 
-        var existingIntervention = await context.Interventions.FindAsync(id);
+        var existingIntervention = await context.Interventions
+            .Include(i => i.Device) // 🔹 Carichiamo il dispositivo per passare il nome
+            .FirstOrDefaultAsync(i => i.Id == id);
+
         if (existingIntervention == null) return NotFound();
 
         // 🔄 Aggiorniamo i campi
@@ -117,22 +168,19 @@ public class InterventionController(ApplicationDbContext context) : Controller
         existingIntervention.PerformedBy = intervention.PerformedBy;
         existingIntervention.Notes = intervention.Notes;
 
-        if (existingIntervention.Type == InterventionType.Maintenance)
-            existingIntervention.MaintenanceCategory = intervention.MaintenanceCategory;
-        else
-            existingIntervention.MaintenanceCategory = null; // Reset se non è manutenzione
+        existingIntervention.MaintenanceCategory = existingIntervention.Type == InterventionType.Maintenance
+            ? intervention.MaintenanceCategory
+            : null; // Reset se non è manutenzione
 
-        if (existingIntervention.Type is InterventionType.ElectricalTest or InterventionType.PhysicalInspection)
-            existingIntervention.Passed = intervention.Passed;
-        else
-            existingIntervention.Passed = null; // Reset se non è test elettrico/fisico
+        existingIntervention.Passed =
+            existingIntervention.Type is InterventionType.ElectricalTest or InterventionType.PhysicalInspection
+                ? intervention.Passed
+                : null; // Reset se non è test elettrico/fisico
 
         context.Update(existingIntervention);
         await context.SaveChangesAsync();
 
-        var device = await context.Devices.Include(d => d.Interventions)
-            .FirstOrDefaultAsync(d => d.Id == intervention.DeviceId);
-
+        var device = existingIntervention.Device;
         if (device != null)
         {
             DueDateHelper.UpdateNextDueDate(device, context);
@@ -142,20 +190,13 @@ public class InterventionController(ApplicationDbContext context) : Controller
 
         TempData["SuccessMessage"] = "Modifica salvata con successo!";
 
-// Se returnUrl è presente e valido, lo usiamo per il redirect
+        // ✅ Se returnUrl è valido, usiamolo
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-        {
             return Redirect(returnUrl);
-        }
 
-// Se l'utente proviene dallo storico interventi (es. /InterventionHistory/List), torniamo lì
-        if (Request.Headers["Referer"].ToString().Contains("/InterventionHistory/List"))
-        {
-            return RedirectToAction("List", "InterventionHistory", new { deviceId = intervention.DeviceId });
-        }
-
-// Se nessuna delle precedenti condizioni è soddisfatta, torniamo alla lista degli interventi
-        return RedirectToAction("Index", "Intervention", new { deviceId = intervention.DeviceId });
+        // ✅ Se l'utente proviene dallo storico, torniamo lì con il nome del dispositivo
+        return RedirectToAction("List", "InterventionHistory",
+            new { deviceId = existingIntervention.DeviceId, deviceName = device?.Name });
     }
 
     // 🗑️ POST: /Intervention/Delete/{id}
@@ -172,18 +213,15 @@ public class InterventionController(ApplicationDbContext context) : Controller
 
         if (device == null) return NotFound();
 
-        // 💾 Rimuoviamo l'intervento e salviamo
         context.Interventions.Remove(intervention);
         await context.SaveChangesAsync();
 
-        // 🔄 Ricalcoliamo le scadenze
         DueDateHelper.UpdateNextDueDate(device, context);
 
-        // 🔄 Se il dispositivo non ha più interventi, ripristiniamo le date iniziali
         var settings = await context.MaintenanceSettings.FirstOrDefaultAsync();
         if (settings == null) return StatusCode(500, "Errore nel recupero delle impostazioni di manutenzione.");
 
-        if (!device.Interventions.Any())
+        if (device.Interventions.Count == 0)
         {
             device.NextMaintenanceDue = device.DataCollaudo.AddMonths(settings.MaintenanceIntervalMonths);
             device.NextElectricalTestDue = device.FirstElectricalTest.AddMonths(settings.ElectricalTestIntervalMonths);
@@ -197,6 +235,31 @@ public class InterventionController(ApplicationDbContext context) : Controller
         await context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Intervento eliminato con successo!";
-        return Redirect(returnUrl ?? Url.Action("Index", "Intervention", new { deviceId = device.Id }));
+
+        // 🔍 Log di Debug per verificare `returnUrl`
+        var referer = Request.Headers.Referer.ToString();
+        Console.WriteLine($"🔍 returnUrl: {returnUrl} | Referer: {referer}");
+
+        // Se returnUrl è nullo, proviamo a dedurre la provenienza
+        if (string.IsNullOrEmpty(returnUrl))
+            if (!string.IsNullOrEmpty(referer))
+            {
+                if (referer.Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase))
+                    returnUrl = Url.Action("List", "InterventionHistory", new { deviceId = device.Id });
+                else if (referer.Contains("/Device/Details", StringComparison.OrdinalIgnoreCase))
+                    returnUrl = Url.Action("Details", "Device", new { id = device.Id });
+            }
+
+        // Se abbiamo un returnUrl valido, reindirizziamo lì
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            Console.WriteLine($"✅ Reindirizzamento a: {returnUrl}");
+            return Redirect(returnUrl);
+        }
+
+        // 🔄 Fallback: Torniamo ai dettagli del dispositivo se tutto il resto fallisce
+        Console.WriteLine($"🛠 Eliminazione intervento {id} completata.");
+        Console.WriteLine($"🔍 Reindirizzamento a Device/Details/{device.Id}");
+        return RedirectToAction("Details", "Device", new { id = device.Id });
     }
 }

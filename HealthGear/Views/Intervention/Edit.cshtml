@@ -14,7 +14,8 @@
     <!-- Data dell'intervento -->
     <div class="col-md-6">
         <label asp-for="Date" class="form-label fw-bold">Data</label>
-        <input asp-for="Date" class="form-control" type="date" required/>
+        <input asp-for="Date" class="form-control" type="date" required
+               max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="Date" class="text-danger"></span>
     </div>
 
@@ -72,9 +73,9 @@
         <button type="submit" class="btn btn-primary">
             💾 Salva Modifiche
         </button>
-        <a asp-action="Details" asp-controller="Device" asp-route-id="@Model.DeviceId" class="btn btn-secondary">
-            ❌ Annulla
-        </a>
+<a href="@ViewBag.ReturnUrl" class="btn btn-secondary">
+    ❌ Annulla
+</a>
     </div>
 </form>
 

@@ -1,5 +1,9 @@
+#region
+
 using HealthGear.Services;
 using Microsoft.AspNetCore.Mvc;
+
+#endregion
 
 namespace HealthGear.Controllers;
 

@@ -1,6 +1,13 @@
+#region
+
+using System.ComponentModel.DataAnnotations;
+
+#endregion
+
 namespace HealthGear.Models;
 
 public class ConfirmDeleteModel
 {
-    public string ConfirmName { get; set; }
+    [Required(ErrorMessage = "Devi inserire il nome esatto per confermare l'eliminazione.")]
+    public required string ConfirmName { get; set; }
 }

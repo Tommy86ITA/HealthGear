@@ -1,4 +1,8 @@
+#region
+
 using HealthGear.Models;
+
+#endregion
 
 namespace HealthGear.Helpers;
 

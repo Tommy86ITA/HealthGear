@@ -7,7 +7,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core')) :
         typeof define === 'function' && define.amd ? define(['@popperjs/core'], factory) :
             (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.bootstrap = factory(global.Popper));
-})(this, (function (Popper) {
+})(this, function (Popper) {
     'use strict';
 
     function _interopNamespaceDefault(e) {
@@ -142,9 +142,7 @@
         transitionDelay = transitionDelay.split(',')[0];
         return (Number.parseFloat(transitionDuration) + Number.parseFloat(transitionDelay)) * MILLISECONDS_MULTIPLIER;
     };
-    const triggerTransitionEnd = element => {
-        element.dispatchEvent(new Event(TRANSITION_END));
-    };
+    const triggerTransitionEnd = element => element.dispatchEvent(new Event(TRANSITION_END));
     const isElement = object => {
         if (!object || typeof object !== 'object') {
             return false;
@@ -254,7 +252,7 @@
         }
     };
     const isRTL = () => document.documentElement.dir === 'rtl';
-    const defineJQueryPlugin = plugin => {
+    const defineJQueryPlugin = plugin =>
         onDOMContentLoaded(() => {
             const $ = getjQuery();
             /* istanbul ignore if */
@@ -269,10 +267,7 @@
                 };
             }
         });
-    };
-    const execute = (possibleCallback, args = [], defaultValue = possibleCallback) => {
-        return typeof possibleCallback === 'function' ? possibleCallback(...args) : defaultValue;
-    };
+    const execute = (possibleCallback, args = [], defaultValue = possibleCallback) => typeof possibleCallback === 'function' ? possibleCallback(...args) : defaultValue;
     const executeAfterTransition = (callback, transitionElement, waitForTransition = true) => {
         if (!waitForTransition) {
             execute(callback);
@@ -420,13 +415,12 @@
         // in case of mouseenter or mouseleave wrap the handler within a function that checks for its DOM position
         // this prevents the handler from being dispatched the same way as mouseover or mouseout does
         if (originalTypeEvent in customEvents) {
-            const wrapFunction = fn => {
-                return function (event) {
+            const wrapFunction = fn =>
+                function (event) {
                     if (!event.relatedTarget || event.relatedTarget !== event.delegateTarget && !event.delegateTarget.contains(event.relatedTarget)) {
                         return fn.call(this, event);
                     }
                 };
-            };
             callable = wrapFunction(callable);
         }
         const events = getElementEvents(element);
@@ -1413,14 +1407,13 @@
                 return;
             }
             const nextElementIndex = this._getItemIndex(nextElement);
-            const triggerEvent = eventName => {
-                return EventHandler.trigger(this._element, eventName, {
+            const triggerEvent = eventName =>
+                EventHandler.trigger(this._element, eventName, {
                     relatedTarget: nextElement,
                     direction: this._orderToDirection(order),
                     from: this._getItemIndex(activeElement),
                     to: nextElementIndex
                 });
-            };
             const slideEvent = triggerEvent(EVENT_SLIDE);
             if (slideEvent.defaultPrevented) {
                 return;
@@ -2222,9 +2215,7 @@
                 reflow(element);
             }
             element.classList.add(CLASS_NAME_SHOW$5);
-            this._emulateAnimation(() => {
-                execute(callback);
-            });
+            this._emulateAnimation(() => execute(callback));
         }
 
         hide(callback) {
@@ -2273,9 +2264,7 @@
             }
             const element = this._getElement();
             this._config.rootElement.append(element);
-            EventHandler.on(element, EVENT_MOUSEDOWN, () => {
-                execute(this._config.clickCallback);
-            });
+            EventHandler.on(element, EVENT_MOUSEDOWN, () => execute(this._config.clickCallback));
             this._isAppended = true;
         }
 
@@ -4602,9 +4591,7 @@
             if (this._hasMouseInteraction || this._hasKeyboardInteraction) {
                 return;
             }
-            this._timeout = setTimeout(() => {
-                this.hide();
-            }, this._config.delay);
+            this._timeout = setTimeout(() => this.hide(), this._config.delay);
         }
 
         _onInteraction(event, isInteracting) {
@@ -4680,5 +4667,5 @@
 
     return index_umd;
 
-}));
+});
 //# sourceMappingURL=bootstrap.js.map

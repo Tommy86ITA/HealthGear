@@ -131,7 +131,7 @@
         if (this.optional(element)) {
             return true;
         }
-        if (!(/^[0-9]{9}|([0-9]{2} ){3}[0-9]{3}$/.test(value))) {
+        if (!/^[0-9]{9}|([0-9]{2} ){3}[0-9]{3}$/.test(value)) {
             return false;
         }
 
@@ -150,8 +150,8 @@
 
     $.validator.addMethod("bankorgiroaccountNL", function (value, element) {
         return this.optional(element) ||
-            ($.validator.methods.bankaccountNL.call(this, value, element)) ||
-            ($.validator.methods.giroaccountNL.call(this, value, element));
+            $.validator.methods.bankaccountNL.call(this, value, element) ||
+            $.validator.methods.giroaccountNL.call(this, value, element);
     }, "Please specify a valid bank or giro account number.");
 
     /**
@@ -270,7 +270,7 @@
         }
 
         all_sum = even_sum + odd_sum;
-        control_digit = (10 - (all_sum).toString().substr(-1)).toString();
+        control_digit = (10 - all_sum.toString().substr(-1)).toString();
         control_digit = parseInt(control_digit, 10) > 9 ? "0" : control_digit;
         control_letter = "JABCDEFGHI".substr(control_digit, 1).toString();
 
@@ -334,7 +334,7 @@
             secondCN = secondCN - dsc;
         }
 
-        return (String(firstCN).concat(secondCN) === value.substr(-2));
+        return String(firstCN).concat(secondCN) === value.substr(-2);
 
     }, "Please specify a valid CNH number.");
 
@@ -372,7 +372,7 @@
         }
 
         // Valida DVs
-        var tamanho = (value.length - 2);
+        var tamanho = value.length - 2;
         var numeros = value.substring(0, tamanho);
         var digitos = value.substring(tamanho);
         var soma = 0;
@@ -440,10 +440,10 @@
 
         checkResult = function (sum, cn) {
             var result = (sum * 10) % 11;
-            if ((result === 10) || (result === 11)) {
+            if (result === 10 || result === 11) {
                 result = 0;
             }
-            return (result === cn);
+            return result === cn;
         };
 
         // Checking for dump data
@@ -517,7 +517,7 @@
             bEven = !bEven;
         }
 
-        return (nCheck % 10) === 0;
+        return nCheck % 10 === 0;
     }, "Please enter a valid credit card number.");
 
     /* NOTICE: Modified version of Castle.Components.Validator.CreditCardValidator
@@ -665,7 +665,7 @@
             mm = parseInt(adata[1], 10);
             aaaa = parseInt(adata[2], 10);
             xdata = new Date(Date.UTC(aaaa, mm - 1, gg, 12, 0, 0, 0));
-            if ((xdata.getUTCFullYear() === aaaa) && (xdata.getUTCMonth() === mm - 1) && (xdata.getUTCDate() === gg)) {
+            if (xdata.getUTCFullYear() === aaaa && xdata.getUTCMonth() === mm - 1 && xdata.getUTCDate() === gg) {
                 check = true;
             } else {
                 check = false;
@@ -828,7 +828,7 @@
         // countries.
         if (typeof bbanpattern !== "undefined") {
             ibanregexp = new RegExp("^[A-Z]{2}\\d{2}" + bbanpattern + "$", "");
-            if (!(ibanregexp.test(iban))) {
+            if (!ibanregexp.test(iban)) {
                 return false; // Invalid country specific format
             }
         }
@@ -1041,12 +1041,12 @@
 
         // Test NIF
         if (/^[0-9]{8}[A-Z]{1}$/.test(value)) {
-            return ("TRWAGMYFPDXBNJZSQVHLCKE".charAt(value.substring(8, 0) % 23) === value.charAt(8));
+            return "TRWAGMYFPDXBNJZSQVHLCKE".charAt(value.substring(8, 0) % 23) === value.charAt(8);
         }
 
         // Test specials NIF (starts with K, L or M)
         if (/^[KLM]{1}/.test(value)) {
-            return (value[8] === "TRWAGMYFPDXBNJZSQVHLCKE".charAt(value.substring(8, 1) % 23));
+            return value[8] === "TRWAGMYFPDXBNJZSQVHLCKE".charAt(value.substring(8, 1) % 23);
         }
 
         return false;
@@ -1071,9 +1071,9 @@
             intSum += arrSteps[i] * value[i];
         }
         var int2 = intSum % 11;
-        var intControlNr = (int2 === 10) ? 0 : int2;
+        var intControlNr = int2 === 10 ? 0 : int2;
 
-        return (intControlNr === parseInt(value[9], 10));
+        return intControlNr === parseInt(value[9], 10);
     }, "Please specify a valid NIP number.");
 
     /**
@@ -1116,13 +1116,13 @@
             if (count === 11) {
                 multiplier = 3;
             }
-            sum += ((number % 10) * multiplier);
+            sum += (number % 10) * multiplier;
             number = parseInt(number / 10, 10);
         }
-        dv = (sum % 11);
+        dv = sum % 11;
 
         if (dv > 1) {
-            dv = (11 - dv);
+            dv = 11 - dv;
         } else {
             dv = 0;
         }
@@ -1409,9 +1409,9 @@
      */
     $.validator.addMethod("stateUS", function (value, element, options) {
         var isDefault = typeof options === "undefined",
-            caseSensitive = (isDefault || typeof options.caseSensitive === "undefined") ? false : options.caseSensitive,
-            includeTerritories = (isDefault || typeof options.includeTerritories === "undefined") ? false : options.includeTerritories,
-            includeMilitary = (isDefault || typeof options.includeMilitary === "undefined") ? false : options.includeMilitary,
+            caseSensitive = isDefault || typeof options.caseSensitive === "undefined" ? false : options.caseSensitive,
+            includeTerritories = isDefault || typeof options.includeTerritories === "undefined" ? false : options.includeTerritories,
+            includeMilitary = isDefault || typeof options.includeMilitary === "undefined" ? false : options.includeMilitary,
             regex;
 
         if (!includeTerritories && !includeMilitary) {

@@ -57,6 +57,6 @@
     function validateDeleteInput() {
         var input = document.getElementById('confirmDeviceName').value;
         var expectedName = document.getElementById('deviceNamePlaceholder').innerText;
-        document.getElementById('deleteConfirmButton').disabled = (input.trim() !== expectedName);
+        document.getElementById('deleteConfirmButton').disabled = input.trim() !== expectedName;
     }
 </script>

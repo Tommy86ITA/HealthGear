@@ -138,28 +138,28 @@
                 options: {  // options structure passed to jQuery Validate's validate() method
                     errorClass: defaultOptions.errorClass || "input-validation-error",
                     errorElement: defaultOptions.errorElement || "span",
-                    errorPlacement: function () {
+                    errorPlacement() {
                         onError.apply(form, arguments);
                         execInContext("errorPlacement", arguments);
                     },
-                    invalidHandler: function () {
+                    invalidHandler() {
                         onErrors.apply(form, arguments);
                         execInContext("invalidHandler", arguments);
                     },
                     messages: {},
                     rules: {},
-                    success: function () {
+                    success() {
                         onSuccess.apply(form, arguments);
                         execInContext("success", arguments);
                     }
                 },
-                attachValidation: function () {
+                attachValidation() {
                     $form
                         .off("reset." + data_validation, onResetProxy)
                         .on("reset." + data_validation, onResetProxy)
                         .validate(this.options);
                 },
-                validate: function () {  // a validation function that is called by unobtrusive Ajax
+                validate() {  // a validation function that is called by unobtrusive Ajax
                     $form.validate();
                     return $form.valid();
                 }
@@ -173,7 +173,7 @@
     $jQval.unobtrusive = {
         adapters: [],
 
-        parseElement: function (element, skipAttach) {
+        parseElement(element, skipAttach) {
             /// <summary>
             /// Parses a single HTML element for unobtrusive validation attributes.
             /// </summary>
@@ -207,12 +207,12 @@
                     });
 
                     this.adapt({
-                        element: element,
-                        form: form,
-                        message: message,
+                        element,
+                        form,
+                        message,
                         params: paramValues,
-                        rules: rules,
-                        messages: messages
+                        rules,
+                        messages
                     });
                 }
             });
@@ -224,7 +224,7 @@
             }
         },
 
-        parse: function (selector) {
+        parse(selector) {
             /// <summary>
             /// Parses all the HTML elements in the specified selector. It looks for input elements decorated
             /// with the [data-val=true] attribute value and enables validation according to the data-val-*
@@ -270,7 +270,7 @@
             fn = params;
             params = [];
         }
-        this.push({name: adapterName, params: params, adapt: fn});
+        this.push({name: adapterName, params, adapt: fn});
         return this;
     };
 
@@ -344,7 +344,7 @@
         }
 
         match = new RegExp(params).exec(value);
-        return (match && (match.index === 0) && (match[0].length === value.length));
+        return match && match.index === 0 && match[0].length === value.length;
     });
 
     $jQval.addMethod("nonalphamin", function (value, element, nonalphamin) {

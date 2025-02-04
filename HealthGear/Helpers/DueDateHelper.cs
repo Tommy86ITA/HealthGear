@@ -1,5 +1,9 @@
+#region
+
 using HealthGear.Data;
 using HealthGear.Models;
+
+#endregion
 
 namespace HealthGear.Helpers;
 

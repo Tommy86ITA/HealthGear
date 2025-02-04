@@ -1,7 +1,11 @@
+#region
+
 using HealthGear.Data;
 using HealthGear.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
+#endregion
 
 public class SettingsController : Controller
 {

@@ -1,5 +1,5 @@
-@model HealthGear.Models.Intervention
 @using HealthGear.Helpers
+@model Intervention
 
 @{
     ViewData["Title"] = "Dettagli Intervento";
@@ -45,12 +45,13 @@
 </table>
 
 <div class="mt-4 d-flex justify-content-between">
-    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@Model.Id" asp-route-returnUrl="@Context.Request.Path"
+    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@Model.Id" asp-route-returnUrl="@ViewBag.ReturnUrl"
        class="btn btn-warning">
         <i class="fas fa-edit"></i> Modifica
     </a>
-    
-    <a href="@ViewBag.ReturnUrl" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Torna all'elenco
+
+    <a href="@(ViewBag.ReturnUrl ?? Url.Action("List", "InterventionHistory", new { deviceId = Model.DeviceId }))"
+       class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Torna indietro
     </a>
 </div>

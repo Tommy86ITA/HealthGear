@@ -5,7 +5,11 @@
     ViewData["Title"] = "Storico Interventi";
 }
 
-<h2 class="mb-4">🛠 Storico Interventi per @ViewBag.DeviceName</h2>
+<h2 class="mb-2"><i class="fas fa-clock-rotate-left"></i> Storico Interventi per <strong>@ViewBag.DeviceBrand @ViewBag.DeviceModel</strong></h2>
+<p class="text-muted">
+    <i class="fas fa-tag"></i> @ViewBag.DeviceName | 
+    <i class="fas fa-hashtag"></i> S/N: @ViewBag.DeviceSerialNumber
+</p>
 
 <!-- Form per i filtri -->
 <form method="get" class="row mb-4">
@@ -57,6 +61,12 @@
                 <i class="fas fa-redo"></i> Reset
             </a>
         </div>
+        <div class="d-flex justify-content-between mb-3">
+            <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@ViewBag.DeviceId"
+               class="btn btn-success">
+                <i class="fas fa-plus"></i> Aggiungi Intervento
+            </a>
+        </div>
         <div>
             <a asp-action="Details" asp-controller="Device" asp-route-id="@ViewBag.DeviceId"
                class="btn btn-secondary">
@@ -97,15 +107,20 @@
             </td>
             <td>@intervention.Notes</td>
             <td>
+                <a asp-action="Details" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                   class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i>
+                </a>
                 <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id"
                    class="btn btn-warning btn-sm">
-                    <i class="fas fa-edit"></i> Modifica
+                    <i class="fas fa-edit"></i>
                 </a>
-                <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id" method="post"
-                      class="d-inline">
+                <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                      asp-route-returnUrl="@Url.Action("List", "InterventionHistory", new { deviceId = ViewBag.DeviceId })"
+                      method="post" class="d-inline">
                     <button type="submit" class="btn btn-danger btn-sm"
                             onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');">
-                        <i class="fas fa-trash"></i> Elimina
+                        <i class="fas fa-trash"></i>
                     </button>
                 </form>
             </td>

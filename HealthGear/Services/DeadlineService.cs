@@ -1,6 +1,10 @@
+#region
+
 using HealthGear.Data;
 using HealthGear.Models;
 using Microsoft.EntityFrameworkCore;
+
+#endregion
 
 namespace HealthGear.Services;
 

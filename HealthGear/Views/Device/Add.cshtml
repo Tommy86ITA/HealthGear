@@ -63,20 +63,23 @@
 
     <div class="col-md-4">
         <label asp-for="DataCollaudo" class="form-label fw-bold">Data di Collaudo</label>
-        <input asp-for="DataCollaudo" class="form-control" type="date" required/>
+        <input asp-for="DataCollaudo" class="form-control" type="date" required
+               max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="DataCollaudo" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
         <label asp-for="FirstElectricalTest" class="form-label fw-bold">Prima Verifica Elettrica</label>
-        <input asp-for="FirstElectricalTest" class="form-control" type="date" required/>
+        <input asp-for="FirstElectricalTest" class="form-control" type="date" required
+               max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="FirstElectricalTest" class="text-danger"></span>
     </div>
 
     <!-- Sezione Prima Verifica Fisica -->
     <div class="col-md-4" id="physicalTestContainer" style="display: none;">
         <label asp-for="FirstPhysicalInspection" class="form-label fw-bold">Prima Verifica Fisica</label>
-        <input asp-for="FirstPhysicalInspection" class="form-control" type="date"/>
+        <input asp-for="FirstPhysicalInspection" class="form-control" type="date"
+               max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="FirstPhysicalInspection" class="text-danger"></span>
     </div>
 

@@ -1,5 +1,9 @@
+#region
+
 using HealthGear.Models;
 using Microsoft.EntityFrameworkCore;
+
+#endregion
 
 namespace HealthGear.Data;
 

@@ -43,17 +43,13 @@
 <table class="table">
     <tr>
         <th class="text-start"><i class="fas fa-wrench"></i> Prossima Manutenzione</th>
-        <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextMaintenanceDue)"
-            data-bs-toggle="tooltip"
-            title="Data calcolata in base all'ultima manutenzione preventiva registrata">
+        <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextMaintenanceDue)">
             @DueDateHelper.GetDueDateText(Model.NextMaintenanceDue)
         </td>
     </tr>
     <tr>
         <th class="text-start"><i class="fas fa-bolt"></i> Prossima Verifica Elettrica</th>
-        <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextElectricalTestDue)"
-            data-bs-toggle="tooltip"
-            title="Data calcolata in base all'ultima verifica elettrica registrata">
+        <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextElectricalTestDue)">
             @DueDateHelper.GetDueDateText(Model.NextElectricalTestDue)
         </td>
     </tr>
@@ -62,9 +58,7 @@
     {
         <tr>
             <th class="text-start"><i class="fas fa-radiation"></i> Prossima Verifica Fisica</th>
-            <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextPhysicalInspectionDue)"
-                data-bs-toggle="tooltip"
-                title="Data calcolata in base all'ultimo controllo fisico sanitario registrato">
+            <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextPhysicalInspectionDue)">
                 @DueDateHelper.GetDueDateText(Model.NextPhysicalInspectionDue)
             </td>
         </tr>
@@ -103,7 +97,11 @@
                 </td>
                 <td>@(string.IsNullOrWhiteSpace(intervention.Notes) ? "<span class='text-muted'>Nessuna nota</span>" : intervention.Notes)</td>
                 <td>
-                    @if (intervention.Passed.HasValue)
+                    @if (intervention.Type == InterventionType.Maintenance)
+                    {
+                        <span class="text-muted">N/A</span>
+                    }
+                    else if (intervention.Passed.HasValue)
                     {
                         <span class="badge @(intervention.Passed.Value ? "bg-success" : "bg-danger")">
                             @(intervention.Passed.Value ? "Superato" : "Non Superato")
@@ -125,8 +123,9 @@
                         <i class="fas fa-edit"></i>
                     </a>
                     <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                          asp-route-returnUrl="@Url.Action("Details", "Device", new { id = Model.Id })"
                           method="post" class="d-inline">
+                        <input type="hidden" name="returnUrl"
+                               value="@Url.Action("Details", "Device", new { id = Model.Id })"/>
                         <button type="submit" class="btn btn-danger btn-sm"
                                 onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');">
                             <i class="fas fa-trash"></i>
@@ -138,10 +137,10 @@
         </tbody>
     </table>
 
-    <!-- Bottone per accedere allo storico completo -->
+    <!-- ✅ Pulsante per accedere allo STORICO INTERVENTI -->
     <div class="text-center mt-3">
         <a asp-action="List" asp-controller="InterventionHistory" asp-route-deviceId="@Model.Id" class="btn btn-info">
-            <i class="fas fa-clock-rotate-left fa-fw"></i> Apri Storico Completo
+            <i class="fas fa-clock-rotate-left"></i> Apri Storico Completo
         </a>
     </div>
 }
@@ -160,9 +159,55 @@ else
             <i class="fas fa-arrow-left"></i> Torna all'elenco
         </a>
     </div>
+
     <div>
-        <a href="#" class="btn btn-danger" onclick="confirmDelete(@Model.Id)" data-bs-toggle="tooltip" title="Elimina definitivamente il dispositivo e tutti gli interventi associati!">
-            <i class="fas fa-trash"></i> Elimina Dispositivo
-        </a>
+        @if (!Model.Interventions.Any())
+        {
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                <i class="fas fa-trash"></i> Elimina Dispositivo
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-dark archive-btn" data-id="@Model.Id">
+                <i class="fas fa-archive"></i> Archivia Dispositivo
+            </button>
+        }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            let token = tokenElement ? tokenElement.value : "";
+
+            function fetchRequest(url, method, successMessage, errorMessage) {
+                fetch(url, {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "RequestVerificationToken": token
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(successMessage);
+                            window.location.reload();
+                        } else {
+                            alert(data.message || errorMessage);
+                        }
+                    })
+                    .catch(error => alert(errorMessage + ": " + error.message));
+            }
+
+            // 🔹 Gestione pulsante di archiviazione
+            document.querySelector(".archive-btn")?.addEventListener("click", function () {
+                let deviceId = this.getAttribute("data-id");
+                if (!confirm("Sei sicuro di voler impostare come Dismesso e archiviare questo dispositivo?")) return;
+                fetchRequest(`/Device/Archive/${deviceId}`, "POST", "Il dispositivo è stato archiviato con successo!", "Errore durante l'archiviazione.");
+            });
+        });
+    </script>
+}

@@ -1,6 +1,10 @@
+#region
+
 using System.Diagnostics;
 using HealthGear.Models;
 using Microsoft.AspNetCore.Mvc;
+
+#endregion
 
 namespace HealthGear.Controllers;
 

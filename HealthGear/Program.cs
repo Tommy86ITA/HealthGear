@@ -1,8 +1,12 @@
+#region
+
 using System.Globalization;
 using HealthGear.Data;
 using HealthGear.Services;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
+
+#endregion
 
 // Inizializzazione necessaria per evitare errori di runtime con SQLite
 Batteries.Init();

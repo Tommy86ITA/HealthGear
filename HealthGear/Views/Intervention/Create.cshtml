@@ -12,7 +12,8 @@
     <!-- Data dell'intervento -->
     <div class="col-md-6">
         <label asp-for="Date" class="form-label fw-bold">Data</label>
-        <input asp-for="Date" class="form-control" type="date" required/>
+        <input asp-for="Date" class="form-control" type="date" required
+               max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="Date" class="text-danger"></span>
     </div>
 
@@ -94,7 +95,7 @@
             console.log("Tipo selezionato:", selectedValue);
 
             // Mostra la categoria manutenzione solo se è "Maintenance"
-            maintenanceContainer.style.display = (selectedValue === "Maintenance") ? "block" : "none";
+            maintenanceContainer.style.display = selectedValue === "Maintenance" ? "block" : "none";
 
             // Mostra l'esito solo se è "ElectricalTest" o "PhysicalInspection"
             if (selectedValue === "ElectricalTest" || selectedValue === "PhysicalInspection") {
