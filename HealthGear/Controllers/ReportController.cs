@@ -1,12 +1,16 @@
 using HealthGear.Services.Reports;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+using HealthGear.Data;
+using HealthGear.Services.Reports.ReportTemplates;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Controllers;
 
-public class ReportController(PdfReportGenerator pdfReportGenerator, ExcelReportGenerator excelReportGenerator)
+public class ReportController(ApplicationDbContext context, PdfReportGenerator pdfReportGenerator, ExcelReportGenerator excelReportGenerator)
     : Controller
 {
+    private readonly ApplicationDbContext _context = context;
+
     // 📌 Genera il report PDF (tutti i dispositivi)
     public async Task<IActionResult> GeneratePdf()
     {
@@ -19,6 +23,37 @@ public class ReportController(PdfReportGenerator pdfReportGenerator, ExcelReport
     {
         var excelBytes = await excelReportGenerator.GenerateDeviceListReportAsync();
         return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report_Dispositivi.xlsx");
+    }
+    
+    public async Task<IActionResult> GenerateDeviceDetailPdf(int id)
+    {
+        var device = await _context.Devices
+            .Include(d => d.Interventions)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (device == null)
+        {
+            return NotFound();
+        }
+
+        var pdfBytes = DeviceDetailsReport.Generate(device);
+        return File(pdfBytes, "application/pdf", $"Report_{device.Name}.pdf");
+    }
+    
+    public IActionResult GenerateDeviceDetailsExcel(int id)
+    {
+        var device = _context.Devices
+            .Include(d => d.Interventions)
+            .FirstOrDefault(d => d.Id == id);
+
+        if (device == null)
+        {
+            return NotFound();
+        }
+
+        var fileContents = DeviceDetailsExcel.Generate(device);
+
+        return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Report_{device.Name}.xlsx");
     }
 }
 

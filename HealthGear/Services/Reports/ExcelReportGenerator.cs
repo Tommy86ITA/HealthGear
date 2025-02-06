@@ -1,4 +1,5 @@
 using HealthGear.Data;
+using HealthGear.Models;
 using HealthGear.Services.Reports.ReportTemplates;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,5 +14,10 @@ public class ExcelReportGenerator(ApplicationDbContext context, DeadlineService 
     {
         var devices = await _context.Devices.Include(d => d.Interventions).ToListAsync();
         return DeviceListExcel.Generate(devices, _deadlineService);
+    }
+    
+    public byte[] GenerateDeviceDetailReport(Device device)
+    {
+        return DeviceDetailsExcel.Generate(device);
     }
 }

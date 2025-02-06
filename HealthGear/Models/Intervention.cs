@@ -29,11 +29,6 @@ public enum MaintenanceType
 public class Intervention
 {
     // Costruttore di default per garantire che le liste siano inizializzate
-    public Intervention()
-    {
-        Attachments = [];
-    }
-
     [Key] public int Id { get; init; }
 
     [Required] public int DeviceId { get; set; }
@@ -56,5 +51,5 @@ public class Intervention
     public string Notes { get; set; } = string.Empty;
 
     // ReSharper disable once PropertyCanBeMadeInitOnly.Global
-    public List<FileDocument> Attachments { get; set; }
+    public List<FileDocument> Attachments { get; set; } = [];
 }
