@@ -9,7 +9,7 @@ namespace HealthGear.Models;
 
 public class MaintenanceSettings
 {
-    [Key] public int Id { get; set; }
+    [Key] public int Id { get; init; }
 
     [Required] public int MaintenanceIntervalMonths { get; set; } = 12;
 

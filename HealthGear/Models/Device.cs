@@ -17,26 +17,30 @@ public class Device
 
     /// <summary>Identificativo univoco del dispositivo.</summary>
     [Key]
-    public int Id { get; set; }
+    public int Id { get; init; }
 
     /// <summary>Nome del dispositivo.</summary>
     [Required(ErrorMessage = "Il nome del dispositivo è obbligatorio.")]
+    [MaxLength(100)]
     public required string Name { get; set; }
 
     /// <summary>Produttore del dispositivo.</summary>
     [Required(ErrorMessage = "Il produttore è obbligatorio.")]
+    // ReSharper disable once EntityFramework.ModelValidation.UnlimitedStringLength
     public required string Brand { get; set; }
 
     /// <summary>Modello del dispositivo.</summary>
     [Required(ErrorMessage = "Il modello è obbligatorio.")]
+    // ReSharper disable once EntityFramework.ModelValidation.UnlimitedStringLength
     public required string Model { get; set; }
 
     /// <summary>Numero di serie del dispositivo.</summary>
     [Required(ErrorMessage = "Il numero di serie è obbligatorio.")]
+    // ReSharper disable once EntityFramework.ModelValidation.UnlimitedStringLength
     public required string SerialNumber { get; set; }
 
     /// <summary>Numero di inventario (opzionale).</summary>
-    [MaxLength(20)]
+    // ReSharper disable once EntityFramework.ModelValidation.UnlimitedStringLength
     public string? InventoryNumber { get; set; }
 
     /// <summary>Ubicazione fisica del dispositivo (opzionale).</summary>
@@ -86,10 +90,10 @@ public class Device
     /// </summary>
     [NotMapped]
     public DateTime? LastOrdinaryMaintenance =>
-        Interventions?.Any() == true
+        Interventions.Count != 0 == true
             ? Interventions
-                .Where(i => i.Type == InterventionType.Maintenance &&
-                            i.MaintenanceCategory == MaintenanceType.Preventive)
+                .Where(i => i is
+                    { Type: InterventionType.Maintenance, MaintenanceCategory: MaintenanceType.Preventive })
                 .OrderByDescending(i => i.Date)
                 .Select(i => i.Date)
                 .FirstOrDefault()
@@ -109,6 +113,6 @@ public class Device
     // 📌 NOTE AGGIUNTIVE
 
     /// <summary>Note opzionali relative al dispositivo.</summary>
-    [MaxLength(1000)]
-    public string? Notes { get; set; }
+    [MaxLength(2000)]
+    public string? Notes { get; set; } = "";
 }

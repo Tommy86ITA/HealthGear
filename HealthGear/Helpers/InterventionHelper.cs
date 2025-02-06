@@ -10,8 +10,6 @@ public static class InterventionHelper
 {
     public static string GetInterventionDisplayName(Intervention intervention)
     {
-        if (intervention == null) return "Intervento Sconosciuto";
-
         return intervention.Type switch
         {
             InterventionType.ElectricalTest => "Verifica Elettrica",
@@ -23,16 +21,6 @@ public static class InterventionHelper
                 _ => "Manutenzione - (Tipo sconosciuto)" // Gestione fallback per i vecchi valori
             },
             _ => "Intervento - (Tipo sconosciuto)"
-        };
-    }
-
-    public static string GetMaintenanceCategoryDisplayName(MaintenanceType category)
-    {
-        return category switch
-        {
-            MaintenanceType.Preventive => "Preventiva", // Ex "Ordinaria"
-            MaintenanceType.Corrective => "Correttiva", // Ex "Correttiva" + "Straordinaria"
-            _ => category.ToString() // Se non è mappato, usa il nome originale dell'enum
         };
     }
 

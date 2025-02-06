@@ -10,6 +10,31 @@
 <a asp-action="Create" class="btn btn-success mb-3">
     <i class="fas fa-plus"></i> Aggiungi Dispositivo
 </a>
+<!-- Pulsante principale -->
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#reportModal">
+    <i class="fas fa-file-download"></i> Scarica Report
+</button>
+
+<!-- Modal Bootstrap -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModalLabel">Scegli il formato del report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>In quale formato vuoi scaricare il report?</p>
+                <a href="@Url.Action("GenerateExcel", "Report")" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+                <a href="@Url.Action("GeneratePdf", "Report")" class="btn btn-danger">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 @Html.AntiForgeryToken() <!-- 🔹 Token CSRF per le richieste AJAX -->
 
@@ -109,6 +134,9 @@ else
         let tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
         let token = tokenElement ? tokenElement.value : "";
 
+        /**
+         * Funzione per effettuare richieste fetch con il token CSRF
+         */
         function fetchRequest(url, method, successMessage, errorMessage) {
             fetch(url, {
                 method,
@@ -129,31 +157,55 @@ else
                 .catch(error => alert(errorMessage + ": " + error.message));
         }
 
-        // 🔹 Nascondere il pulsante di eliminazione per i dispositivi con interventi registrati
+        /**
+         * 🔹 Nasconde il pulsante di eliminazione per dispositivi con interventi registrati
+         */
         document.querySelectorAll("tr[id^='device-row-']").forEach(row => {
             let deleteBtn = row.querySelector(".delete-btn");
             let hasInterventions = row.getAttribute("data-has-interventions") === "true";
 
-            if (hasInterventions) {
-                // Se ha interventi → Nasconde SOLO il pulsante di eliminazione
-                if (deleteBtn) deleteBtn.style.display = "none";
+            if (hasInterventions && deleteBtn) {
+                deleteBtn.style.display = "none";
             }
         });
 
-        // 🔹 Funzione per archiviare un dispositivo (SEMPRE visibile)
-        document.querySelectorAll(".archive-btn").forEach(button =>
+        /**
+         * 🔹 Event listener per archiviare un dispositivo
+         */
+        document.querySelectorAll(".archive-btn").forEach(button => {
             button.addEventListener("click", function () {
                 let deviceId = this.getAttribute("data-id");
                 if (!confirm("Sei sicuro di voler archiviare questo dispositivo?")) return;
                 fetchRequest(`/Device/Archive/${deviceId}`, "POST", "Il dispositivo è stato archiviato con successo!", "Errore durante l'archiviazione.");
-            }));
+            });
+        });
 
-        // 🔹 Funzione per riattivare un dispositivo dismesso
-        document.querySelectorAll(".restore-btn").forEach(button =>
+        /**
+         * 🔹 Event listener per riattivare un dispositivo dismesso
+         */
+        document.querySelectorAll(".restore-btn").forEach(button => {
             button.addEventListener("click", function () {
                 let deviceId = this.getAttribute("data-id");
                 if (!confirm("Sei sicuro di voler riattivare questo dispositivo?")) return;
                 fetchRequest(`/Device/Restore/${deviceId}`, "POST", "Il dispositivo è stato riattivato con successo!", "Errore durante la riattivazione.");
-            }));
+            });
+        });
+
+        /**
+         * 🔹 Chiusura del modal dopo il click su un pulsante di download
+         */
+        let reportModalElement = document.getElementById("reportModal");
+        if (reportModalElement) {
+            let reportModal = new bootstrap.Modal(reportModalElement);
+
+            // Seleziona tutti i bottoni e i link dentro il modal
+            document.querySelectorAll("#reportModal .btn, #reportModal a").forEach(button => {
+                button.addEventListener("click", function () {
+                    setTimeout(() => {
+                        reportModal.hide();
+                    }, 500); // Ritardo per evitare chiusura prematura
+                });
+            });
+        }
     });
 </script>

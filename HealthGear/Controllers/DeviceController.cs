@@ -17,6 +17,8 @@ public class DeviceController(
     DeadlineService deadlineService,
     ILogger<DeviceController> logger) : Controller
 {
+    public ILogger<DeviceController> Logger { get; } = logger;
+
     // 📌 GET: /Device
     // Mostra la lista dei dispositivi attivi e dismessi
     [HttpGet("")]
@@ -124,7 +126,6 @@ public class DeviceController(
         device.Status = DeviceStatus.Dismesso;
         await context.SaveChangesAsync();
 
-        logger.LogInformation($"Dispositivo {id} archiviato con successo.");
         return Json(new { success = true, message = "Dispositivo archiviato con successo!" });
     }
 
@@ -143,7 +144,6 @@ public class DeviceController(
         device.Status = DeviceStatus.Attivo;
         await context.SaveChangesAsync();
 
-        logger.LogInformation($"Dispositivo {id} riattivato con successo.");
         return Json(new { success = true, message = "Dispositivo riattivato con successo!" });
     }
 
@@ -155,18 +155,11 @@ public class DeviceController(
             return BadRequest(new { success = false, message = "Richiesta non valida. Dati mancanti." });
 
         var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
-        if (device == null)
-        {
-            logger.LogWarning($"Tentata eliminazione: Dispositivo {id} non trovato.");
-            return NotFound(new { success = false, message = "Dispositivo non trovato." });
-        }
+        if (device == null) return NotFound(new { success = false, message = "Dispositivo non trovato." });
 
-        if (device.Interventions.Any())
-        {
-            logger.LogWarning($"Eliminazione bloccata: Il dispositivo {id} ha interventi registrati.");
+        if (device.Interventions.Count != 0)
             return BadRequest(new
                 { success = false, message = "Il dispositivo ha interventi registrati e non può essere eliminato." });
-        }
 
         if (data.ConfirmName != device.Name)
             return BadRequest(new { success = false, message = "Il nome non corrisponde. Riprova." });
@@ -174,7 +167,6 @@ public class DeviceController(
         context.Devices.Remove(device);
         await context.SaveChangesAsync();
 
-        logger.LogInformation($"Dispositivo {id} eliminato con successo.");
         return Json(new { success = true });
     }
 
@@ -185,7 +177,7 @@ public class DeviceController(
         var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
         if (device == null) return NotFound();
 
-        if (device.Interventions.Any()) return RedirectToAction("ConfirmDeleteOrArchive", new { id });
+        if (device.Interventions.Count != 0) return RedirectToAction("ConfirmDeleteOrArchive", new { id });
 
         var html = await this.RenderViewToStringAsync("_ConfirmDelete", device);
         return Json(new { success = true, html });

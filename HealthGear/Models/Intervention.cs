@@ -31,15 +31,16 @@ public class Intervention
     // Costruttore di default per garantire che le liste siano inizializzate
     public Intervention()
     {
-        Attachments = new List<FileDocument>();
+        Attachments = [];
     }
 
-    [Key] public int Id { get; set; }
+    [Key] public int Id { get; init; }
 
     [Required] public int DeviceId { get; set; }
 
     [ForeignKey("DeviceId")] public Device? Device { get; set; }
 
+    // ReSharper disable once PropertyCanBeMadeInitOnly.Global
     [Required] public InterventionType Type { get; set; }
 
     [Required] public DateTime Date { get; set; }
@@ -54,5 +55,6 @@ public class Intervention
 
     public string Notes { get; set; } = string.Empty;
 
-    public List<FileDocument> Attachments { get; set; } = new();
+    // ReSharper disable once PropertyCanBeMadeInitOnly.Global
+    public List<FileDocument> Attachments { get; set; }
 }

@@ -21,9 +21,10 @@ public static class DueDateHelper
 
         if (due < today)
             return "text-danger font-weight-bold"; // 🔴 Scaduto
-        if (due < twoMonthsLater)
-            return "text-warning"; // 🟡 In scadenza
-        return "text-success"; // 🟢 OK
+        return due < twoMonthsLater
+            ? "text-warning"
+            : // 🟡 In scadenza
+            "text-success"; // 🟢 OK
     }
 
     /// <summary>

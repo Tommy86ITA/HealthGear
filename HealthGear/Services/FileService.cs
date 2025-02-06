@@ -39,7 +39,7 @@ public class FileService
                 var fileName = Path.GetFileName(file.FileName);
                 var filePath = Path.Combine(uploadsPath, fileName);
 
-                using var stream = new FileStream(filePath, FileMode.Create);
+                await using var stream = new FileStream(filePath, FileMode.Create);
                 await file.CopyToAsync(stream);
 
                 var fileDocument = new FileDocument
@@ -110,7 +110,7 @@ public class FileService
     /// <summary>
     ///     Rimuove caratteri non validi dal nome della cartella.
     /// </summary>
-    private string SanitizeFolderName(string name)
+    private static string SanitizeFolderName(string name)
     {
         return name.Replace(" ", "_").Replace("/", "-");
     }

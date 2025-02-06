@@ -23,12 +23,10 @@ public class DeadlineService
     private async Task<MaintenanceSettings> GetSettingsAsync()
     {
         var settings = await _context.MaintenanceSettings.FirstOrDefaultAsync();
-        if (settings == null)
-        {
-            settings = new MaintenanceSettings();
-            _context.MaintenanceSettings.Add(settings);
-            await _context.SaveChangesAsync();
-        }
+        if (settings != null) return settings;
+        settings = new MaintenanceSettings();
+        _context.MaintenanceSettings.Add(settings);
+        await _context.SaveChangesAsync();
 
         return settings;
     }
@@ -108,7 +106,7 @@ public class DeadlineService
 
         // ✅ Troviamo l'ultima verifica fisica effettuata, altrimenti prendiamo la data di collaudo o la prima verifica
         var lastPhysicalInspection = device.Interventions?
-            .Where(i => i.Type == InterventionType.PhysicalInspection && i.Passed == true)
+            .Where(i => i is { Type: InterventionType.PhysicalInspection, Passed: true })
             .OrderByDescending(i => i.Date)
             .Select(i => (DateTime?)i.Date)
             .FirstOrDefault();

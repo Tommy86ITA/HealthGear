@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Modifica Dispositivo";
-    var showPhysicalInspection = Model.DeviceType == DeviceType.Radiologico || Model.DeviceType == DeviceType.Mammografico;
+    //var showPhysicalInspection = Model.DeviceType is DeviceType.Radiologico or DeviceType.Mammografico;
 }
 
 <h2 class="mb-4">✏️ Modifica Dispositivo</h2>
@@ -105,16 +105,16 @@
     <partial name="_ValidationScriptsPartial"/>
     <script>
         function togglePhysicalTestField() {
-            var physicalTestContainer = document.getElementById("physicalTestContainer");
-            var deviceTypeElement = document.getElementById("DeviceType");
+            let physicalTestContainer = document.getElementById("physicalTestContainer");
+            let deviceTypeElement = document.getElementById("DeviceType");
 
             if (!physicalTestContainer || !deviceTypeElement) {
                 console.error("Elementi non trovati: physicalTestContainer o DeviceType.");
                 return;
             }
 
-            var selectedValue = deviceTypeElement.value;
-            var selectedText = deviceTypeElement.options[deviceTypeElement.selectedIndex].text;
+            let selectedValue = deviceTypeElement.value;
+            let selectedText = deviceTypeElement.options[deviceTypeElement.selectedIndex].text;
             console.log("Selected DeviceType (Value):", selectedValue);
             console.log("Selected DeviceType (Text):", selectedText);
 

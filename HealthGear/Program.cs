@@ -3,6 +3,7 @@
 using System.Globalization;
 using HealthGear.Data;
 using HealthGear.Services;
+using HealthGear.Services.Reports;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 
@@ -25,6 +26,13 @@ builder.Services.AddScoped<FileService>();
 
 // Aggiunta del servizio di calcolo delle scadenze
 builder.Services.AddScoped<DeadlineService>();
+
+// Aggiunta dei servizi di generazione dei report
+builder.Services.AddScoped<PdfReportGenerator>();
+builder.Services.AddScoped<ExcelReportGenerator>();
+
+// Configura la licenza di QuestPDF
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // Configurazione del logging
 builder.Services.AddLogging(logging =>

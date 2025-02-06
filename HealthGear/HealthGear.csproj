@@ -4,63 +4,59 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <NoWarn>NU1608</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ClosedXML" Version="0.105.0-rc" />
+        <PackageReference Include="FastReport.OpenSource.Export.PdfSimple" Version="2025.1.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="9.0.1"/>
-        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="9.0.1" />
+        <PackageReference Include="QuestPDF" Version="2025.1.1" />
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="Models\PhysicalInspection.cs"/>
-        <Compile Remove="Models\ElectricalTest.cs"/>
-        <Compile Remove="Models\Maintenance.cs"/>
-        <Compile Remove="Controllers\MaintenanceController.cs"/>
-        <Compile Remove="Controllers\PhysicalInspectionController.cs"/>
-        <Compile Remove="Controllers\ElectricalTestController.cs"/>
-        <Compile Remove="Views\ElectricalTest\**"/>
-        <Compile Remove="Views\Maintenance\**"/>
-        <Compile Remove="Views\PhysicalInspection\**"/>
+        <EmbeddedResource Remove="Views\ElectricalTest\**" />
+        <EmbeddedResource Remove="Views\Maintenance\**" />
+        <EmbeddedResource Remove="Views\PhysicalInspection\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Remove="Views\ElectricalTest\**"/>
-        <EmbeddedResource Remove="Views\Maintenance\**"/>
-        <EmbeddedResource Remove="Views\PhysicalInspection\**"/>
+        <Content Remove="Views\ElectricalTest\**" />
+        <Content Remove="Views\Maintenance\**" />
+        <Content Remove="Views\PhysicalInspection\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Remove="Views\ElectricalTest\**"/>
-        <Content Remove="Views\Maintenance\**"/>
-        <Content Remove="Views\PhysicalInspection\**"/>
+        <None Remove="Views\ElectricalTest\**" />
+        <None Remove="Views\Maintenance\**" />
+        <None Remove="Views\PhysicalInspection\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="Views\ElectricalTest\**"/>
-        <None Remove="Views\Maintenance\**"/>
-        <None Remove="Views\PhysicalInspection\**"/>
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Create.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Delete.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Details.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Edit.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Index.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Create.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Delete.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Details.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Edit.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\Maintenance\Index.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Create.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Delete.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Details.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Edit.cshtml" />
+        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Index.cshtml" />
     </ItemGroup>
 
     <ItemGroup>
-        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Create.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Delete.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Details.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Edit.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\ElectricalTest\Index.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\Maintenance\Create.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\Maintenance\Delete.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\Maintenance\Details.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\Maintenance\Edit.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\Maintenance\Index.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Create.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Delete.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Details.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Edit.cshtml"/>
-        <_ContentIncludedByDefault Remove="Views\PhysicalInspection\Index.cshtml"/>
+      <Folder Include="Assets\Icons\" />
     </ItemGroup>
 
 </Project>

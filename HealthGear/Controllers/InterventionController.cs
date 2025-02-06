@@ -90,13 +90,12 @@ public class InterventionController(ApplicationDbContext context) : Controller
 
         TempData["SuccessMessage"] = "Intervento aggiunto con successo!";
 
-        if (!string.IsNullOrEmpty(Request.Headers["Referer"]) &&
-            Request.Headers.Referer.ToString().Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase))
-        {
+        if (!string.IsNullOrEmpty(Request.Headers.Referer) &&
+            Request.Headers.Referer.ToString()
+                .Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase))
             return RedirectToAction("List", "InterventionHistory", new { deviceId });
-        }
 
-// ✅ Altrimenti, torniamo ai dettagli del dispositivo
+        // ✅ Altrimenti, torniamo ai dettagli del dispositivo
         return RedirectToAction("Details", "Device", new { id = deviceId });
     }
 
@@ -113,14 +112,11 @@ public class InterventionController(ApplicationDbContext context) : Controller
         // ✅ Se returnUrl è nullo, proviamo a dedurre la provenienza dall'header Referer
         if (string.IsNullOrEmpty(returnUrl))
         {
-            var referer = Request.Headers["Referer"].ToString();
+            var referer = Request.Headers.Referer.ToString();
             if (!string.IsNullOrEmpty(referer))
-            {
-                if (referer.Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase))
-                    returnUrl = Url.Action("List", "InterventionHistory", new { deviceId = intervention.DeviceId });
-                else
-                    returnUrl = Url.Action("Details", "Device", new { id = intervention.DeviceId });
-            }
+                returnUrl = referer.Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase)
+                    ? Url.Action("List", "InterventionHistory", new { deviceId = intervention.DeviceId })
+                    : Url.Action("Details", "Device", new { id = intervention.DeviceId });
         }
 
         // ✅ Se ancora null, fallback alla pagina dei dettagli del dispositivo

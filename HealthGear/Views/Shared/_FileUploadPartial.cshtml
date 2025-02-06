@@ -1,5 +1,6 @@
 @{
     var fieldName = ViewData["FieldName"]?.ToString() ?? "files";
+    // ReSharper disable once InconsistentNaming
     var maxSizeInMB = ViewData["MaxFileSizeMB"] is int size ? size : 100;
 }
 

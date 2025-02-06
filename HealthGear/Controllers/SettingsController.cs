@@ -7,24 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 #endregion
 
-public class SettingsController : Controller
+namespace HealthGear.Controllers;
+
+public class SettingsController(ApplicationDbContext context) : Controller
 {
-    private readonly ApplicationDbContext _context;
-
-    public SettingsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<IActionResult> Index()
     {
-        var settings = await _context.MaintenanceSettings.FirstOrDefaultAsync();
-        if (settings == null)
-        {
-            settings = new MaintenanceSettings();
-            _context.MaintenanceSettings.Add(settings);
-            await _context.SaveChangesAsync();
-        }
+        var settings = await context.MaintenanceSettings.FirstOrDefaultAsync();
+        if (settings != null) return View(settings);
+        settings = new MaintenanceSettings();
+        context.MaintenanceSettings.Add(settings);
+        await context.SaveChangesAsync();
 
         return View(settings);
     }
@@ -32,26 +25,22 @@ public class SettingsController : Controller
     [HttpPost]
     public async Task<IActionResult> Index(MaintenanceSettings settings)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid) return View(settings);
+        var existingSettings = await context.MaintenanceSettings.FirstOrDefaultAsync();
+        if (existingSettings != null)
         {
-            var existingSettings = await _context.MaintenanceSettings.FirstOrDefaultAsync();
-            if (existingSettings != null)
-            {
-                existingSettings.MaintenanceIntervalMonths = settings.MaintenanceIntervalMonths;
-                existingSettings.ElectricalTestIntervalMonths = settings.ElectricalTestIntervalMonths;
-                existingSettings.PhysicalInspectionIntervalMonths = settings.PhysicalInspectionIntervalMonths;
-                existingSettings.MammographyInspectionIntervalMonths = settings.MammographyInspectionIntervalMonths;
-            }
-            else
-            {
-                _context.MaintenanceSettings.Add(settings);
-            }
-
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Impostazioni aggiornate con successo!";
-            return RedirectToAction("Index");
+            existingSettings.MaintenanceIntervalMonths = settings.MaintenanceIntervalMonths;
+            existingSettings.ElectricalTestIntervalMonths = settings.ElectricalTestIntervalMonths;
+            existingSettings.PhysicalInspectionIntervalMonths = settings.PhysicalInspectionIntervalMonths;
+            existingSettings.MammographyInspectionIntervalMonths = settings.MammographyInspectionIntervalMonths;
+        }
+        else
+        {
+            context.MaintenanceSettings.Add(settings);
         }
 
-        return View(settings);
+        await context.SaveChangesAsync();
+        TempData["Success"] = "Impostazioni aggiornate con successo!";
+        return RedirectToAction("Index");
     }
 }

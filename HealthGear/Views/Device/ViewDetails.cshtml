@@ -7,7 +7,12 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4><i class="fas fa-box"></i> Dati Generali</h4>
     <span
-        class="badge bg-@(Model.Status == DeviceStatus.Attivo ? "success" : Model.Status == DeviceStatus.Guasto ? "danger" : "secondary")"
+        class="badge bg-@(Model.Status switch
+                        {
+                            DeviceStatus.Attivo => "success",
+                            DeviceStatus.Guasto => "danger",
+                            _ => "secondary"
+                        })"
         style="font-size: 1.2em; padding: 0.5em 1em;">
         @Model.Status.ToString()
     </span>
@@ -90,9 +95,12 @@
             <tr>
                 <td>@intervention.Date.ToShortDateString()</td>
                 <td>
-                    <i class="@(intervention.Type == InterventionType.Maintenance ? "fas fa-wrench" :
-                              intervention.Type == InterventionType.ElectricalTest ? "fas fa-bolt" :
-                              "fas fa-radiation")"></i>
+                    <i class="@(intervention.Type switch
+                              {
+                                  InterventionType.Maintenance => "fas fa-wrench",
+                                  InterventionType.ElectricalTest => "fas fa-bolt",
+                                  _ => "fas fa-radiation"
+                              })"></i>
                     @InterventionHelper.GetInterventionDisplayName(intervention)
                 </td>
                 <td>@(string.IsNullOrWhiteSpace(intervention.Notes) ? "<span class='text-muted'>Nessuna nota</span>" : intervention.Notes)</td>

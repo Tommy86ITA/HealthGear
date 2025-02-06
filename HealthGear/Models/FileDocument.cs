@@ -8,10 +8,12 @@ namespace HealthGear.Models;
 
 public class FileDocument
 {
-    [Key] public int Id { get; set; }
+    [Key] public int Id { get; init; }
 
+    // ReSharper disable once PropertyCanBeMadeInitOnly.Global
     [Required] public int ParentEntityId { get; set; } // ID dell'intervento associato
 
+    // ReSharper disable once PropertyCanBeMadeInitOnly.Global
     [Required] [MaxLength(255)] public string FileName { get; set; } = string.Empty;
 
     [Required] [MaxLength(500)] public string FilePath { get; set; } = string.Empty;

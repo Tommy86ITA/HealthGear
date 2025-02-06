@@ -36,10 +36,9 @@ public static class ControllerExtensions
         await using var writer = new StringWriter();
 
         // Recuperiamo il motore di rendering delle viste
-        var viewEngine =
-            controller.HttpContext.RequestServices.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
 
-        if (viewEngine == null)
+        if (controller.HttpContext.RequestServices.GetService(typeof(ICompositeViewEngine)) is not ICompositeViewEngine
+            viewEngine)
             throw new InvalidOperationException("Impossibile ottenere un'istanza valida di ICompositeViewEngine.");
 
         // Cerchiamo la vista richiesta

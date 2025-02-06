@@ -25,9 +25,7 @@ public class FileController : Controller
     [HttpPost("Upload")]
     public async Task<IActionResult> Upload(List<IFormFile> files)
     {
-        _logger.LogInformation("📂 Richiesta di upload ricevuta con {FileCount} file.", files?.Count ?? 0);
-
-        if (files == null || !files.Any())
+        if (files == null || files.Count == 0)
         {
             _logger.LogWarning("⚠️ Nessun file selezionato per l'upload.");
             return Json(new { success = false, message = "Nessun file selezionato." });
@@ -57,9 +55,9 @@ public class FileController : Controller
             return Json(new { success = false, message = "Nome del file non valido." });
 
         var success = await _fileService.DeleteFileAsync(filePath);
-        if (success) return Json(new { success = true, message = $"Il file {filePath} è stato eliminato." });
-
-        return Json(new { success = false, message = "Errore durante l'eliminazione del file." });
+        return Json(success
+            ? new { success = true, message = $"Il file {filePath} è stato eliminato." }
+            : new { success = false, message = "Errore durante l'eliminazione del file." });
     }
 
     /// <summary>
@@ -72,8 +70,8 @@ public class FileController : Controller
             return Json(new { success = false, message = "Intervento o nome dispositivo non validi." });
 
         var files = _fileService.ListFiles(interventionType, deviceName);
-        if (files.Any()) return Json(new { success = true, files });
-
-        return Json(new { success = false, message = "Nessun file trovato." });
+        return files.Count != 0
+            ? Json(new { success = true, files })
+            : Json(new { success = false, message = "Nessun file trovato." });
     }
 }

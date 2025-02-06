@@ -1,6 +1,10 @@
+#region
+
 using HealthGear.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
+#endregion
 
 namespace HealthGear.Controllers;
 
@@ -80,7 +84,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         ViewBag.DateTo = dateTo?.ToString("yyyy-MM-dd");
         ViewBag.DeviceId = device.Id;
         ViewBag.DeviceName = device.Name;
-        
+
         // Dati per comporre il titolo della pagina
         ViewBag.DeviceName = device.Name;
         ViewBag.DeviceBrand = device.Brand;
