@@ -103,22 +103,20 @@ public static class DeviceDetailsExcel
         if (!dueDate.HasValue) return XLColor.LightGray;
         var daysRemaining = (dueDate.Value - DateTime.Today).TotalDays;
         return daysRemaining < 0 ? XLColor.Red :
-               daysRemaining <= 60 ? XLColor.Orange :
-               XLColor.LightGreen;
+            daysRemaining <= 60 ? XLColor.Orange :
+            XLColor.LightGreen;
     }
 
     // 🔹 Ottieni il nome visualizzato dell'intervento
     private static string GetInterventionDisplayName(Intervention intervention)
     {
         if (intervention.Type == InterventionType.Maintenance)
-        {
             return intervention.MaintenanceCategory switch
             {
                 MaintenanceType.Preventive => "Manutenzione - Preventiva",
                 MaintenanceType.Corrective => "Manutenzione - Correttiva",
                 _ => "Manutenzione"
             };
-        }
 
         return intervention.Type.ToString();
     }

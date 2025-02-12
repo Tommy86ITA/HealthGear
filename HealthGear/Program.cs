@@ -5,6 +5,8 @@ using HealthGear.Data;
 using HealthGear.Services;
 using HealthGear.Services.Reports;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF;
+using QuestPDF.Infrastructure;
 using SQLitePCL;
 
 #endregion
@@ -32,7 +34,7 @@ builder.Services.AddScoped<PdfReportGenerator>();
 builder.Services.AddScoped<ExcelReportGenerator>();
 
 // Configura la licenza di QuestPDF
-QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+Settings.License = LicenseType.Community;
 
 // Configurazione del logging
 builder.Services.AddLogging(logging =>

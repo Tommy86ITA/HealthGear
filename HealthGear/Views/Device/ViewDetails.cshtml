@@ -1,19 +1,27 @@
 @using HealthGear.Helpers
 @model Device
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="tempDataMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    TempData.Remove("SuccessMessage");
+}
+
 <h2 class="mb-4"><i class="fas fa-info-circle"></i> Dettagli Dispositivo</h2>
 
-<!-- Dati Generali con Stato allineato a destra -->
+<!-- 📌 Dati Generali -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4><i class="fas fa-box"></i> Dati Generali</h4>
-    <span
-        class="badge bg-@(Model.Status switch
-                        {
-                            DeviceStatus.Attivo => "success",
-                            DeviceStatus.Guasto => "danger",
-                            _ => "secondary"
-                        })"
-        style="font-size: 1.2em; padding: 0.5em 1em;">
+    <span class="badge bg-@(Model.Status switch
+                          {
+                              DeviceStatus.Attivo => "success",
+                              DeviceStatus.Guasto => "danger",
+                              _ => "secondary"
+                          })"
+          style="font-size: 1.2em; padding: 0.5em 1em;">
         @Model.Status.ToString()
     </span>
 </div>
@@ -21,48 +29,47 @@
 <hr>
 <table class="table">
     <tr>
-        <th class="text-start"><i class="fas fa-tag"></i> Nome</th>
+        <th><i class="fas fa-tag"></i> Nome</th>
         <td class="text-end">@Model.Name</td>
     </tr>
     <tr>
-        <th class="text-start"><i class="fas fa-industry"></i> Produttore</th>
+        <th><i class="fas fa-industry"></i> Produttore</th>
         <td class="text-end">@Model.Brand</td>
     </tr>
     <tr>
-        <th class="text-start"><i class="fas fa-barcode"></i> Modello</th>
+        <th><i class="fas fa-barcode"></i> Modello</th>
         <td class="text-end">@Model.Model</td>
     </tr>
     <tr>
-        <th class="text-start"><i class="fas fa-hashtag"></i> Numero di Serie</th>
+        <th><i class="fas fa-hashtag"></i> Numero di Serie</th>
         <td class="text-end">@Model.SerialNumber</td>
     </tr>
     <tr>
-        <th class="text-start"><i class="fas fa-calendar-check"></i> Data collaudo</th>
+        <th><i class="fas fa-calendar-check"></i> Data collaudo</th>
         <td class="text-end">@Model.DataCollaudo.ToString("dd/MM/yyyy")</td>
     </tr>
 </table>
 
-<!-- Manutenzione e Controlli -->
+<!-- 📌 Manutenzione e Controlli -->
 <h4 class="mt-5"><i class="fas fa-tools"></i> Manutenzione e Controlli</h4>
 <hr>
 <table class="table">
     <tr>
-        <th class="text-start"><i class="fas fa-wrench"></i> Prossima Manutenzione</th>
+        <th><i class="fas fa-wrench"></i> Prossima Manutenzione</th>
         <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextMaintenanceDue)">
             @DueDateHelper.GetDueDateText(Model.NextMaintenanceDue)
         </td>
     </tr>
     <tr>
-        <th class="text-start"><i class="fas fa-bolt"></i> Prossima Verifica Elettrica</th>
+        <th><i class="fas fa-bolt"></i> Prossima Verifica Elettrica</th>
         <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextElectricalTestDue)">
             @DueDateHelper.GetDueDateText(Model.NextElectricalTestDue)
         </td>
     </tr>
-
     @if (Model.RequiresPhysicalInspection)
     {
         <tr>
-            <th class="text-start"><i class="fas fa-radiation"></i> Prossima Verifica Fisica</th>
+            <th><i class="fas fa-radiation"></i> Prossima Verifica Fisica</th>
             <td class="text-end @DueDateHelper.GetDueDateClass(Model.NextPhysicalInspectionDue)">
                 @DueDateHelper.GetDueDateText(Model.NextPhysicalInspectionDue)
             </td>
@@ -70,7 +77,7 @@
     }
 </table>
 
-<!-- 🔥 Storico Interventi -->
+<!-- 📌 Storico Interventi -->
 <h4 class="mt-5"><i class="fas fa-history"></i> Interventi Recenti</h4>
 <hr>
 <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@Model.Id" class="btn btn-success mb-3">
@@ -86,7 +93,7 @@
             <th>Tipo</th>
             <th>Note</th>
             <th>Esito</th>
-            <th>Azioni</th>
+            <th>Azioni</th> <!-- ✅ Pulsanti azioni -->
         </tr>
         </thead>
         <tbody>
@@ -120,22 +127,25 @@
                         <span class="text-muted">N/A</span>
                     }
                 </td>
-                <td>
+                <td class="text-center">
+                    <!-- ✅ Pulsante per vedere i dettagli dell'intervento -->
                     <a asp-action="Details" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                       class="btn btn-info btn-sm">
+                       class="btn btn-info btn-sm" title="Dettagli">
                         <i class="fas fa-eye"></i>
                     </a>
+
+                    <!-- ✅ Pulsante per modificare l'intervento -->
                     <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                       asp-route-returnUrl="@Url.Action("Details", "Device", new { id = Model.Id })"
-                       class="btn btn-warning btn-sm">
+                       class="btn btn-warning btn-sm" title="Modifica">
                         <i class="fas fa-edit"></i>
                     </a>
+
+                    <!-- ✅ Pulsante per eliminare l'intervento -->
                     <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
                           method="post" class="d-inline">
-                        <input type="hidden" name="returnUrl"
-                               value="@Url.Action("Details", "Device", new { id = Model.Id })"/>
+                        <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Device", new { id = Model.Id })"/>
                         <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');">
+                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');" title="Elimina">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -144,46 +154,13 @@
         }
         </tbody>
     </table>
-
-    <!-- ✅ Pulsante per accedere allo STORICO INTERVENTI -->
-    <div class="text-center mt-3">
-        <a asp-action="List" asp-controller="InterventionHistory" asp-route-deviceId="@Model.Id" class="btn btn-info">
-            <i class="fas fa-clock-rotate-left"></i> Apri Storico Completo
-        </a>
-
-        <!-- Pulsante per aprire il modal -->
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deviceReportModal">
-            <i class="fas fa-file-download"></i> Scarica Report
-        </button>
-
-        <!-- Modal per la selezione del formato -->
-        <div class="modal fade" id="deviceReportModal" tabindex="-1" aria-labelledby="deviceReportModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deviceReportModalLabel">Scarica Report Dispositivo</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <p>Seleziona il formato del report:</p>
-                        <a href="@Url.Action("GenerateDeviceDetailsExcel", "Report", new { id = Model.Id })" class="btn btn-success">
-                            <i class="fas fa-file-excel"></i> Excel
-                        </a>
-                        <a href="@Url.Action("GenerateDeviceDetailPdf", "Report", new { id = Model.Id })" class="btn btn-danger">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 }
 else
 {
     <p class="text-muted">Nessun intervento registrato per questo dispositivo.</p>
 }
 
-<!-- Pulsanti Azioni -->
+<!-- 📌 Pulsanti di Azione -->
 <div class="d-flex justify-content-between mt-4">
     <div>
         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
@@ -195,18 +172,102 @@ else
     </div>
 
     <div>
-        @if (!Model.Interventions.Any())
-        {
-            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-                <i class="fas fa-trash"></i> Elimina Dispositivo
+        <!-- ✅ Pulsante di eliminazione visibile solo se non ci sono interventi -->
+
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal"
+                @(Model.Interventions.Any() ? "hidden" : "")>
+            <i class="fas fa-trash"></i> Elimina Dispositivo
+        </button>
+
+        <!-- ✅ Pulsante di archiviazione dinamico -->
+        <form asp-action="Archive" asp-controller="Device" asp-route-id="@Model.Id" method="post" class="d-inline">
+            <button type="submit" class="btn @(Model.Status == DeviceStatus.Dismesso ? "btn-success" : "btn-dark")">
+                <i class="fas @(Model.Status == DeviceStatus.Dismesso ? "fas fa-undo" : "fa-archive")"></i>
+                @(Model.Status == DeviceStatus.Dismesso ? "Riattiva Dispositivo" : "Archivia Dispositivo")
             </button>
-        }
-        else
-        {
-            <button class="btn btn-dark archive-btn" data-id="@Model.Id">
-                <i class="fas fa-archive"></i> Archivia Dispositivo
-            </button>
-        }
+        </form>
+    </div>
+</div>
+
+<!-- 📌 Modal di conferma per Archiviazione/Riattivazione -->
+<div class="modal fade" id="confirmArchiveModal" tabindex="-1" aria-labelledby="confirmArchiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmArchiveModalLabel">Conferma Operazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="archiveModalMessage">Sei sicuro di voler archiviare questo dispositivo?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="confirmArchiveBtn">Conferma</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📌 Pulsanti Extra -->
+<div class="text-center mt-3">
+    <a asp-action="List" asp-controller="InterventionHistory" asp-route-deviceId="@Model.Id" class="btn btn-info">
+        <i class="fas fa-clock-rotate-left"></i> Apri Storico Completo
+    </a>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportReportModal">
+        <i class="fas fa-file-download"></i> Scarica Report
+    </button>
+</div>
+
+<!-- 📌 MODAL PER LA SCELTA DEL FORMATO DEL REPORT -->
+<div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportReportModalLabel">Esporta Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Seleziona il formato in cui desideri esportare il report:</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Esporta come PDF</button>
+                    <button class="btn btn-success" id="exportExcelBtn"><i class="fas fa-file-excel"></i> Esporta come Excel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📌 MODAL PER CONFERMA ELIMINAZIONE -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Stai per eliminare il seguente dispositivo:</strong></p>
+                <ul>
+                    <li><strong>Nome:</strong> @Model.Name</li>
+                    <li><strong>Marca:</strong> @Model.Brand</li>
+                    <li><strong>Modello:</strong> @Model.Model</li>
+                    <li><strong>Numero di Serie:</strong> @Model.SerialNumber</li>
+                </ul>
+                <p>Digita il nome del dispositivo per confermare:</p>
+                <input type="text" id="confirmDeviceName" class="form-control" placeholder="Nome dispositivo">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form id="deleteForm" method="post" action="@Url.Action("Delete", "Device", new { id = Model.Id })">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="hiddenConfirmName" name="confirmName" value="">
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                        <i class="fas fa-trash"></i> Conferma Eliminazione
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -216,46 +277,173 @@ else
             let tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
             let token = tokenElement ? tokenElement.value : "";
 
-            function fetchRequest(url, method, successMessage, errorMessage) {
+            // ✅ FUNZIONE PER MOSTRARE UN TOAST DI NOTIFICA
+            function showToast(message, type = "success") {
+                let toastContainer = document.getElementById("toastContainer");
+                if (!toastContainer) {
+                    toastContainer = document.createElement("div");
+                    toastContainer.id = "toastContainer";
+                    toastContainer.style.position = "fixed";
+                    toastContainer.style.top = "20px";
+                    toastContainer.style.right = "20px";
+                    toastContainer.style.zIndex = "1050";
+                    document.body.appendChild(toastContainer);
+                }
+
+                let toast = document.createElement("div");
+                toast.className = `toast align-items-center text-bg-${type} border-0 show`;
+                toast.setAttribute("role", "alert");
+                toast.setAttribute("aria-live", "assertive");
+                toast.setAttribute("aria-atomic", "true");
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.remove("show");
+                    toastContainer.removeChild(toast);
+                }, 3000);
+            }
+
+            // ✅ FUNZIONE GENERICA PER RICHIESTE FETCH
+            function fetchRequest(url, method, body, successMessage, errorMessage, callback = null) {
                 fetch(url, {
                     method,
                     headers: {
                         "Content-Type": "application/json",
                         "RequestVerificationToken": token
+                    },
+                    body: body ? JSON.stringify(body) : null
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(successMessage, "success");
+                        if (callback) callback(data);
+                    } else {
+                        showToast(data.message || errorMessage, "danger");
                     }
                 })
+                .catch(error => showToast(errorMessage + ": " + error.message, "danger"));
+            }
+
+            // ✅ **GESTIONE ELIMINAZIONE DISPOSITIVO SENZA AJAX**
+            let confirmInput = document.getElementById("confirmDeviceName");
+            let deleteBtn = document.getElementById("confirmDeleteBtn");
+            let hiddenConfirmName = document.getElementById("hiddenConfirmName");
+            let deleteForm = document.getElementById("deleteForm");
+
+            let expectedName = "@Html.Raw(Model.Name)".trim(); // Nome corretto
+
+            if (confirmInput && deleteBtn) {
+                confirmInput.addEventListener("input", function () {
+                    let userInput = this.value.trim();
+                    deleteBtn.disabled = userInput !== expectedName;
+                    hiddenConfirmName.value = userInput === expectedName ? userInput : "";
+                });
+            }
+
+            // ✅ GESTIONE ARCHIVIAZIONE / RIATTIVAZIONE DISPOSITIVO
+            let archiveBtn = document.getElementById("archiveDeviceBtn");
+            let confirmArchiveBtn = document.getElementById("confirmArchiveBtn");
+            let archiveModalMessage = document.getElementById("archiveModalMessage");
+            let confirmArchiveModal = new bootstrap.Modal(document.getElementById("confirmArchiveModal"));
+
+            if (archiveBtn) {
+                archiveBtn.addEventListener("click", function () {
+                    let deviceId = this.getAttribute("data-id");
+                    let isArchiving = archiveBtn.classList.contains("btn-dark");
+
+                    archiveModalMessage.textContent = isArchiving
+                        ? "Sei sicuro di voler archiviare questo dispositivo?"
+                        : "Sei sicuro di voler riattivare questo dispositivo?";
+
+                    confirmArchiveBtn.dataset.deviceId = deviceId;
+                    confirmArchiveModal.show();
+                });
+
+                confirmArchiveBtn.addEventListener("click", function () {
+                    let deviceId = this.dataset.deviceId;
+
+                    fetch(`/Device/Archive/${deviceId}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "RequestVerificationToken": token
+                        }
+                    })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert(successMessage);
-                            window.location.reload();
+                            showToast(data.message, "success");
+
+                            // ✅ Cambia dinamicamente il pulsante senza ricaricare
+                            if (data.newStatus === "Attivo") {
+                                archiveBtn.classList.remove("btn-dark");
+                                archiveBtn.classList.add("btn-success");
+                                archiveBtn.innerHTML = '<i class="fas fa-undo"></i> Riattiva Dispositivo';
+                            } else {
+                                archiveBtn.classList.remove("btn-success");
+                                archiveBtn.classList.add("btn-dark");
+                                archiveBtn.innerHTML = '<i class="fas fa-archive"></i> Archivia Dispositivo';
+                            }
+
+                            confirmArchiveModal.hide();
+
+                            // ✅ FORZA IL REFRESH DOPO L'AGGIORNAMENTO
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
                         } else {
-                            alert(data.message || errorMessage);
+                            showToast(data.message || "Errore durante l'operazione.", "danger");
                         }
                     })
-                    .catch(error => alert(errorMessage + ": " + error.message));
+                    .catch(error => showToast("Errore: " + error.message, "danger"));
+                });
             }
 
-            // 🔹 Gestione pulsante di archiviazione
-            document.querySelector(".archive-btn")?.addEventListener("click", function () {
-                let deviceId = this.getAttribute("data-id");
-                if (!confirm("Sei sicuro di voler impostare come Dismesso e archiviare questo dispositivo?")) return;
-                fetchRequest(`/Device/Archive/${deviceId}`, "POST", "Il dispositivo è stato archiviato con successo!", "Errore durante l'archiviazione.");
+            // ✅ CHIUSURA AUTOMATICA DEL MODALE DOPO IL DOWNLOAD DEL REPORT
+            let reportModal = document.getElementById('deviceReportModal');
+            if (reportModal) {
+                let reportModalInstance = new bootstrap.Modal(reportModal);
+                document.querySelectorAll("#deviceReportModal a").forEach(button => {
+                    button.addEventListener("click", function () {
+                        setTimeout(() => {
+                            reportModalInstance.hide();
+                        }, 500);
+                    });
+                });
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let exportPdfBtn = document.getElementById("exportPdfBtn");
+            let exportExcelBtn = document.getElementById("exportExcelBtn");
+            let exportReportModal = new bootstrap.Modal(document.getElementById("exportReportModal"));
+
+            function downloadReport(format) {
+                let deviceId = "@Model.Id";
+                let url = format === "pdf"
+                    ? `/Report/GenerateDeviceDetailPdf/${deviceId}`
+                    : `/Report/GenerateDeviceDetailExcel/${deviceId}`;
+
+                window.location.href = url;
+                exportReportModal.hide();
+            }
+
+            exportPdfBtn.addEventListener("click", function () {
+                downloadReport("pdf");
+            });
+
+            exportExcelBtn.addEventListener("click", function () {
+                downloadReport("excel");
             });
         });
     </script>
-    
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let reportModal = new bootstrap.Modal(document.getElementById('deviceReportModal'));
-
-        document.querySelectorAll("#deviceReportModal a").forEach(button => {
-            button.addEventListener("click", function () {
-                setTimeout(() => {
-                    reportModal.hide();
-                }, 500); // Ritardo di 500ms per assicurarsi che l'azione parta prima della chiusura
-            });
-        });
-    });
-</script>
 }

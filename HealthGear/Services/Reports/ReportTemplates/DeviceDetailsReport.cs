@@ -50,11 +50,11 @@ public static class DeviceDetailsReport
                         row.RelativeItem().AlignRight().Column(right =>
                         {
                             right.Item().Text($"Scadenza manutenzione: {device.NextMaintenanceDue:dd/MM/yyyy}");
-                            right.Item().Text($"Scadenza verifica elettrica: {device.NextElectricalTestDue:dd/MM/yyyy}");
+                            right.Item()
+                                .Text($"Scadenza verifica elettrica: {device.NextElectricalTestDue:dd/MM/yyyy}");
                             if (device.RequiresPhysicalInspection)
-                            {
-                                right.Item().Text($"Scadenza controlli fisici: {device.NextPhysicalInspectionDue:dd/MM/yyyy}");
-                            }
+                                right.Item()
+                                    .Text($"Scadenza controlli fisici: {device.NextPhysicalInspectionDue:dd/MM/yyyy}");
                         });
                     });
 
@@ -88,8 +88,10 @@ public static class DeviceDetailsReport
                             header.Cell().Element(CellStyle).Text(text => text.Span("Esito").Bold());
                             return;
 
-                            static IContainer CellStyle(IContainer container) =>
-                                container.Padding(5).BorderBottom(1).Background(Colors.Grey.Lighten3);
+                            static IContainer CellStyle(IContainer container)
+                            {
+                                return container.Padding(5).BorderBottom(1).Background(Colors.Grey.Lighten3);
+                            }
                         });
 
                         // Dati della tabella
@@ -116,8 +118,10 @@ public static class DeviceDetailsReport
                             }).FontColor(intervention.Passed == false ? Colors.Red.Medium : Colors.Green.Medium);
                             continue;
 
-                            static IContainer CellDataStyle(IContainer container) =>
-                                container.Padding(7).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
+                            static IContainer CellDataStyle(IContainer container)
+                            {
+                                return container.Padding(7).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
+                            }
                         }
                     });
                 });
@@ -147,17 +151,17 @@ public static class DeviceDetailsReport
     private static string GetInterventionDisplayName(Intervention intervention)
     {
         if (intervention.Type == InterventionType.Maintenance)
-        {
             return intervention.MaintenanceCategory switch
             {
                 MaintenanceType.Preventive => "Manutenzione - Preventiva",
                 MaintenanceType.Corrective => "Manutenzione - Correttiva",
                 _ => "Manutenzione"
             };
-        }
 
         var field = intervention.Type.GetType().GetField(intervention.Type.ToString());
-        var attribute = field is not null ? (DisplayAttribute?)Attribute.GetCustomAttribute(field, typeof(DisplayAttribute)) : null;
+        var attribute = field is not null
+            ? (DisplayAttribute?)Attribute.GetCustomAttribute(field, typeof(DisplayAttribute))
+            : null;
         return attribute?.Name ?? intervention.Type.ToString();
     }
 

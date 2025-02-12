@@ -1,7 +1,6 @@
 #region
 
 using HealthGear.Data;
-using HealthGear.Helpers;
 using HealthGear.Models;
 using HealthGear.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -118,68 +117,70 @@ public class DeviceController(
     {
         var device = await context.Devices.FindAsync(id);
         if (device == null)
-            return Json(new { success = false, message = "Dispositivo non trovato." });
+        {
+            if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+                return Json(new { success = false, message = "Dispositivo non trovato." });
 
-        if (device.Status == DeviceStatus.Dismesso)
-            return Json(new { success = false, message = "Il dispositivo è già archiviato." });
+            return RedirectToAction("Index");
+        }
 
-        device.Status = DeviceStatus.Dismesso;
+        // ✅ Se il dispositivo è già archiviato, lo riattiviamo
+        var wasArchived = device.Status == DeviceStatus.Dismesso;
+        device.Status = wasArchived ? DeviceStatus.Attivo : DeviceStatus.Dismesso;
+
         await context.SaveChangesAsync();
 
-        return Json(new { success = true, message = "Dispositivo archiviato con successo!" });
+        var successMessage =
+            wasArchived ? "Dispositivo riattivato con successo!" : "Dispositivo archiviato con successo!";
+        TempData["SuccessMessage"] = successMessage;
+        var newStatus = wasArchived ? "Attivo" : "Dismesso";
+
+        // ✅ Se la richiesta è AJAX, ritorniamo il JSON
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+            return Json(new { success = true, message = successMessage, newStatus });
+
+        // ✅ Se la richiesta è normale, reindirizza alla pagina Dettagli del dispositivo
+        return RedirectToAction("Details", new { id });
     }
 
-    // 📌 POST: /Device/Restore/{id}
-    [HttpPost("Restore/{id:int}")]
+
+// 📌 POST: /Device/Delete/{id}
+    [HttpPost("Delete/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Restore(int id)
+    public async Task<IActionResult> Delete(int id, string confirmName)
     {
-        var device = await context.Devices.FindAsync(id);
-        if (device == null)
-            return Json(new { success = false, message = "Dispositivo non trovato." });
-
-        if (device.Status == DeviceStatus.Attivo)
-            return Json(new { success = false, message = "Il dispositivo è già attivo." });
-
-        device.Status = DeviceStatus.Attivo;
-        await context.SaveChangesAsync();
-
-        return Json(new { success = true, message = "Dispositivo riattivato con successo!" });
-    }
-
-    // 📌 POST: /Device/DeleteConfirmed/{id}
-    [HttpPost("DeleteConfirmed/{id:int}")]
-    public async Task<IActionResult> DeleteConfirmed(int id, [FromBody] ConfirmDeleteModel data)
-    {
-        if (string.IsNullOrWhiteSpace(data.ConfirmName))
-            return BadRequest(new { success = false, message = "Richiesta non valida. Dati mancanti." });
+        if (string.IsNullOrWhiteSpace(confirmName))
+        {
+            TempData["ErrorMessage"] = "Richiesta non valida. Devi inserire il nome del dispositivo.";
+            return RedirectToAction("Details", new { id });
+        }
 
         var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
-        if (device == null) return NotFound(new { success = false, message = "Dispositivo non trovato." });
+        if (device == null)
+        {
+            TempData["ErrorMessage"] = "Dispositivo non trovato.";
+            return RedirectToAction("Index");
+        }
 
-        if (device.Interventions.Count != 0)
-            return BadRequest(new
-                { success = false, message = "Il dispositivo ha interventi registrati e non può essere eliminato." });
+        if (device.Interventions.Any())
+        {
+            TempData["ErrorMessage"] = "Il dispositivo ha interventi registrati e non può essere eliminato.";
+            return RedirectToAction("Details", new { id });
+        }
 
-        if (data.ConfirmName != device.Name)
-            return BadRequest(new { success = false, message = "Il nome non corrisponde. Riprova." });
+        if (!string.Equals(confirmName, device.Name, StringComparison.Ordinal))
+        {
+            TempData["ErrorMessage"] = "Il nome del dispositivo non corrisponde. Riprova.";
+            return RedirectToAction("Details", new { id });
+        }
 
+        // ✅ Elimina il dispositivo dal database
         context.Devices.Remove(device);
         await context.SaveChangesAsync();
 
-        return Json(new { success = true });
-    }
-
-    // 📌 GET: /Device/ConfirmDelete/{id}
-    [HttpGet("ConfirmDelete/{id:int}")]
-    public async Task<IActionResult> ConfirmDelete(int id)
-    {
-        var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
-        if (device == null) return NotFound();
-
-        if (device.Interventions.Count != 0) return RedirectToAction("ConfirmDeleteOrArchive", new { id });
-
-        var html = await this.RenderViewToStringAsync("_ConfirmDelete", device);
-        return Json(new { success = true, html });
+        TempData["SuccessMessage"] = "Dispositivo eliminato con successo!";
+    
+        // ✅ Sempre redirect alla lista dispositivi
+        return RedirectToAction("Index");
     }
 }
