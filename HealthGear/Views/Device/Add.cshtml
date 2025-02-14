@@ -4,38 +4,35 @@
     ViewData["Title"] = "Aggiungi Nuovo Dispositivo";
 }
 
-<h2 class="mb-4">📋 Aggiungi Nuovo Dispositivo</h2>
+<h2 class="mb-4">
+    <i class="fas fa-plus"></i> Aggiungi Nuovo Dispositivo
+</h2>
 
 <form asp-action="Create" class="row g-3">
+    <input type="hidden" asp-for="InventoryNumber" />
 
     <div class="col-md-6">
-        <label asp-for="Name" class="form-label fw-bold">Nome Dispositivo</label>
+        <label asp-for="Name" class="form-label fw-bold">Nome Dispositivo *</label>
         <input asp-for="Name" class="form-control" placeholder="Inserisci il nome del dispositivo" required/>
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Brand" class="form-label fw-bold">Produttore</label>
+        <label asp-for="Brand" class="form-label fw-bold">Produttore *</label>
         <input asp-for="Brand" class="form-control" placeholder="Es. Siemens, Philips..." required/>
         <span asp-validation-for="Brand" class="text-danger"></span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="Model" class="form-label fw-bold">Modello</label>
+        <label asp-for="Model" class="form-label fw-bold">Modello *</label>
         <input asp-for="Model" class="form-control" placeholder="Inserisci il modello" required/>
         <span asp-validation-for="Model" class="text-danger"></span>
     </div>
 
     <div class="col-md-6">
-        <label asp-for="SerialNumber" class="form-label fw-bold">Numero di Serie</label>
+        <label asp-for="SerialNumber" class="form-label fw-bold">Numero di Serie *</label>
         <input asp-for="SerialNumber" class="form-control" placeholder="Es. ABC12345" required/>
         <span asp-validation-for="SerialNumber" class="text-danger"></span>
-    </div>
-
-    <div class="col-md-6">
-        <label asp-for="InventoryNumber" class="form-label fw-bold">Numero di Inventario</label>
-        <input asp-for="InventoryNumber" class="form-control" placeholder="Facoltativo"/>
-        <span asp-validation-for="InventoryNumber" class="text-danger"></span>
     </div>
 
     <div class="col-md-6">
@@ -45,7 +42,7 @@
     </div>
 
     <div class="col-md-6">
-        <label asp-for="DeviceType" class="form-label fw-bold">Tipologia Dispositivo</label>
+        <label asp-for="DeviceType" class="form-label fw-bold">Tipologia Dispositivo *</label>
         <select asp-for="DeviceType" asp-items="Html.GetEnumSelectList<DeviceType>()" class="form-select" required
                 id="DeviceType">
             <option value="">-- Seleziona una tipologia --</option>
@@ -53,23 +50,15 @@
         <span asp-validation-for="DeviceType" class="text-danger"></span>
     </div>
 
-    <div class="col-md-6">
-        <label asp-for="Status" class="form-label fw-bold">Stato</label>
-        <select asp-for="Status" asp-items="Html.GetEnumSelectList<DeviceStatus>()" class="form-select" required>
-            <option value="">-- Seleziona lo stato --</option>
-        </select>
-        <span asp-validation-for="Status" class="text-danger"></span>
-    </div>
-
     <div class="col-md-4">
-        <label asp-for="DataCollaudo" class="form-label fw-bold">Data di Collaudo</label>
+        <label asp-for="DataCollaudo" class="form-label fw-bold">Data di Collaudo *</label>
         <input asp-for="DataCollaudo" class="form-control" type="date" required
                max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="DataCollaudo" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
-        <label asp-for="FirstElectricalTest" class="form-label fw-bold">Prima Verifica Elettrica</label>
+        <label asp-for="FirstElectricalTest" class="form-label fw-bold">Prima Verifica Elettrica *</label>
         <input asp-for="FirstElectricalTest" class="form-control" type="date" required
                max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="FirstElectricalTest" class="text-danger"></span>
@@ -77,7 +66,7 @@
 
     <!-- Sezione Prima Verifica Fisica -->
     <div class="col-md-4" id="physicalTestContainer" style="display: none;">
-        <label asp-for="FirstPhysicalInspection" class="form-label fw-bold">Prima Verifica Fisica</label>
+        <label asp-for="FirstPhysicalInspection" class="form-label fw-bold">Prima Verifica Fisica *</label>
         <input asp-for="FirstPhysicalInspection" class="form-control" type="date"
                max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
         <span asp-validation-for="FirstPhysicalInspection" class="text-danger"></span>
@@ -89,12 +78,16 @@
         <span asp-validation-for="Notes" class="text-danger"></span>
     </div>
 
+    <div class="col-12 text-muted text-center">
+        <small>* indica campi obbligatori</small>
+    </div>
+    
     <div class="col-12 d-flex justify-content-between mt-4">
-        <button type="submit" class="btn btn-success">
-            💾 Salva
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salva
         </button>
         <a asp-action="Index" class="btn btn-outline-secondary">
-            ❌ Annulla
+            <i class="fas fa-times"></i> Annulla
         </a>
     </div>
 

@@ -29,6 +29,9 @@ builder.Services.AddScoped<FileService>();
 // Aggiunta del servizio di calcolo delle scadenze
 builder.Services.AddScoped<DeadlineService>();
 
+// Aggiunta del servizio di generazione del numero di inventario
+builder.Services.AddScoped<InventoryNumberService>();
+
 // Aggiunta dei servizi di generazione dei report
 builder.Services.AddScoped<PdfReportGenerator>();
 builder.Services.AddScoped<ExcelReportGenerator>();
@@ -85,5 +88,29 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.EnsureCreated(); // Crea il database se non esiste
 }
+
+
+/*using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var inventoryNumberService = scope.ServiceProvider.GetRequiredService<InventoryNumberService>();
+
+    // Recuperiamo tutti i dispositivi che non hanno ancora un numero di inventario
+    var devicesToUpdate = await dbContext.Devices
+        .Where(d => string.IsNullOrEmpty(d.InventoryNumber))
+        .ToListAsync();
+
+    // Per ogni dispositivo senza numero di inventario, generiamo e aggiorniamo il numero
+    foreach (var device in devicesToUpdate)
+    {
+        var inventoryNumber = await inventoryNumberService.GenerateInventoryNumberAsync(device.DataCollaudo.Year);
+        device.SetInventoryNumber(inventoryNumber); // Impostiamo il numero di inventario
+    }
+
+    // Salviamo i cambiamenti nel database
+    await dbContext.SaveChangesAsync();
+
+    Console.WriteLine($"Generati numeri di inventario per {devicesToUpdate.Count} dispositivi.");
+}*/
 
 app.Run();

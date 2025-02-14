@@ -68,12 +68,16 @@
     </div>
 
     <!-- Pulsanti -->
+    <div class="col-12 text-muted text-center">
+        <small>Tutti i campi sono obbligatori</small>
+    </div>
+
     <div class="col-12 d-flex justify-content-between mt-4">
         <button type="submit" class="btn btn-primary">
-            💾 Salva
+            <i class="fas fa-save"></i> Salva
         </button>
-        <a asp-action="Details" asp-controller="Device" asp-route-id="@Model.DeviceId" class="btn btn-secondary">
-            ❌ Annulla
+        <a asp-action="Details" asp-controller="Device" asp-route-id="@Model.DeviceId" class="btn btn-outline-secondary">
+            <i class="fas fa-times"></i> Annulla
         </a>
     </div>
 </form>
@@ -82,16 +86,16 @@
     <partial name="_ValidationScriptsPartial"/>
     <script>
         function toggleFields() {
-            var typeElement = document.getElementById("Type");
-            var maintenanceContainer = document.getElementById("maintenanceCategoryContainer");
-            var passedContainer = document.getElementById("passedContainer");
+            const typeElement = document.getElementById("Type");
+            const maintenanceContainer = document.getElementById("maintenanceCategoryContainer");
+            const passedContainer = document.getElementById("passedContainer");
 
             if (!typeElement || !maintenanceContainer || !passedContainer) {
                 console.error("Uno degli elementi non è stato trovato nel DOM.");
                 return;
             }
 
-            var selectedValue = typeElement.value;
+            let selectedValue = typeElement.value;
             console.log("Tipo selezionato:", selectedValue);
 
             // Mostra la categoria manutenzione solo se è "Maintenance"

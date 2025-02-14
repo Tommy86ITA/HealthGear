@@ -40,7 +40,8 @@ namespace HealthGear.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("InventoryNumber")
-                        .HasMaxLength(20)
+                        .IsRequired()
+                        .HasMaxLength(15)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Location")
@@ -53,6 +54,7 @@ namespace HealthGear.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("NextElectricalTestDue")
@@ -65,7 +67,7 @@ namespace HealthGear.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(1000)
+                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SerialNumber")

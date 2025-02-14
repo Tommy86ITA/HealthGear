@@ -20,17 +20,21 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reportModalLabel">Scegli il formato del report</h5>
+                <h5 class="modal-title" id="reportModalLabel">
+                    <i class="fas fa-file-alt"></i> Scegli il formato del report
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
                 <p>In quale formato vuoi scaricare il report?</p>
-                <a href="@Url.Action("GenerateExcel", "Report")" class="btn btn-success">
-                    <i class="fas fa-file-excel"></i> Excel
-                </a>
-                <a href="@Url.Action("GeneratePdf", "Report")" class="btn btn-danger">
-                    <i class="fas fa-file-pdf"></i> PDF
-                </a>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="@Url.Action("GenerateDeviceListExcel", "Report")" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </a>
+                    <a href="@Url.Action("GenerateDeviceListPdf", "Report")" class="btn btn-danger">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -42,11 +46,11 @@
 <ul class="nav nav-tabs">
     <li class="nav-item">
         <a class="nav-link @(Model.StatusFilter == "attivi" ? "active" : "")" asp-action="Index"
-           asp-route-statusFilter="attivi">Attivi</a>
+           asp-route-statusFilter="attivi">Attivi (@ViewBag.CountAttivi)</a>
     </li>
     <li class="nav-item">
         <a class="nav-link @(Model.StatusFilter == "dismessi" ? "active" : "")" asp-action="Index"
-           asp-route-statusFilter="dismessi">Dismessi</a>
+           asp-route-statusFilter="dismessi">Dismessi (@ViewBag.CountDismessi)</a>
     </li>
 </ul>
 
@@ -94,35 +98,26 @@ else
             </td>
 
             <td>
-                <span class="@(DueDateHelper.GetDueDateClass(device.NextPhysicalInspectionDue))">
-                    @(device.NextPhysicalInspectionDue?.ToShortDateString() ?? "N/A")
-                </span>
+                @if (device.RequiresPhysicalInspection) // Supponendo che tu abbia una proprietà booleana per verificare se è necessario
+                {
+                    <span class="@(DueDateHelper.GetDueDateClass(device.NextPhysicalInspectionDue))">
+            @(device.NextPhysicalInspectionDue?.ToShortDateString() ?? "N/A")
+        </span>
+                }
+                else
+                {
+                    <span>—</span> <!-- Mostra un trattino invece di "N/A" -->
+                }
             </td>
             <td>
                 <a asp-action="Details" asp-route-id="@device.Id" class="btn btn-info btn-sm" title="Dettagli">
                     <i class="fas fa-eye"></i>
                 </a>
 
-                @if (Model.StatusFilter == "attivi")
-                {
-                    <a asp-action="Edit" asp-route-id="@device.Id" class="btn btn-warning btn-sm" title="Modifica">
-                        <i class="fas fa-edit"></i>
-                    </a>
 
-                    <!-- 🔹 Pulsante di Archiviazione SEMPRE visibile -->
-                    <button class="btn btn-dark btn-sm archive-btn" data-id="@device.Id"
-                            title="Dismetti e archivia il dispositivo">
-                        <i class="fas fa-archive"></i>
-                    </button>
-                }
-                else
-                {
-                    <!-- 🔹 Pulsante per RIATTIVARE dispositivi dismessi -->
-                    <button class="btn btn-success btn-sm restore-btn" data-id="@device.Id"
-                            title="Riattiva Dispositivo">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                }
+                <a asp-action="Edit" asp-route-id="@device.Id" class="btn btn-warning btn-sm" title="Modifica">
+                    <i class="fas fa-edit"></i>
+                </a>
             </td>
         </tr>
     }

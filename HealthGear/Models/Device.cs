@@ -40,8 +40,20 @@ public class Device
     public required string SerialNumber { get; set; }
 
     /// <summary>Numero di inventario (opzionale).</summary>
-    // ReSharper disable once EntityFramework.ModelValidation.UnlimitedStringLength
-    public string? InventoryNumber { get; set; }
+    [Required]
+    [MaxLength(15)]
+    public string InventoryNumber { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Imposta il numero di inventario solo se non è già stato assegnato.
+    /// </summary>
+    public void SetInventoryNumber(string inventoryNumber)
+    {
+        if (string.IsNullOrWhiteSpace(InventoryNumber))
+        {
+            InventoryNumber = inventoryNumber;
+        }
+    }
 
     /// <summary>Ubicazione fisica del dispositivo (opzionale).</summary>
     [MaxLength(100)]

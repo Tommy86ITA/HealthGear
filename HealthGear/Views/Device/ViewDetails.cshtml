@@ -223,14 +223,14 @@ else
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exportReportModalLabel">Esporta Report</h5>
+                <h5 class="modal-title" id="exportReportModalLabel"> <i class="fas fa-file-alt"></i> Scegli il formato del report</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <p>Seleziona il formato in cui desideri esportare il report:</p>
-                <div class="d-grid gap-2">
-                    <button class="btn btn-primary" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Esporta come PDF</button>
-                    <button class="btn btn-success" id="exportExcelBtn"><i class="fas fa-file-excel"></i> Esporta come Excel</button>
+            <div class="modal-body text-center">
+                <p>In quale formato vuoi scaricare il report?</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-success" id="exportExcelBtn"><i class="fas fa-file-excel"></i> Excel</button>
+                    <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
                 </div>
             </div>
         </div>
@@ -308,35 +308,12 @@ else
                     toastContainer.removeChild(toast);
                 }, 3000);
             }
-
-            // ✅ FUNZIONE GENERICA PER RICHIESTE FETCH
-            function fetchRequest(url, method, body, successMessage, errorMessage, callback = null) {
-                fetch(url, {
-                    method,
-                    headers: {
-                        "Content-Type": "application/json",
-                        "RequestVerificationToken": token
-                    },
-                    body: body ? JSON.stringify(body) : null
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(successMessage, "success");
-                        if (callback) callback(data);
-                    } else {
-                        showToast(data.message || errorMessage, "danger");
-                    }
-                })
-                .catch(error => showToast(errorMessage + ": " + error.message, "danger"));
-            }
-
-            // ✅ **GESTIONE ELIMINAZIONE DISPOSITIVO SENZA AJAX**
+            
+// ✅ **GESTIONE ELIMINAZIONE DISPOSITIVO SENZA AJAX**
             let confirmInput = document.getElementById("confirmDeviceName");
             let deleteBtn = document.getElementById("confirmDeleteBtn");
             let hiddenConfirmName = document.getElementById("hiddenConfirmName");
             let deleteForm = document.getElementById("deleteForm");
-
             let expectedName = "@Html.Raw(Model.Name)".trim(); // Nome corretto
 
             if (confirmInput && deleteBtn) {
@@ -429,11 +406,9 @@ else
 
             function downloadReport(format) {
                 let deviceId = "@Model.Id";
-                let url = format === "pdf"
+                window.location.href = format === "pdf"
                     ? `/Report/GenerateDeviceDetailPdf/${deviceId}`
                     : `/Report/GenerateDeviceDetailExcel/${deviceId}`;
-
-                window.location.href = url;
                 exportReportModal.hide();
             }
 

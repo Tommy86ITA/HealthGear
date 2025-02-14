@@ -14,10 +14,10 @@ namespace HealthGear.Controllers;
 public class DeviceController(
     ApplicationDbContext context,
     DeadlineService deadlineService,
-    ILogger<DeviceController> logger) : Controller
-{
-    public ILogger<DeviceController> Logger { get; } = logger;
+    InventoryNumberService inventoryNumberService)
+    : Controller
 
+{
     // 📌 GET: /Device
     // Mostra la lista dei dispositivi attivi e dismessi
     [HttpGet("")]
@@ -27,10 +27,12 @@ public class DeviceController(
         var activeDevices = await context.Devices
             .Where(d => d.Status != DeviceStatus.Dismesso)
             .ToListAsync();
+        ViewBag.CountAttivi = activeDevices.Count;
 
         var archivedDevices = await context.Devices
             .Where(d => d.Status == DeviceStatus.Dismesso)
             .ToListAsync();
+        ViewBag.CountDismessi = archivedDevices.Count;
 
         var viewModel = new DeviceListViewModel
         {
@@ -67,9 +69,13 @@ public class DeviceController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Device device)
     {
+        ModelState.Remove("InventoryNumber");
         if (!ModelState.IsValid) return View("Add", device);
 
-        context.Add(device);
+        // ✅ Generazione automatica del numero di inventario basato sull'anno di collaudo
+        device.SetInventoryNumber(await inventoryNumberService.GenerateInventoryNumberAsync(device.DataCollaudo.Year));
+
+        context.Devices.Add(device);
         await context.SaveChangesAsync();
         await deadlineService.UpdateNextDueDatesAsync(device);
 
@@ -88,14 +94,25 @@ public class DeviceController(
     // 📌 POST: /Device/Modify/{id}
     [HttpPost("Modify/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Device device)
+    public async Task<IActionResult> Edit(int id, Device updatedDevice)
     {
-        if (id != device.Id) return BadRequest();
-        if (!ModelState.IsValid) return View("Modify", device);
+        if (id != updatedDevice.Id) return BadRequest();
+        
+        // 🔹 Rimuoviamo InventoryNumber e Status dalla validazione
+        ModelState.Remove("InventoryNumber");
+        ModelState.Remove("Status");
+        if (!ModelState.IsValid) return View("Modify", updatedDevice);
 
-        context.Update(device);
+        var existingDevice = await context.Devices.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
+        if (existingDevice == null) return NotFound();
+
+        // ✅ Manteniamo invariato il numero di inventario
+        updatedDevice.SetInventoryNumber(existingDevice.InventoryNumber);
+        updatedDevice.Status = existingDevice.Status;
+
+        context.Entry(updatedDevice).State = EntityState.Modified;
         await context.SaveChangesAsync();
-        await deadlineService.UpdateNextDueDatesAsync(device);
+        await deadlineService.UpdateNextDueDatesAsync(updatedDevice);
 
         return RedirectToAction(nameof(Index));
     }
@@ -116,53 +133,28 @@ public class DeviceController(
     public async Task<IActionResult> Archive(int id)
     {
         var device = await context.Devices.FindAsync(id);
-        if (device == null)
-        {
-            if (Request.Headers.XRequestedWith == "XMLHttpRequest")
-                return Json(new { success = false, message = "Dispositivo non trovato." });
+        if (device == null) return NotFound();
 
-            return RedirectToAction("Index");
-        }
-
-        // ✅ Se il dispositivo è già archiviato, lo riattiviamo
+        // ✅ Alterna lo stato tra Attivo e Dismesso
         var wasArchived = device.Status == DeviceStatus.Dismesso;
         device.Status = wasArchived ? DeviceStatus.Attivo : DeviceStatus.Dismesso;
 
         await context.SaveChangesAsync();
 
-        var successMessage =
-            wasArchived ? "Dispositivo riattivato con successo!" : "Dispositivo archiviato con successo!";
-        TempData["SuccessMessage"] = successMessage;
-        var newStatus = wasArchived ? "Attivo" : "Dismesso";
+        TempData["SuccessMessage"] = wasArchived ? "Dispositivo riattivato con successo!" : "Dispositivo archiviato con successo!";
 
-        // ✅ Se la richiesta è AJAX, ritorniamo il JSON
-        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
-            return Json(new { success = true, message = successMessage, newStatus });
-
-        // ✅ Se la richiesta è normale, reindirizza alla pagina Dettagli del dispositivo
         return RedirectToAction("Details", new { id });
     }
 
-
-// 📌 POST: /Device/Delete/{id}
+    // 📌 POST: /Device/Delete/{id}
     [HttpPost("Delete/{id:int}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, string confirmName)
     {
-        if (string.IsNullOrWhiteSpace(confirmName))
-        {
-            TempData["ErrorMessage"] = "Richiesta non valida. Devi inserire il nome del dispositivo.";
-            return RedirectToAction("Details", new { id });
-        }
-
         var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
-        if (device == null)
-        {
-            TempData["ErrorMessage"] = "Dispositivo non trovato.";
-            return RedirectToAction("Index");
-        }
+        if (device == null) return NotFound();
 
-        if (device.Interventions.Any())
+        if (device.Interventions.Count > 0)
         {
             TempData["ErrorMessage"] = "Il dispositivo ha interventi registrati e non può essere eliminato.";
             return RedirectToAction("Details", new { id });
@@ -174,13 +166,11 @@ public class DeviceController(
             return RedirectToAction("Details", new { id });
         }
 
-        // ✅ Elimina il dispositivo dal database
+        // ✅ Eliminazione definitiva del dispositivo
         context.Devices.Remove(device);
         await context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Dispositivo eliminato con successo!";
-    
-        // ✅ Sempre redirect alla lista dispositivi
         return RedirectToAction("Index");
     }
 }
