@@ -5,6 +5,7 @@ using HealthGear.Models;
 using HealthGear.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using X.PagedList.EF;
 
 #endregion
 
@@ -20,60 +21,64 @@ public class DeviceController(
 {
     // 📌 GET: /Device
 // Mostra la lista dei dispositivi attivi e dismessi con ricerca
-    [HttpGet("")]
-    [HttpGet("Index")]
-   public async Task<IActionResult> Index(string statusFilter = "attivi", string? searchQuery = null, string dueDateFilter = "all")
+[HttpGet("")]
+[HttpGet("Index")]
+public async Task<IActionResult> Index(
+    string statusFilter = "attivi",
+    string? searchQuery = null,
+    string dueDateFilter = "all",
+    int? pageAttivi = 1,
+    int? pageDismessi = 1)
 {
-    var devices = context.Devices.AsQueryable();
+    const int pageSize = 10;
 
-    // 🔹 Filtra per stato attivo/dismesso
-    if (statusFilter == "attivi")
-    {
-        devices = devices.Where(d => d.Status != DeviceStatus.Dismesso);
-    }
-    else if (statusFilter == "dismessi")
-    {
-        devices = devices.Where(d => d.Status == DeviceStatus.Dismesso);
-    }
+    var devicesQuery = context.Devices.AsNoTracking().AsQueryable();
 
-    // 🔹 Filtra per ricerca
+    // Filtro per ricerca
     if (!string.IsNullOrEmpty(searchQuery))
     {
         searchQuery = searchQuery.Trim().ToLower();
-        devices = devices.Where(d => d.Name.ToLower().Contains(searchQuery) ||
-                                     d.Brand.ToLower().Contains(searchQuery) ||
-                                     d.Model.ToLower().Contains(searchQuery) ||
-                                     d.SerialNumber.ToLower().Contains(searchQuery));
+        devicesQuery = devicesQuery.Where(d => d.Name.ToLower().Contains(searchQuery) ||
+                                                d.Brand.ToLower().Contains(searchQuery) ||
+                                                d.Model.ToLower().Contains(searchQuery) ||
+                                                d.SerialNumber.ToLower().Contains(searchQuery));
     }
 
-    // 🔹 Filtra per stato delle scadenze
+    // Filtro per stato delle scadenze (vedi codice precedente)
     var today = DateTime.Today;
     var soonThreshold = today.AddMonths(2);
-
     if (dueDateFilter == "expired")
     {
-        devices = devices.Where(d =>
+        devicesQuery = devicesQuery.Where(d =>
             d.NextMaintenanceDue < today ||
             d.NextElectricalTestDue < today ||
             d.NextPhysicalInspectionDue < today);
     }
     else if (dueDateFilter == "soon")
     {
-        devices = devices.Where(d =>
+        devicesQuery = devicesQuery.Where(d =>
             (d.NextMaintenanceDue >= today && d.NextMaintenanceDue < soonThreshold) ||
             (d.NextElectricalTestDue >= today && d.NextElectricalTestDue < soonThreshold) ||
             (d.NextPhysicalInspectionDue >= today && d.NextPhysicalInspectionDue < soonThreshold));
     }
     else if (dueDateFilter == "ok")
     {
-        devices = devices.Where(d =>
+        devicesQuery = devicesQuery.Where(d =>
             (d.NextMaintenanceDue >= soonThreshold) &&
             (d.NextElectricalTestDue >= soonThreshold) &&
             (d.NextPhysicalInspectionDue >= soonThreshold));
     }
 
-    var activeDevices = await devices.Where(d => d.Status == DeviceStatus.Attivo).ToListAsync();
-    var archivedDevices = await devices.Where(d => d.Status == DeviceStatus.Dismesso).ToListAsync();
+    // Paginazione separata per dispositivi attivi e dismessi
+    var activeDevices = await devicesQuery
+        .Where(d => d.Status == DeviceStatus.Attivo)
+        .OrderBy(d => d.InventoryNumber)
+        .ToPagedListAsync(pageAttivi ?? 1, pageSize);
+
+    var archivedDevices = await devicesQuery
+        .Where(d => d.Status == DeviceStatus.Dismesso)
+        .OrderBy(d => d.InventoryNumber)
+        .ToPagedListAsync(pageDismessi ?? 1, pageSize);
 
     var viewModel = new DeviceListViewModel
     {
@@ -82,12 +87,68 @@ public class DeviceController(
         StatusFilter = statusFilter
     };
 
-    ViewBag.CountAttivi = activeDevices.Count;
-    ViewBag.CountDismessi = archivedDevices.Count;
+    ViewBag.PageAttivi = pageAttivi;
+    ViewBag.PageDismessi = pageDismessi;
     ViewBag.SearchQuery = searchQuery;
     ViewBag.DueDateFilter = dueDateFilter;
 
     return View("List", viewModel);
+}
+
+// 🔹 Metodo helper per filtrare i dispositivi
+private static IQueryable<Device> ApplyFilters(
+    IQueryable<Device> query, 
+    string statusFilter, 
+    string? searchQuery, 
+    string dueDateFilter)
+{
+    var today = DateTime.Today;
+    var soonThreshold = today.AddMonths(2);
+
+    // 🔹 Filtra per stato attivo/dismesso
+    if (statusFilter == "attivi")
+    {
+        query = query.Where(d => d.Status != DeviceStatus.Dismesso);
+    }
+    else if (statusFilter == "dismessi")
+    {
+        query = query.Where(d => d.Status == DeviceStatus.Dismesso);
+    }
+
+    // 🔹 Filtra per ricerca
+    if (!string.IsNullOrEmpty(searchQuery))
+    {
+        searchQuery = searchQuery.Trim().ToLower();
+        query = query.Where(d => d.Name.ToLower().Contains(searchQuery) ||
+                                 d.Brand.ToLower().Contains(searchQuery) ||
+                                 d.Model.ToLower().Contains(searchQuery) ||
+                                 d.SerialNumber.ToLower().Contains(searchQuery));
+    }
+
+    // 🔹 Filtra per stato delle scadenze
+    if (dueDateFilter == "expired")
+    {
+        query = query.Where(d =>
+            d.NextMaintenanceDue < today ||
+            d.NextElectricalTestDue < today ||
+            d.NextPhysicalInspectionDue < today);
+    }
+    else if (dueDateFilter == "soon")
+    {
+        query = query.Where(d =>
+            (d.NextMaintenanceDue >= today && d.NextMaintenanceDue < soonThreshold) ||
+            (d.NextElectricalTestDue >= today && d.NextElectricalTestDue < soonThreshold) ||
+            (d.NextPhysicalInspectionDue >= today && d.NextPhysicalInspectionDue < soonThreshold));
+    }
+    else if (dueDateFilter == "ok")
+    {
+        query = query.Where(d =>
+            (d.NextMaintenanceDue >= soonThreshold) &&
+            (d.NextElectricalTestDue >= soonThreshold) &&
+            (d.NextPhysicalInspectionDue >= soonThreshold));
+    }
+
+    return query;
 }
 
     // 📌 GET: /Device/Details/{id}

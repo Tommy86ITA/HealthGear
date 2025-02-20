@@ -17,6 +17,9 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="9.0.1" />
         <PackageReference Include="QuestPDF" Version="2025.1.1" />
         <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
+        <PackageReference Include="X.PagedList" Version="10.5.7" />
+        <PackageReference Include="X.PagedList.EF" Version="10.5.7" />
+        <PackageReference Include="X.PagedList.Mvc.Core" Version="10.5.7" />
     </ItemGroup>
 
     <ItemGroup>
