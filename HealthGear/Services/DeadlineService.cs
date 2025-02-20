@@ -8,25 +8,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Services;
 
-public class DeadlineService
+public class DeadlineService(ApplicationDbContext context)
 {
-    private readonly ApplicationDbContext _context;
-
-    public DeadlineService(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     /// <summary>
     ///     Ottiene le impostazioni di manutenzione dal database.
     /// </summary>
     private async Task<MaintenanceSettings> GetSettingsAsync()
     {
-        var settings = await _context.MaintenanceSettings.FirstOrDefaultAsync();
+        var settings = await context.MaintenanceSettings.FirstOrDefaultAsync();
         if (settings != null) return settings;
         settings = new MaintenanceSettings();
-        _context.MaintenanceSettings.Add(settings);
-        await _context.SaveChangesAsync();
+        context.MaintenanceSettings.Add(settings);
+        await context.SaveChangesAsync();
 
         return settings;
     }
@@ -81,10 +74,7 @@ public class DeadlineService
         Console.WriteLine($"[DEBUG] {device.Name} - Calculated Next Electrical Test Due: {nextDueDate}");
         return nextDueDate;
     }
-
-    /// <summary>
-    ///     Calcola la prossima scadenza per il controllo fisico.
-    /// </summary>
+    
     /// <summary>
     ///     Calcola la prossima scadenza per il controllo fisico.
     /// </summary>
@@ -105,7 +95,7 @@ public class DeadlineService
             : settings.PhysicalInspectionIntervalMonths; // Annuale per gli altri radiologici
 
         // ✅ Troviamo l'ultima verifica fisica effettuata, altrimenti prendiamo la data di collaudo o la prima verifica
-        var lastPhysicalInspection = device.Interventions?
+        var lastPhysicalInspection = device.Interventions
             .Where(i => i is { Type: InterventionType.PhysicalInspection, Passed: true })
             .OrderByDescending(i => i.Date)
             .Select(i => (DateTime?)i.Date)
@@ -138,7 +128,7 @@ public class DeadlineService
     {
         Console.WriteLine($"[DEBUG] Updating due dates for device: {device.Name}");
 
-        var settings = await GetSettingsAsync();
+        await GetSettingsAsync();
 
         device.NextMaintenanceDue = await GetNextMaintenanceDueDateAsync(device);
         device.NextElectricalTestDue = await GetNextElectricalTestDueDateAsync(device);
@@ -149,8 +139,8 @@ public class DeadlineService
         Console.WriteLine(
             $"[DEBUG] {device.Name} - Final Next Physical Inspection Due: {device.NextPhysicalInspectionDue}");
 
-        _context.Entry(device).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
+        context.Entry(device).State = EntityState.Modified;
+        await context.SaveChangesAsync();
 
         Console.WriteLine($"[DEBUG] {device.Name} - Due dates successfully updated in database.");
     }

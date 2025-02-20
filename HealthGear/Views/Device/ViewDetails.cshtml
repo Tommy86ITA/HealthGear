@@ -18,7 +18,6 @@
     <span class="badge bg-@(Model.Status switch
                           {
                               DeviceStatus.Attivo => "success",
-                              DeviceStatus.Guasto => "danger",
                               _ => "secondary"
                           })"
           style="font-size: 1.2em; padding: 0.5em 1em;">
@@ -28,6 +27,10 @@
 
 <hr>
 <table class="table">
+    <tr>
+        <th><i class="fas fa-folder-open"></i> Numero di Inventario</th>
+        <td class="text-end">@Model.InventoryNumber</td>
+    </tr>
     <tr>
         <th><i class="fas fa-tag"></i> Nome</th>
         <td class="text-end">@Model.Name</td>
@@ -80,24 +83,33 @@
 <!-- 📌 Storico Interventi -->
 <h4 class="mt-5"><i class="fas fa-history"></i> Interventi Recenti</h4>
 <hr>
-<a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@Model.Id" class="btn btn-success mb-3">
-    <i class="fas fa-plus"></i> Aggiungi Intervento
-</a>
+<div class="d-flex gap-2 mb-3">
+    <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@Model.Id" class="btn btn-success mb-3">
+        <i class="fas fa-plus"></i> Aggiungi Intervento
+    </a>
+    <a asp-action="List" asp-controller="InterventionHistory" asp-route-deviceId="@Model.Id" class="btn btn-info mb-3">
+        <i class="fas fa-clock-rotate-left"></i> Apri Storico Completo
+    </a>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#exportReportModal">
+        <i class="fas fa-file-download"></i> Scarica Report
+    </button>
+</div>
+<hr/>
 
 @if (Model.Interventions.Any())
 {
     <table class="table table-striped table-bordered text-center shadow-sm">
         <thead>
         <tr>
-            <th>Data</th>
-            <th>Tipo</th>
-            <th>Note</th>
-            <th>Esito</th>
-            <th>Azioni</th> <!-- ✅ Pulsanti azioni -->
+            <th class="col-1">Data</th>
+            <th class="col-3">Tipo</th>
+            <th class="col-4">Note</th>
+            <th class="col-2">Esito</th>
+            <th class="col-4 text-center">Azioni</th>
         </tr>
         </thead>
         <tbody>
-        @foreach (var intervention in Model.Interventions.OrderByDescending(i => i.Date).Take(5))
+        @foreach (var intervention in Model.Interventions.OrderByDescending(i => i.Date).Take(3))
         {
             <tr>
                 <td>@intervention.Date.ToShortDateString()</td>
@@ -124,7 +136,7 @@
                     }
                     else
                     {
-                        <span class="text-muted">N/A</span>
+                        <span class="text-muted"> - </span>
                     }
                 </td>
                 <td class="text-center">
@@ -143,9 +155,11 @@
                     <!-- ✅ Pulsante per eliminare l'intervento -->
                     <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
                           method="post" class="d-inline">
-                        <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Device", new { id = Model.Id })"/>
+                        <input type="hidden" name="returnUrl"
+                               value="@Url.Action("Details", "Device", new { id = Model.Id })"/>
                         <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');" title="Elimina">
+                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');"
+                                title="Elimina">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -166,7 +180,7 @@ else
         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
             <i class="fas fa-edit"></i> Modifica Dispositivo
         </a>
-        <a asp-action="Index" class="btn btn-secondary">
+        <a asp-action="Index" class="btn btn-outline-dark">
             <i class="fas fa-arrow-left"></i> Torna all'elenco
         </a>
     </div>
@@ -190,7 +204,8 @@ else
 </div>
 
 <!-- 📌 Modal di conferma per Archiviazione/Riattivazione -->
-<div class="modal fade" id="confirmArchiveModal" tabindex="-1" aria-labelledby="confirmArchiveModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmArchiveModal" tabindex="-1" aria-labelledby="confirmArchiveModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -208,22 +223,14 @@ else
     </div>
 </div>
 
-<!-- 📌 Pulsanti Extra -->
-<div class="text-center mt-3">
-    <a asp-action="List" asp-controller="InterventionHistory" asp-route-deviceId="@Model.Id" class="btn btn-info">
-        <i class="fas fa-clock-rotate-left"></i> Apri Storico Completo
-    </a>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportReportModal">
-        <i class="fas fa-file-download"></i> Scarica Report
-    </button>
-</div>
-
 <!-- 📌 MODAL PER LA SCELTA DEL FORMATO DEL REPORT -->
-<div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel" aria-hidden="true">
+<div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exportReportModalLabel"> <i class="fas fa-file-alt"></i> Scegli il formato del report</h5>
+                <h5 class="modal-title" id="exportReportModalLabel"><i class="fas fa-file-alt"></i> Scegli il formato
+                    del report</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
@@ -308,12 +315,12 @@ else
                     toastContainer.removeChild(toast);
                 }, 3000);
             }
-            
+
 // ✅ **GESTIONE ELIMINAZIONE DISPOSITIVO SENZA AJAX**
             let confirmInput = document.getElementById("confirmDeviceName");
             let deleteBtn = document.getElementById("confirmDeleteBtn");
             let hiddenConfirmName = document.getElementById("hiddenConfirmName");
-            let deleteForm = document.getElementById("deleteForm");
+            document.getElementById("deleteForm");
             let expectedName = "@Html.Raw(Model.Name)".trim(); // Nome corretto
 
             if (confirmInput && deleteBtn) {
@@ -353,33 +360,33 @@ else
                             "RequestVerificationToken": token
                         }
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showToast(data.message, "success");
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast(data.message, "success");
 
-                            // ✅ Cambia dinamicamente il pulsante senza ricaricare
-                            if (data.newStatus === "Attivo") {
-                                archiveBtn.classList.remove("btn-dark");
-                                archiveBtn.classList.add("btn-success");
-                                archiveBtn.innerHTML = '<i class="fas fa-undo"></i> Riattiva Dispositivo';
+                                // ✅ Cambia dinamicamente il pulsante senza ricaricare
+                                if (data.newStatus === "Attivo") {
+                                    archiveBtn.classList.remove("btn-dark");
+                                    archiveBtn.classList.add("btn-success");
+                                    archiveBtn.innerHTML = '<i class="fas fa-undo"></i> Riattiva Dispositivo';
+                                } else {
+                                    archiveBtn.classList.remove("btn-success");
+                                    archiveBtn.classList.add("btn-dark");
+                                    archiveBtn.innerHTML = '<i class="fas fa-archive"></i> Archivia Dispositivo';
+                                }
+
+                                confirmArchiveModal.hide();
+
+                                // ✅ FORZA IL REFRESH DOPO L'AGGIORNAMENTO
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 500);
                             } else {
-                                archiveBtn.classList.remove("btn-success");
-                                archiveBtn.classList.add("btn-dark");
-                                archiveBtn.innerHTML = '<i class="fas fa-archive"></i> Archivia Dispositivo';
+                                showToast(data.message || "Errore durante l'operazione.", "danger");
                             }
-
-                            confirmArchiveModal.hide();
-
-                            // ✅ FORZA IL REFRESH DOPO L'AGGIORNAMENTO
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        } else {
-                            showToast(data.message || "Errore durante l'operazione.", "danger");
-                        }
-                    })
-                    .catch(error => showToast("Errore: " + error.message, "danger"));
+                        })
+                        .catch(error => showToast("Errore: " + error.message, "danger"));
                 });
             }
 

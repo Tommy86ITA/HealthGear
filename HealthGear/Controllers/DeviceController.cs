@@ -19,30 +19,76 @@ public class DeviceController(
 
 {
     // 📌 GET: /Device
-    // Mostra la lista dei dispositivi attivi e dismessi
+// Mostra la lista dei dispositivi attivi e dismessi con ricerca
     [HttpGet("")]
     [HttpGet("Index")]
-    public async Task<IActionResult> Index(string statusFilter = "attivi")
+   public async Task<IActionResult> Index(string statusFilter = "attivi", string? searchQuery = null, string dueDateFilter = "all")
+{
+    var devices = context.Devices.AsQueryable();
+
+    // 🔹 Filtra per stato attivo/dismesso
+    if (statusFilter == "attivi")
     {
-        var activeDevices = await context.Devices
-            .Where(d => d.Status != DeviceStatus.Dismesso)
-            .ToListAsync();
-        ViewBag.CountAttivi = activeDevices.Count;
-
-        var archivedDevices = await context.Devices
-            .Where(d => d.Status == DeviceStatus.Dismesso)
-            .ToListAsync();
-        ViewBag.CountDismessi = archivedDevices.Count;
-
-        var viewModel = new DeviceListViewModel
-        {
-            ActiveDevices = activeDevices,
-            ArchivedDevices = archivedDevices,
-            StatusFilter = statusFilter
-        };
-
-        return View("List", viewModel);
+        devices = devices.Where(d => d.Status != DeviceStatus.Dismesso);
     }
+    else if (statusFilter == "dismessi")
+    {
+        devices = devices.Where(d => d.Status == DeviceStatus.Dismesso);
+    }
+
+    // 🔹 Filtra per ricerca
+    if (!string.IsNullOrEmpty(searchQuery))
+    {
+        searchQuery = searchQuery.Trim().ToLower();
+        devices = devices.Where(d => d.Name.ToLower().Contains(searchQuery) ||
+                                     d.Brand.ToLower().Contains(searchQuery) ||
+                                     d.Model.ToLower().Contains(searchQuery) ||
+                                     d.SerialNumber.ToLower().Contains(searchQuery));
+    }
+
+    // 🔹 Filtra per stato delle scadenze
+    var today = DateTime.Today;
+    var soonThreshold = today.AddMonths(2);
+
+    if (dueDateFilter == "expired")
+    {
+        devices = devices.Where(d =>
+            d.NextMaintenanceDue < today ||
+            d.NextElectricalTestDue < today ||
+            d.NextPhysicalInspectionDue < today);
+    }
+    else if (dueDateFilter == "soon")
+    {
+        devices = devices.Where(d =>
+            (d.NextMaintenanceDue >= today && d.NextMaintenanceDue < soonThreshold) ||
+            (d.NextElectricalTestDue >= today && d.NextElectricalTestDue < soonThreshold) ||
+            (d.NextPhysicalInspectionDue >= today && d.NextPhysicalInspectionDue < soonThreshold));
+    }
+    else if (dueDateFilter == "ok")
+    {
+        devices = devices.Where(d =>
+            (d.NextMaintenanceDue >= soonThreshold) &&
+            (d.NextElectricalTestDue >= soonThreshold) &&
+            (d.NextPhysicalInspectionDue >= soonThreshold));
+    }
+
+    var activeDevices = await devices.Where(d => d.Status == DeviceStatus.Attivo).ToListAsync();
+    var archivedDevices = await devices.Where(d => d.Status == DeviceStatus.Dismesso).ToListAsync();
+
+    var viewModel = new DeviceListViewModel
+    {
+        ActiveDevices = activeDevices,
+        ArchivedDevices = archivedDevices,
+        StatusFilter = statusFilter
+    };
+
+    ViewBag.CountAttivi = activeDevices.Count;
+    ViewBag.CountDismessi = archivedDevices.Count;
+    ViewBag.SearchQuery = searchQuery;
+    ViewBag.DueDateFilter = dueDateFilter;
+
+    return View("List", viewModel);
+}
 
     // 📌 GET: /Device/Details/{id}
     [HttpGet("Details/{id:int}")]
@@ -97,7 +143,7 @@ public class DeviceController(
     public async Task<IActionResult> Edit(int id, Device updatedDevice)
     {
         if (id != updatedDevice.Id) return BadRequest();
-        
+
         // 🔹 Rimuoviamo InventoryNumber e Status dalla validazione
         ModelState.Remove("InventoryNumber");
         ModelState.Remove("Status");
@@ -117,16 +163,6 @@ public class DeviceController(
         return RedirectToAction(nameof(Index));
     }
 
-    // 📌 GET: /Device/ConfirmDeleteOrArchive/{id}
-    [HttpGet("ConfirmDeleteOrArchive/{id:int}")]
-    public async Task<IActionResult> ConfirmDeleteOrArchive(int id)
-    {
-        var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
-        if (device == null) return NotFound();
-
-        return View("ConfirmDeleteOrArchive", device);
-    }
-
     // 📌 POST: /Device/Archive/{id}
     [HttpPost("Archive/{id:int}")]
     [ValidateAntiForgeryToken]
@@ -141,7 +177,8 @@ public class DeviceController(
 
         await context.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = wasArchived ? "Dispositivo riattivato con successo!" : "Dispositivo archiviato con successo!";
+        TempData["SuccessMessage"] =
+            wasArchived ? "Dispositivo riattivato con successo!" : "Dispositivo archiviato con successo!";
 
         return RedirectToAction("Details", new { id });
     }

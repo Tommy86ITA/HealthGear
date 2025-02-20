@@ -53,7 +53,9 @@ public static class DueDateHelper
 
         // 🔧 TROVA L'ULTIMA MANUTENZIONE REGISTRATA
         var lastMaintenance = context.Interventions
-            .Where(i => i.DeviceId == device.Id && i.Type == InterventionType.Maintenance)
+            .Where(i => i.DeviceId == device.Id &&
+                        i.Type == InterventionType.Maintenance &&
+                        i.MaintenanceCategory == MaintenanceType.Preventive) // <-- Ora filtra solo le manutenzioni periodiche
             .OrderByDescending(i => i.Date)
             .FirstOrDefault();
 

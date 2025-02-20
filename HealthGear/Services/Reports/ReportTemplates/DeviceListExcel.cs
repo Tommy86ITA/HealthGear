@@ -9,6 +9,8 @@ public static class DeviceListExcel
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Report Dispositivi");
+        worksheet.SheetView.FreezeRows(1);
+        worksheet.Style.Font.FontName = "Arial Unicode MS";
 
         var headers = new[]
         {

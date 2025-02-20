@@ -1,4 +1,5 @@
 using HealthGear.Data;
+using HealthGear.Models;
 using HealthGear.Services.Reports;
 using HealthGear.Services.Reports.ReportTemplates;
 using Microsoft.AspNetCore.Mvc;
@@ -9,34 +10,47 @@ namespace HealthGear.Controllers;
 [Route("Report")]
 public class ReportController(
     ApplicationDbContext context,
-    PdfReportGenerator pdfReportGenerator,
     ExcelReportGenerator excelReportGenerator)
     : Controller
 {
-    private readonly ApplicationDbContext _context = context;
-
-    // 📌 Genera il report PDF (tutti i dispositivi)
+    // 📌 Genera il report PDF con filtro sui dispositivi
     [HttpGet("GenerateDeviceListPdf")]
-    public async Task<IActionResult> GenerateDeviceListPdf()
+    public async Task<IActionResult> GenerateDeviceListPdf(string statusFilter = "all")
     {
-        var pdfBytes = await pdfReportGenerator.GenerateDeviceListReportAsync();
+        var devices = await GetFilteredDevices(statusFilter);
+        var pdfBytes = await PdfReportGenerator.GenerateDeviceListReportAsync(devices, statusFilter);
         return File(pdfBytes, "application/pdf", "Report_Dispositivi.pdf");
     }
 
-    // 📌 Genera il report Excel (tutti i dispositivi)
+// 📌 Genera il report Excel con filtro sui dispositivi
     [HttpGet("GenerateDeviceListExcel")]
-    public async Task<IActionResult> GenerateDeviceListExcel()
+    public async Task<IActionResult> GenerateDeviceListExcel(string statusFilter = "all")
     {
-        var excelBytes = await excelReportGenerator.GenerateDeviceListReportAsync();
-        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Report_Dispositivi.xlsx");
+        var devices = await GetFilteredDevices(statusFilter);
+        var excelBytes = await excelReportGenerator.GenerateDeviceListReportAsync(devices);
+        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report_Dispositivi.xlsx");
     }
 
+// 📌 Metodo per filtrare i dispositivi in base alla selezione dell'utente
+    private async Task<List<Device>> GetFilteredDevices(string statusFilter)
+    {
+        IQueryable<Device> query = context.Devices;
+
+        query = statusFilter switch
+        {
+            "attivi" => query.Where(d => d.Status == DeviceStatus.Attivo),
+            "dismessi" => query.Where(d => d.Status == DeviceStatus.Dismesso),
+            _ => query // "all" restituisce tutti i dispositivi
+        };
+
+        return await query.ToListAsync();
+    }
+    
     // 📌 Genera il report PDF per un singolo dispositivo
     [HttpGet("GenerateDeviceDetailPdf/{id:int}")]
     public async Task<IActionResult> GenerateDeviceDetailPdf(int id)
     {
-        var device = await _context.Devices
+        var device = await context.Devices
             .Include(d => d.Interventions)
             .FirstOrDefaultAsync(d => d.Id == id);
 
@@ -50,7 +64,7 @@ public class ReportController(
     [HttpGet("GenerateDeviceDetailExcel/{id:int}")]
     public async Task<IActionResult> GenerateDeviceDetailExcel(int id)
     {
-        var device = await _context.Devices
+        var device = await context.Devices
             .Include(d => d.Interventions)
             .FirstOrDefaultAsync(d => d.Id == id);
 

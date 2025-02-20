@@ -1,14 +1,12 @@
-using HealthGear.Data;
+using HealthGear.Models;
 using HealthGear.Services.Reports.ReportTemplates;
-using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Services.Reports;
 
-public class PdfReportGenerator(ApplicationDbContext context)
+public class PdfReportGenerator
 {
-    public async Task<byte[]> GenerateDeviceListReportAsync()
+    public static Task<byte[]> GenerateDeviceListReportAsync(List<Device> devices, string statusFilter)
     {
-        var devices = await context.Devices.Include(d => d.Interventions).ToListAsync();
-        return DeviceListReport.Generate(devices);
+        return Task.FromResult(DeviceListReport.Generate(devices, statusFilter)); 
     }
 }

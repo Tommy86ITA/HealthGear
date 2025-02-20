@@ -44,17 +44,6 @@ public class Device
     [MaxLength(15)]
     public string InventoryNumber { get; private set; } = string.Empty;
 
-    /// <summary>
-    /// Imposta il numero di inventario solo se non è già stato assegnato.
-    /// </summary>
-    public void SetInventoryNumber(string inventoryNumber)
-    {
-        if (string.IsNullOrWhiteSpace(InventoryNumber))
-        {
-            InventoryNumber = inventoryNumber;
-        }
-    }
-
     /// <summary>Ubicazione fisica del dispositivo (opzionale).</summary>
     [MaxLength(100)]
     public string? Location { get; set; }
@@ -102,7 +91,7 @@ public class Device
     /// </summary>
     [NotMapped]
     public DateTime? LastOrdinaryMaintenance =>
-        Interventions.Count != 0 == true
+        Interventions.Count != 0
             ? Interventions
                 .Where(i => i is
                     { Type: InterventionType.Maintenance, MaintenanceCategory: MaintenanceType.Preventive })
@@ -127,4 +116,12 @@ public class Device
     /// <summary>Note opzionali relative al dispositivo.</summary>
     [MaxLength(2000)]
     public string? Notes { get; set; } = "";
+
+    /// <summary>
+    ///     Imposta il numero di inventario solo se non è già stato assegnato.
+    /// </summary>
+    public void SetInventoryNumber(string inventoryNumber)
+    {
+        if (string.IsNullOrWhiteSpace(InventoryNumber)) InventoryNumber = inventoryNumber;
+    }
 }

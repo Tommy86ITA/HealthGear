@@ -15,14 +15,11 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
     public async Task<IActionResult> List(int deviceId, string typeFilter, string passedFilter, DateTime? dateFrom,
         DateTime? dateTo, string sortBy, int page = 1)
     {
-        // ✅ Debug: Stampiamo i parametri ricevuti nella console
-        Console.WriteLine(
-            $"[DEBUG] DeviceId: {deviceId}, TypeFilter: {typeFilter}, PassedFilter: {passedFilter}, DateFrom: {dateFrom}, DateTo: {dateTo}, SortBy: {sortBy}, Page: {page}");
-
         // ✅ Controlliamo se il dispositivo esiste
         var device = await context.Devices
             .Where(d => d.Id == deviceId)
-            .Select(d => new { d.Id, d.Name, d.Brand, d.Model, d.SerialNumber }) // ✅ Aggiunti i campi mancanti
+            .Select(d => new
+                { d.Id, d.Name, d.Brand, d.Model, d.SerialNumber, d.InventoryNumber }) // ✅ Aggiunti i campi mancanti
             .FirstOrDefaultAsync();
 
         if (device == null) return NotFound("Dispositivo non trovato.");
@@ -55,13 +52,18 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
             Console.WriteLine($"[DEBUG] Filtro Data A: {dateTo.Value}");
         }
 
-        // 🔀 ORDINAMENTO
-        query = sortBy switch
-        {
-            "Type" => query.OrderBy(i => i.Type),
-            "Passed" => query.OrderBy(i => i.Passed),
-            _ => query.OrderByDescending(i => i.Date)
-        };
+// 🔀 ORDINAMENTO
+        if (string.IsNullOrEmpty(sortBy))
+            query = query.OrderByDescending(i => i.Date);
+        else
+            query = sortBy switch
+            {
+                "Date" => query.OrderBy(i => i.Date),
+                "-Date" => query.OrderByDescending(i => i.Date),
+                "Type" => query.OrderBy(i => i.Type),
+                "Passed" => query.OrderBy(i => i.Passed),
+                _ => query.OrderByDescending(i => i.Date)
+            };
 
         // 📄 PAGINAZIONE
         var totalItems = await query.CountAsync();
@@ -90,6 +92,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         ViewBag.DeviceBrand = device.Brand;
         ViewBag.DeviceModel = device.Model;
         ViewBag.DeviceSerialNumber = device.SerialNumber;
+        ViewBag.DeviceInventoryNumber = device.InventoryNumber;
 
         return View("~/Views/InterventionHistory/List.cshtml", interventions);
     }

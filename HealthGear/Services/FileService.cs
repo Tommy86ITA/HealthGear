@@ -20,7 +20,7 @@ public class FileService
     /// <summary>
     ///     Salva i file nella cartella dell'intervento specifico.
     /// </summary>
-    public async Task<List<FileDocument>> SaveFilesAsync(List<IFormFile> files, int parentEntityId,
+    public async Task<List<FileDocument>> SaveFilesAsync(List<IFormFile>? files, int parentEntityId,
         string interventionType, string deviceName)
     {
         var savedFiles = new List<FileDocument>();
@@ -33,6 +33,7 @@ public class FileService
             _logger.LogInformation("📁 Cartella creata: {UploadsPath}", uploadsPath);
         }
 
+        if (files == null) return savedFiles;
         foreach (var file in files)
             try
             {

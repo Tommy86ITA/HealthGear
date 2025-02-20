@@ -23,7 +23,7 @@ public class FileController : Controller
     ///     API per il caricamento dei file, delegata a FileService.
     /// </summary>
     [HttpPost("Upload")]
-    public async Task<IActionResult> Upload(List<IFormFile> files)
+    public async Task<IActionResult> Upload(List<IFormFile>? files)
     {
         if (files == null || files.Count == 0)
         {

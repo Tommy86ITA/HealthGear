@@ -6,8 +6,16 @@ namespace HealthGear.Services.Reports.ReportTemplates;
 
 public static class DeviceListReport
 {
-    public static byte[] Generate(List<Device> devices)
+    public static byte[] Generate(List<Device> devices, string statusFilter)
     {
+        // 🔹 Determina il titolo del report in base al filtro
+        string reportTitle = statusFilter switch
+        {
+            "attivi" => "Report Dispositivi Attivi",
+            "dismessi" => "Report Dispositivi Dismessi",
+            _ => "Report Completo Dispositivi"
+        };
+        
         var pdf = Document.Create(container =>
         {
             container.Page(page =>
@@ -22,14 +30,13 @@ public static class DeviceListReport
                     header.Item().AlignCenter().Row(row =>
                     {
                         row.AutoItem().Width(15).Image("Assets/Icons/clipboard.png");
-                        row.AutoItem().Text(" Report Dispositivi")
+                        row.AutoItem().Text($" {reportTitle}")
                             .SemiBold().FontSize(18).FontColor(Colors.Blue.Medium);
                     });
 
                     header.Item().AlignCenter()
                         .Text($"Generato il {DateTime.Now:dd/MM/yyyy} alle ore {DateTime.Now:T}");
                     header.Item().AlignRight().Text("Made with HealthGear v. 1.0");
-
                     header.Item().LineHorizontal(2).LineColor(Colors.Blue.Darken2);
                 });
 
@@ -58,9 +65,15 @@ public static class DeviceListReport
                             deviceSection.Item().Text($"{device.Brand} {device.Model}")
                                 .Bold().FontSize(14);
 
-                            deviceSection.Item().Text($"{device.Name} - S/N: {device.SerialNumber}")
-                                .Italic().FontSize(10);
-
+                                deviceSection.Item().Row(row =>
+                                {
+                                    row.RelativeItem().Text($"{device.Name} - S/N: {device.SerialNumber}")
+                                        .Italic().FontSize(10);
+    
+                                    row.RelativeItem().AlignRight().Text($"Stato: {device.Status}")
+                                        .Italic().FontSize(10);
+                                });
+                                
                             deviceSection.Item().Height(5);
                             deviceSection.Item().LineHorizontal(1);
                             deviceSection.Item().Height(5);

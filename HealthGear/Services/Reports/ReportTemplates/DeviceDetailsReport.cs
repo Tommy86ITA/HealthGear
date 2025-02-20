@@ -31,8 +31,9 @@ public static class DeviceDetailsReport
                     header.Item().PaddingBottom(10).AlignCenter()
                         .Text($"Generato il {DateTime.Now:dd/MM/yyyy HH:mm:ss}");
                     header.Item().AlignRight().Text("Made with HealthGear v. 1.0");
-
+                    header.Item().PaddingBottom(5);
                     header.Item().LineHorizontal(2).LineColor(Colors.Blue.Darken2);
+                    header.Item().PaddingBottom(5);
                 });
 
                 // 📌 Dati principali del dispositivo
@@ -57,7 +58,7 @@ public static class DeviceDetailsReport
                                     .Text($"Scadenza controlli fisici: {device.NextPhysicalInspectionDue:dd/MM/yyyy}");
                         });
                     });
-
+                    content.Item().PaddingBottom(10).AlignCenter();
                     content.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
                     // 📌 Storico Interventi
@@ -75,8 +76,8 @@ public static class DeviceDetailsReport
                         {
                             columns.ConstantColumn(75); // Data
                             columns.RelativeColumn(); // Tipo intervento
-                            columns.ConstantColumn(90); // Eseguito da
-                            columns.ConstantColumn(75); // Esito
+                            columns.ConstantColumn(120); // Eseguito da
+                            columns.ConstantColumn(70); // Esito
                         });
 
                         // Intestazione della tabella
@@ -116,6 +117,15 @@ public static class DeviceDetailsReport
                                 false => "Non superato",
                                 _ => "N/A"
                             }).FontColor(intervention.Passed == false ? Colors.Red.Medium : Colors.Green.Medium);
+                            
+                            // 📌 **Aggiunta delle note sotto l'intervento (solo se presenti)**
+                            table.Cell().ColumnSpan(4).PaddingTop(5).BorderBottom(1).Row(row =>
+                            {
+                                row.ConstantItem(8).Image("Assets/Icons/note-sticky-regular.png").FitWidth();
+                                row.RelativeItem().Text($" Note: {intervention.Notes}")
+                                    .FontSize(9).Italic().FontColor(Colors.Grey.Darken2);
+                            });
+
                             continue;
 
                             static IContainer CellDataStyle(IContainer container)
@@ -138,14 +148,6 @@ public static class DeviceDetailsReport
             });
         }).GeneratePdf();
     }
-
-    // 🔹 Metodo per determinare il colore dello stato della scadenza
-    /*private static string GetStatusColor(DateTime? dueDate)
-    {
-        if (!dueDate.HasValue) return Colors.Grey.Medium;
-        var daysRemaining = (float)(dueDate.Value - DateTime.Today).TotalDays; // Conversione a float per evitare errore CS1503
-        return daysRemaining < 0 ? Colors.Red.Medium : daysRemaining <= 60 ? Colors.Orange.Medium : Colors.Green.Medium;
-    }*/
 
     // 🔹 Ottieni il nome visualizzato dell'enum (es. "Manutenzione - Preventiva")
     private static string GetInterventionDisplayName(Intervention intervention)
