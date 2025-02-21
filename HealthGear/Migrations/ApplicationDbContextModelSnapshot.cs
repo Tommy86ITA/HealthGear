@@ -30,6 +30,9 @@ namespace HealthGear.Migrations
                     b.Property<DateTime>("DataCollaudo")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DataDismissione")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("DeviceType")
                         .HasColumnType("INTEGER");
 

@@ -62,6 +62,11 @@ public class Device
     [DataType(DataType.Date)]
     [Required(ErrorMessage = "La data di collaudo è obbligatoria.")]
     public required DateTime DataCollaudo { get; set; }
+    
+    /// <summary>
+    ///  DATA DI DISMISSIONE
+    /// </summary>
+    public DateTime? DataDismissione { get; set; }
 
     /// <summary>Data della prima verifica elettrica obbligatoria.</summary>
     [DataType(DataType.Date)]

@@ -95,6 +95,7 @@ public async Task<IActionResult> Index(
     return View("List", viewModel);
 }
 
+/*
 // 🔹 Metodo helper per filtrare i dispositivi
 private static IQueryable<Device> ApplyFilters(
     IQueryable<Device> query, 
@@ -150,6 +151,7 @@ private static IQueryable<Device> ApplyFilters(
 
     return query;
 }
+*/
 
     // 📌 GET: /Device/Details/{id}
     [HttpGet("Details/{id:int}")]
@@ -232,14 +234,33 @@ private static IQueryable<Device> ApplyFilters(
         var device = await context.Devices.FindAsync(id);
         if (device == null) return NotFound();
 
-        // ✅ Alterna lo stato tra Attivo e Dismesso
-        var wasArchived = device.Status == DeviceStatus.Dismesso;
-        device.Status = wasArchived ? DeviceStatus.Attivo : DeviceStatus.Dismesso;
+        // Se il dispositivo è attivo, stiamo per dismetterlo
+        if (device.Status != DeviceStatus.Dismesso)
+        {
+            // Qui potresti inserire la logica per chiedere conferma all'utente (ad esempio, tramite un modal nella view)
+            // Se la conferma arriva, impostiamo lo stato su Dismesso e registriamo la Data di Dismissione.
+            device.Status = DeviceStatus.Dismesso;
+            device.DataDismissione = DateTime.Now;
+            // Opzionalmente, puoi decidere di non aggiornare le scadenze oppure di cancellarle, ad es.:
+            // device.NextMaintenanceDue = null;
+            // device.NextElectricalTestDue = null;
+            // device.NextPhysicalInspectionDue = null;
+        }
+        else
+        {
+            // Se il dispositivo è dismesso, lo riattiviamo
+            device.Status = DeviceStatus.Attivo;
+            device.DataDismissione = null; // oppure lascia la data come riferimento storico
+            // Ricalcola le scadenze per il dispositivo attivo
+            await deadlineService.UpdateNextDueDatesAsync(device);
+        }
 
         await context.SaveChangesAsync();
 
         TempData["SuccessMessage"] =
-            wasArchived ? "Dispositivo riattivato con successo!" : "Dispositivo archiviato con successo!";
+            device.Status == DeviceStatus.Dismesso
+                ? "Dispositivo dismesso con successo!"
+                : "Dispositivo riattivato con successo!";
 
         return RedirectToAction("Details", new { id });
     }
