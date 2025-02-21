@@ -5,6 +5,7 @@ using HealthGear.Helpers;
 using HealthGear.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using X.PagedList;
 
 #endregion
 
@@ -13,30 +14,58 @@ namespace HealthGear.Controllers;
 [Route("Intervention")]
 public class InterventionController(ApplicationDbContext context) : Controller
 {
+    private const int PageSize = 10;
+    
 // 🔍 GET: /Intervention/Index/{deviceId}
 // Mostra la lista degli interventi per un dispositivo specifico
     [HttpGet("Index/{deviceId:int}")]
-    public async Task<IActionResult> Index(int deviceId)
+    public async Task<IActionResult> Index(int deviceId, int page = 1)
     {
-        // ✅ Recupera il dispositivo dal database con tutte le informazioni necessarie
+        // Recupera il dispositivo dal database con le informazioni necessarie
         var device = await context.Devices
             .Where(d => d.Id == deviceId)
-            .Select(d => new { d.Id, d.Name, d.Brand, d.Model, d.SerialNumber })
+            .Select(d => new 
+            { 
+                d.Id, 
+                d.Name, 
+                d.Brand, 
+                d.Model, 
+                d.SerialNumber,
+                d.InventoryNumber 
+            })
             .FirstOrDefaultAsync();
 
-        if (device == null) return NotFound("Dispositivo non trovato.");
+        if (device == null)
+            return NotFound("Dispositivo non trovato.");
 
-        // ✅ Recupera la lista degli interventi
-        var interventions = await context.Interventions
+        // Recupera la lista degli interventi ordinati per data decrescente
+// Recupera gli interventi
+        var interventionsList = await context.Interventions
             .Where(i => i.DeviceId == deviceId)
             .OrderByDescending(i => i.Date)
             .ToListAsync();
 
-        // ✅ Passiamo i dati alla ViewBag per il titolo della pagina
+// Calcola il totale degli interventi
+        var totalItems = interventionsList.Count;
+
+// Crea il ViewModel utilizzando una StaticPagedList (per ora impostiamo la pagina a 1 e pageSize uguale al totale, in assenza di paginazione attiva)
+        var viewModel = new InterventionHistoryViewModel
+        {
+            DeviceId = device.Id,
+            Interventions = new StaticPagedList<Intervention>(interventionsList, page, PageSize, totalItems)
+        };
+
+        //return View("~/Views/InterventionHistory/List.cshtml", viewModel);
+
+        // Passa i dati del dispositivo tramite ViewBag per il titolo e altre informazioni
         ViewBag.DeviceId = device.Id;
         ViewBag.DeviceName = $"{device.Name} {device.Brand} {device.Model} (S/N: {device.SerialNumber})";
+        ViewBag.DeviceBrand = device.Brand;
+        ViewBag.DeviceModel = device.Model;
+        ViewBag.DeviceSerialNumber = device.SerialNumber;
+        ViewBag.DeviceInventoryNumber = device.InventoryNumber;
 
-        return View("~/Views/InterventionHistory/List.cshtml", interventions);
+        return View("~/Views/InterventionHistory/List.cshtml", viewModel);
     }
 
     // ➕ GET: /Intervention/Create/{deviceId}
@@ -249,7 +278,7 @@ public class InterventionController(ApplicationDbContext context) : Controller
         // Se abbiamo un returnUrl valido, reindirizziamo lì
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
-            Console.WriteLine($"✅ Reindirizzamento a: {returnUrl}");
+            //Console.WriteLine($"✅ Reindirizzamento a: {returnUrl}");
             return Redirect(returnUrl);
         }
 

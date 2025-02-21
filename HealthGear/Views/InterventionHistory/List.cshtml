@@ -1,5 +1,7 @@
 @using HealthGear.Helpers
-@model IEnumerable<Intervention>
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using X.PagedList.Mvc.Core
+@model HealthGear.Models.InterventionHistoryViewModel
 
 @{
     ViewData["Title"] = "Storico Interventi";
@@ -149,7 +151,7 @@
     </tr>
     </thead>
     <tbody>
-    @foreach (var intervention in Model)
+    @foreach (var intervention in Model.Interventions)
     {
         <tr>
             <td>@intervention.Date.ToShortDateString()</td>
@@ -158,8 +160,8 @@
                 @if (intervention.Passed.HasValue)
                 {
                     <span class="badge @(intervention.Passed.Value ? "bg-success" : "bg-danger")">
-                            @(intervention.Passed.Value ? "Superato" : "Non Superato")
-                        </span>
+                        @(intervention.Passed.Value ? "Superato" : "Non Superato")
+                    </span>
                 }
                 else
                 {
@@ -192,6 +194,30 @@
     }
     </tbody>
 </table>
+
+<!-- Paginazione per lo storico degli interventi -->
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(Model.Interventions, page =>
+            Url.Action("List", new {
+                deviceId = ViewBag.DeviceId,
+                page,
+                typeFilter = ViewBag.TypeFilter,
+                passedFilter = ViewBag.PassedFilter,
+                dateFrom = ViewBag.DateFrom,
+                dateTo = ViewBag.DateTo,
+                sortBy = ViewBag.SortBy
+            }),
+        new PagedListRenderOptions
+        {
+            DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+            DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
+            DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
+            UlElementClasses = ["pagination", "justify-content-center"],
+            LiElementClasses = ["page-item"],
+            PageClasses = ["page-link"]
+        })
+</div>
 
 <!-- Modal per la scelta del formato del report -->
 <div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel"
