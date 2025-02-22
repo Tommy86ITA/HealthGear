@@ -14,8 +14,11 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
 {
     private const int PageSize = 10;
 
+    [HttpGet("")]
+    [HttpGet("Index")]
     public async Task<IActionResult> List(
         int deviceId, 
+        string? searchQuery, 
         string? typeFilter, 
         string? passedFilter, 
         DateTime? dateFrom,
@@ -23,6 +26,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         string? sortBy, 
         int page = 1)
     {
+
         // Recupera il dispositivo (solo i campi necessari per il titolo)
         var device = await context.Devices
             .Where(d => d.Id == deviceId)
@@ -41,8 +45,15 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
             return NotFound("Dispositivo non trovato.");
 
         // Inizia la query per gli interventi del dispositivo
-        var query = context.Interventions
-            .Where(i => i.DeviceId == device.Id);
+        var query = context.Interventions.Where(i => i.DeviceId == device.Id);
+
+        // Filtra per ricerca nelle note (se specificato)
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            var pattern = $"%{searchQuery.Trim()}%";
+            query = query.Where(i => EF.Functions.Like(i.Notes, pattern));
+            Console.WriteLine($"[DEBUG] Filtro Note: {searchQuery.Trim()}");
+        }
 
         // Filtra per tipo di intervento
         if (!string.IsNullOrEmpty(typeFilter))
@@ -89,7 +100,6 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
 
         // Calcola il totale degli interventi
         var totalItems = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalItems / (double)PageSize);
 
         // Recupera solo la pagina corrente degli interventi
         var interventionsList = await query
@@ -106,14 +116,15 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
             Interventions = new StaticPagedList<Intervention>(interventionsList, page, PageSize, totalItems)
         };
 
-        // Imposta i parametri per la view
+        // Passa i parametri alla view tramite ViewBag
         ViewBag.CurrentPage = page;
-        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)PageSize);
         ViewBag.SortBy = sortBy;
         ViewBag.TypeFilter = typeFilter;
         ViewBag.PassedFilter = passedFilter;
         ViewBag.DateFrom = dateFrom?.ToString("yyyy-MM-dd");
         ViewBag.DateTo = dateTo?.ToString("yyyy-MM-dd");
+        ViewBag.SearchQuery = searchQuery;
         ViewBag.DeviceId = device.Id;
         ViewBag.DeviceName = device.Name;
         ViewBag.DeviceBrand = device.Brand;
@@ -121,6 +132,12 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         ViewBag.DeviceSerialNumber = device.SerialNumber;
         ViewBag.DeviceInventoryNumber = device.InventoryNumber;
 
-        return View("~/Views/InterventionHistory/List.cshtml", viewModel);
+        // Se la richiesta è AJAX, restituisci la PartialView
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+        {
+            return PartialView("_InterventionHistoryPartial", viewModel);
+        }
+
+        return View("List", viewModel);
     }
 }

@@ -1,7 +1,4 @@
-@using HealthGear.Helpers
-@using X.PagedList.Mvc.Core
 @model HealthGear.Models.DeviceListViewModel
-
 @{
     ViewData["Title"] = "Elenco Dispositivi";
 }
@@ -18,8 +15,8 @@
     <i class="fas fa-file-download"></i> Scarica Report
 </button>
 
-<!-- Form per la ricerca e filtro per le scadenze -->
-<form method="get" class="mb-3">
+<!-- Form per la ricerca e i filtri -->
+<form id="filtersForm" method="get" action="@Url.Action("Index", "Device")" class="mb-3">
     <div class="input-group">
         <input type="text" name="searchQuery" class="form-control" placeholder="Cerca dispositivo..." value="@ViewBag.SearchQuery" />
         <select name="dueDateFilter" class="form-select">
@@ -86,7 +83,6 @@
             </div>
             <div class="modal-body">
                 <p>Seleziona i dispositivi da includere nel report:</p>
-                @* Utilizziamo un blocco switch per generare le option in modo elegante *@
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="reportFilter" id="allDevices" value="all" checked />
                     <label class="form-check-label" for="allDevices">Tutti i dispositivi</label>
@@ -139,184 +135,40 @@ else
     <h4><i class="fas fa-archive"></i> Dispositivi Dismessi</h4>
 }
 
-<!-- Tabella dei dispositivi -->
-<table class="table table-striped table-bordered text-center">
-    <thead class="thead-dark">
-        <tr>
-            <th><i class="fas fa-folder-open"></i> Inv.</th>
-            <th><i class="fas fa-tag"></i> Nome</th>
-            <th><i class="fas fa-industry"></i> Produttore</th>
-            <th><i class="fas fa-barcode"></i> Modello</th>
-            <th><i class="fas fa-wrench"></i> Manutenzione</th>
-            <th class="text-center"><i class="fas fa-bolt"></i> Verifica Elettrica</th>
-            <th class="text-center"><i class="fas fa-radiation"></i> Controllo Fisico</th>
-            <th class="text-center"><i class="fas fa-cogs"></i> Azioni</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var device in Model.StatusFilter == "attivi" ? Model.ActiveDevices : Model.ArchivedDevices)
-        {
-            <tr id="device-row-@device.Id" data-has-interventions="@(device.Interventions.Any().ToString().ToLower())">
-                <td class="text-center">@device.InventoryNumber</td>
-                <td class="text-start">@device.Name</td>
-                <td class="text-start">@device.Brand</td>
-                <td class="text-start">@device.Model</td>
-                <td class="text-center">
-                    <span class="@(DueDateHelper.GetDueDateClass(device.NextMaintenanceDue))">
-                        @(device.NextMaintenanceDue?.ToShortDateString() ?? "N/A")
-                    </span>
-                </td>
-                <td class="text-center">
-                    <span class="@(DueDateHelper.GetDueDateClass(device.NextElectricalTestDue))">
-                        @(device.NextElectricalTestDue?.ToShortDateString() ?? "N/A")
-                    </span>
-                </td>
-                <td class="text-center">
-                    @if (device.RequiresPhysicalInspection)
-                    {
-                        <span class="@(DueDateHelper.GetDueDateClass(device.NextPhysicalInspectionDue))">
-                            @(device.NextPhysicalInspectionDue?.ToShortDateString() ?? "N/A")
-                        </span>
-                    }
-                    else
-                    {
-                        <span>—</span>
-                    }
-                </td>
-                <td class="text-center">
-                    <a asp-action="Details" asp-route-id="@device.Id" class="btn btn-info btn-sm" title="Dettagli">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a asp-action="Edit" asp-route-id="@device.Id" class="btn btn-warning btn-sm" title="Modifica">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- Container per la lista dei dispositivi (viene caricato via AJAX) -->
+<div id="devicesList">
+    @await Html.PartialAsync("_DeviceListPartial", Model)
+</div>
 
-<!-- Paginazione: mostra solo la paginazione per la tabella attiva se lo stato corrente è "attivi", altrimenti per dismessi -->
-@if (Model.StatusFilter == "attivi")
-{
-    <div class="d-flex justify-content-center">
-        @Html.PagedListPager(Model.ActiveDevices, page => 
-                Url.Action("Index", new { pageAttivi = page, statusFilter = "attivi", searchQuery = ViewBag.SearchQuery, dueDateFilter = ViewBag.DueDateFilter }),
-            new PagedListRenderOptions
-            {
-                DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
-                UlElementClasses = ["pagination", "justify-content-center"],
-                LiElementClasses = ["page-item"],
-                PageClasses = ["page-link"]
-            })
-    </div>
-}
-else if (Model.StatusFilter == "dismessi")
-{
-    <div class="d-flex justify-content-center">
-        @Html.PagedListPager(Model.ArchivedDevices, page => 
-                Url.Action("Index", new { pageDismessi = page, statusFilter = "dismessi", searchQuery = ViewBag.SearchQuery, dueDateFilter = ViewBag.DueDateFilter }),
-            new PagedListRenderOptions
-            {
-                DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
-                UlElementClasses = ["pagination", "justify-content-center"],
-                LiElementClasses = ["page-item"],
-                PageClasses = ["page-link"]
-            })
-    </div>
-}
-
-<!-- Script per gestione eventi e azioni AJAX -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-        let token = tokenElement ? tokenElement.value : "";
-
-        function fetchRequest(url, method, successMessage, errorMessage) {
-            fetch(url, {
-                method: method,
-                headers: {
-                    "Content-Type": "application/json",
-                    "RequestVerificationToken": token
+@section Scripts {
+    <script>
+        // Funzione per caricare la lista dei dispositivi via AJAX
+        function loadDevices(url) {
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function(data) {
+                    $("#devicesList").html(data);
+                },
+                error: function() {
+                    alert("Si è verificato un errore durante il caricamento dei dispositivi.");
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(successMessage);
-                    location.reload();
-                } else {
-                    alert(data.message || errorMessage);
-                }
-            })
-            .catch(error => alert(errorMessage + ": " + error.message));
-        }
-
-        // Nasconde eventuali pulsanti di eliminazione se ci sono interventi (esempio)
-        document.querySelectorAll("tr[id^='device-row-']").forEach(row => {
-            let deleteBtn = row.querySelector(".delete-btn");
-            let hasInterventions = row.getAttribute("data-has-interventions") === "true";
-            if (hasInterventions && deleteBtn) {
-                deleteBtn.style.display = "none";
-            }
-        });
-
-        // Event listener per archiviare dispositivo
-        document.querySelectorAll(".archive-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                let deviceId = this.getAttribute("data-id");
-                if (!confirm("Sei sicuro di voler archiviare questo dispositivo?")) return;
-                fetchRequest(`/Device/Archive/${deviceId}`, "POST", "Il dispositivo è stato archiviato con successo!", "Errore durante l'archiviazione.");
-            });
-        });
-
-        // Event listener per riattivare dispositivo dismesso
-        document.querySelectorAll(".restore-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                let deviceId = this.getAttribute("data-id");
-                if (!confirm("Sei sicuro di voler riattivare questo dispositivo?")) return;
-                fetchRequest(`/Device/Restore/${deviceId}`, "POST", "Il dispositivo è stato riattivato con successo!", "Errore durante la riattivazione.");
-            });
-        });
-
-        // Gestione modal per report: chiusura automatica dopo il click sui pulsanti
-        let reportModalElement = document.getElementById("reportModal");
-        if (reportModalElement) {
-            let reportModal = new bootstrap.Modal(reportModalElement);
-            document.querySelectorAll("#reportModal .btn, #reportModal a").forEach(button => {
-                button.addEventListener("click", function () {
-                    setTimeout(() => {
-                        reportModal.hide();
-                    }, 500);
-                });
             });
         }
-    });
-</script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let exportExcelBtn = document.getElementById("exportExcel");
-        let exportPdfBtn = document.getElementById("exportPdf");
-        function getSelectedFilter() {
-            return document.querySelector("input[name='reportFilter']:checked").value;
-        }
-        function generateReport(format) {
-            let statusFilter = getSelectedFilter();
-            let baseUrl = format === "pdf" ? "/Report/GenerateDeviceListPdf" : "/Report/GenerateDeviceListExcel";
-            window.location.href = `${baseUrl}?statusFilter=${statusFilter}`;
-        }
-        exportExcelBtn.addEventListener("click", function () {
-            generateReport("excel");
+        // Intercetta il submit del form dei filtri
+        $("#filtersForm").submit(function(e) {
+            e.preventDefault();
+            let url = $(this).attr("action");
+            let queryString = $(this).serialize();
+            loadDevices(url + "?" + queryString);
         });
-        exportPdfBtn.addEventListener("click", function () {
-            generateReport("pdf");
+
+        // Intercetta i click sui link di paginazione
+        $(document).on("click", ".pagination a", function(e) {
+            e.preventDefault();
+            let url = $(this).attr("href");
+            loadDevices(url);
         });
-    });
-</script>
+    </script>
+}

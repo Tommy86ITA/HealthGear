@@ -1,14 +1,11 @@
-@using HealthGear.Helpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using X.PagedList.Mvc.Core
-@model HealthGear.Models.InterventionHistoryViewModel
+@model InterventionHistoryViewModel
 
 @{
     ViewData["Title"] = "Storico Interventi";
 }
 
 <h2 class="mb-2">
-    <i class="fas fa-clock-rotate-left"></i> Storico Interventi per
+    <i class="fas fa-clock-rotate-left"></i> Storico Interventi per 
     <strong>@ViewBag.DeviceBrand @ViewBag.DeviceModel</strong>
 </h2>
 <p class="text-muted">
@@ -18,272 +15,150 @@
 </p>
 
 <!-- Form per i filtri -->
-<form method="get" class="row mb-4">
-    <input type="hidden" name="deviceId" value="@ViewBag.DeviceId"/>
+<form id="filtersForm" method="get" action="@Url.Action("List", "InterventionHistory")" class="row mb-4">
+    <input type="hidden" name="deviceId" value="@ViewBag.DeviceId" />
 
+    <!-- Barra di ricerca su tutta la larghezza -->
+    <div class="col-md-12 mb-3">
+        <label for="searchQuery" class="form-label">Ricerca Note</label>
+        <input type="text" name="searchQuery" id="searchQuery"
+               class="form-control"
+               placeholder="Cerca nelle note..."
+               value="@ViewBag.SearchQuery" />
+    </div>
+
+    <!-- Altra riga per i restanti campi di filtro (Tipo, Date, Esito) -->
     <div class="col-md-3">
         <label for="typeFilter" class="form-label">Tipo Intervento</label>
         <select name="typeFilter" id="typeFilter" class="form-select">
             <option value="">-- Tutti --</option>
-            <option value="Maintenance" selected="@(ViewBag.TypeFilter == "Maintenance" ? "selected" : null)">
-                Manutenzione
-            </option>
-            <option value="ElectricalTest" selected="@(ViewBag.TypeFilter == "ElectricalTest" ? "selected" : null)">
-                Verifica Elettrica
-            </option>
-            <option value="PhysicalInspection"
-                    selected="@(ViewBag.TypeFilter == "PhysicalInspection" ? "selected" : null)">
-                Verifica Fisica
-            </option>
+            @if ((ViewBag.TypeFilter as string) == "Maintenance")
+            {
+                <option value="Maintenance" selected>Manutenzione</option>
+            }
+            else
+            {
+                <option value="Maintenance">Manutenzione</option>
+            }
+            @if ((ViewBag.TypeFilter as string) == "ElectricalTest")
+            {
+                <option value="ElectricalTest" selected>Verifica Elettrica</option>
+            }
+            else
+            {
+                <option value="ElectricalTest">Verifica Elettrica</option>
+            }
+            @if ((ViewBag.TypeFilter as string) == "PhysicalInspection")
+            {
+                <option value="PhysicalInspection" selected>Verifica Fisica</option>
+            }
+            else
+            {
+                <option value="PhysicalInspection">Verifica Fisica</option>
+            }
         </select>
     </div>
 
     <div class="col-md-3">
         <label for="dateFrom" class="form-label">Da</label>
-        <input type="date" name="dateFrom" id="dateFrom" class="form-control" value="@ViewBag.DateFrom"/>
+        <input type="date" name="dateFrom" id="dateFrom" class="form-control" value="@ViewBag.DateFrom" />
     </div>
 
     <div class="col-md-3">
         <label for="dateTo" class="form-label">A</label>
-        <input type="date" name="dateTo" id="dateTo" class="form-control" value="@ViewBag.DateTo"/>
+        <input type="date" name="dateTo" id="dateTo" class="form-control" value="@ViewBag.DateTo" />
     </div>
 
     <div class="col-md-3">
         <label for="passedFilter" class="form-label">Esito</label>
         <select name="passedFilter" id="passedFilter" class="form-select">
-            <option value="">-- Tutti --</option>
-            <option value="true" selected="@(ViewBag.PassedFilter == "true" ? "selected" : null)">
-                Superato
-            </option>
-            <option value="false" selected="@(ViewBag.PassedFilter == "false" ? "selected" : null)">
-                Non Superato
-            </option>
+            @if (string.IsNullOrEmpty(ViewBag.PassedFilter as string))
+            {
+                <option value="" selected>Qualsiasi</option>
+            }
+            else
+            {
+                <option value="">Qualsiasi</option>
+            }
+
+            @if ((ViewBag.PassedFilter as string) == "true")
+            {
+                <option value="true" selected>Superato</option>
+            }
+            else
+            {
+                <option value="true">Superato</option>
+            }
+
+            @if ((ViewBag.PassedFilter as string) == "false")
+            {
+                <option value="false" selected>Non Superato</option>
+            }
+            else
+            {
+                <option value="false">Non Superato</option>
+            }
         </select>
     </div>
 
-    <div class="col-md-12 mt-3 d-flex justify-content-between">
+    <!-- Pulsanti di azione (Filtra e Reset) -->
+    <div class="col-md-12 d-flex align-items-end justify-content-between mt-3">
         <div>
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-filter"></i> Filtra
             </button>
-            <a asp-action="List" asp-controller="InterventionHistory" asp-route-deviceId="@ViewBag.DeviceId"
-               class="btn btn-secondary">
+            <a href="@Url.Action("List", "InterventionHistory", new { deviceId = ViewBag.DeviceId })" class="btn btn-secondary">
                 <i class="fas fa-redo"></i> Reset
             </a>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@ViewBag.DeviceId"
-               class="btn btn-success">
+            <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-success">
                 <i class="fas fa-plus"></i> Aggiungi Intervento
             </a>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportReportModal">
                 <i class="fas fa-file-download"></i> Scarica Report
             </button>
-            <a asp-action="Details" asp-controller="Device" asp-route-id="@ViewBag.DeviceId"
-               class="btn btn-outline-dark">
+            <a asp-action="Details" asp-controller="Device" asp-route-id="@ViewBag.DeviceId" class="btn btn-outline-dark">
                 <i class="fas fa-arrow-left"></i> Torna al Dispositivo
             </a>
         </div>
     </div>
 </form>
 
-<!-- Tabella con ordinamento; intestazioni aggiornate e larghezze ottimizzate -->
-<table class="table table-striped table-bordered text-center">
-    <thead class="thead-dark">
-    <tr>
-        <th class="col-1">
-            <a href="?deviceId=@ViewBag.DeviceId&sortBy=@(ViewBag.SortBy == "Date" ? "-Date" : "Date")">
-                <i class="fas fa-calendar-alt"></i> Data
-                @if (ViewBag.SortBy == "Date")
-                {
-                    <i class="fas fa-sort-up"></i>
-                }
-                else if (ViewBag.SortBy == "-Date")
-                {
-                    <i class="fas fa-sort-down"></i>
-                }
-                else
-                {
-                    <i class="fas fa-sort"></i>
-                }
-            </a>
-        </th>
-        <th class="col-2">
-            <a href="?deviceId=@ViewBag.DeviceId&sortBy=@(ViewBag.SortBy == "Type" ? "-Type" : "Type")">
-                <i class="fas fa-tools"></i> Tipo
-                @if (ViewBag.SortBy == "Type")
-                {
-                    <i class="fas fa-sort-up"></i>
-                }
-                else if (ViewBag.SortBy == "-Type")
-                {
-                    <i class="fas fa-sort-down"></i>
-                }
-                else
-                {
-                    <i class="fas fa-sort"></i>
-                }
-            </a>
-        </th>
-        <th class="col-1">
-            <a href="?deviceId=@ViewBag.DeviceId&sortBy=@(ViewBag.SortBy == "Passed" ? "-Passed" : "Passed")">
-                <i class="fas fa-check-circle"></i> Esito
-                @if (ViewBag.SortBy == "Passed")
-                {
-                    <i class="fas fa-sort-up"></i>
-                }
-                else if (ViewBag.SortBy == "-Passed")
-                {
-                    <i class="fas fa-sort-down"></i>
-                }
-                else
-                {
-                    <i class="fas fa-sort"></i>
-                }
-            </a>
-        </th>
-        <th class="col-5">
-            <i class="fas fa-sticky-note"></i> Note
-        </th>
-        <th class="col-2">
-            <i class="fas fa-cogs"></i> Azioni
-        </th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var intervention in Model.Interventions)
-    {
-        <tr>
-            <td>@intervention.Date.ToShortDateString()</td>
-            <td>@InterventionHelper.GetInterventionDisplayName(intervention)</td>
-            <td>
-                @if (intervention.Passed.HasValue)
-                {
-                    <span class="badge @(intervention.Passed.Value ? "bg-success" : "bg-danger")">
-                        @(intervention.Passed.Value ? "Superato" : "Non Superato")
-                    </span>
-                }
-                else
-                {
-                    <span class="text-muted">N/A</span>
-                }
-            </td>
-            <td>@intervention.Notes</td>
-            <td>
-                <div class="d-flex justify-content-center gap-1">
-                    <a asp-action="Details" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                       class="btn btn-info btn-sm" title="Dettagli">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                       class="btn btn-warning btn-sm" title="Modifica">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                          asp-route-returnUrl="@Url.Action("List", "InterventionHistory", new { deviceId = ViewBag.DeviceId })"
-                          method="post" class="d-inline">
-                        <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');"
-                                title="Elimina">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
-
-<!-- Paginazione per lo storico degli interventi -->
-<div class="d-flex justify-content-center">
-    @Html.PagedListPager(Model.Interventions, page =>
-            Url.Action("List", new {
-                deviceId = ViewBag.DeviceId,
-                page,
-                typeFilter = ViewBag.TypeFilter,
-                passedFilter = ViewBag.PassedFilter,
-                dateFrom = ViewBag.DateFrom,
-                dateTo = ViewBag.DateTo,
-                sortBy = ViewBag.SortBy
-            }),
-        new PagedListRenderOptions
-        {
-            DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
-            DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
-            DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
-            DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
-            UlElementClasses = ["pagination", "justify-content-center"],
-            LiElementClasses = ["page-item"],
-            PageClasses = ["page-link"]
-        })
-</div>
-
-<!-- Modal per la scelta del formato del report -->
-<div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel"
-     aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exportReportModalLabel">
-                    <i class="fas fa-file-alt"></i> Scegli il formato del report
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
-            </div>
-            <div class="modal-body text-center">
-                <p>In quale formato vuoi scaricare il report?</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <button type="button" class="btn btn-success" id="exportExcelBtn">
-                        <i class="fas fa-file-excel"></i> Excel
-                    </button>
-                    <button type="button" class="btn btn-danger" id="exportPdfBtn">
-                        <i class="fas fa-file-pdf"></i> PDF
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Container che contiene la partial dello storico interventi -->
+<div id="interventionHistoryList">
+    @await Html.PartialAsync("_InterventionHistoryPartial", Model)
 </div>
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Recupera l'elemento modal e crea l'istanza Bootstrap
-            var modalEl = document.getElementById("exportReportModal");
-            if (!modalEl) {
-                console.error("Modal 'exportReportModal' non trovato.");
-                return;
-            }
-            var reportModal = new bootstrap.Modal(modalEl);
-
-            // Recupera i pulsanti del modal
-            var exportExcelBtn = document.getElementById("exportExcelBtn");
-            var exportPdfBtn = document.getElementById("exportPdfBtn");
-
-            // Funzione per il download del report
-            function downloadReport(format) {
-                // Assicurati che ViewBag.DeviceId sia valorizzato
-                var deviceId = "@ViewBag.DeviceId";
-                if (format === "pdf") {
-                    window.location.href = `/Report/GenerateDeviceDetailPdf/${deviceId}`;
-                } else {
-                    window.location.href = `/Report/GenerateDeviceDetailExcel/${deviceId}`;
+        // Funzione per caricare via AJAX la partial dello storico interventi
+        function loadInterventions(url) {
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function (data) {
+                    $("#interventionHistoryList").html(data);
+                },
+                error: function () {
+                    alert("Si è verificato un errore durante il caricamento dello storico interventi.");
                 }
-                // Nascondi il modal
-                reportModal.hide();
-            }
+            });
+        }
 
-            // Collega gli eventi di click ai pulsanti
-            if (exportExcelBtn) {
-                exportExcelBtn.addEventListener("click", function () {
-                    downloadReport("excel");
-                });
-            }
-            if (exportPdfBtn) {
-                exportPdfBtn.addEventListener("click", function () {
-                    downloadReport("pdf");
-                });
-            }
+        // Intercetta il submit del form dei filtri
+        $("#filtersForm").submit(function (e) {
+            e.preventDefault();
+            const url = $(this).attr("action");
+            const queryString = $(this).serialize();
+            loadInterventions(url + "?" + queryString);
+        });
+
+        // Intercetta i click sui link di paginazione all'interno della partial
+        $(document).on("click", ".pagination a", function (e) {
+            e.preventDefault();
+            const url = $(this).attr("href");
+            loadInterventions(url);
         });
     </script>
 }

@@ -32,19 +32,21 @@ public async Task<IActionResult> Index(
 {
     const int pageSize = 10;
 
+    // Recupera la query di base (tutti i dispositivi)
     var devicesQuery = context.Devices.AsNoTracking().AsQueryable();
 
     // Filtro per ricerca
     if (!string.IsNullOrEmpty(searchQuery))
     {
         searchQuery = searchQuery.Trim().ToLower();
-        devicesQuery = devicesQuery.Where(d => d.Name.ToLower().Contains(searchQuery) ||
-                                                d.Brand.ToLower().Contains(searchQuery) ||
-                                                d.Model.ToLower().Contains(searchQuery) ||
-                                                d.SerialNumber.ToLower().Contains(searchQuery));
+        devicesQuery = devicesQuery.Where(d =>
+            d.Name.ToLower().Contains(searchQuery) ||
+            d.Brand.ToLower().Contains(searchQuery) ||
+            d.Model.ToLower().Contains(searchQuery) ||
+            d.SerialNumber.ToLower().Contains(searchQuery));
     }
 
-    // Filtro per stato delle scadenze (vedi codice precedente)
+    // Filtro per stato delle scadenze
     var today = DateTime.Today;
     var soonThreshold = today.AddMonths(2);
     if (dueDateFilter == "expired")
@@ -69,7 +71,7 @@ public async Task<IActionResult> Index(
             (d.NextPhysicalInspectionDue >= soonThreshold));
     }
 
-    // Paginazione separata per dispositivi attivi e dismessi
+    // Applica la paginazione separata per dispositivi attivi e dismessi
     var activeDevices = await devicesQuery
         .Where(d => d.Status == DeviceStatus.Attivo)
         .OrderBy(d => d.InventoryNumber)
@@ -80,6 +82,7 @@ public async Task<IActionResult> Index(
         .OrderBy(d => d.InventoryNumber)
         .ToPagedListAsync(pageDismessi ?? 1, pageSize);
 
+    // Crea il ViewModel
     var viewModel = new DeviceListViewModel
     {
         ActiveDevices = activeDevices,
@@ -87,14 +90,22 @@ public async Task<IActionResult> Index(
         StatusFilter = statusFilter
     };
 
+    // Passiamo i parametri alla view (o partial) tramite ViewBag
     ViewBag.PageAttivi = pageAttivi;
     ViewBag.PageDismessi = pageDismessi;
     ViewBag.SearchQuery = searchQuery;
     ViewBag.DueDateFilter = dueDateFilter;
 
+    // 🔑 Controlla se la richiesta è AJAX
+    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+    {
+        // Se è una richiesta AJAX, restituiamo la partial view (senza layout)
+        return PartialView("_DeviceListPartial", viewModel);
+    }
+
+    // Altrimenti, restituiamo la view completa
     return View("List", viewModel);
 }
-
 /*
 // 🔹 Metodo helper per filtrare i dispositivi
 private static IQueryable<Device> ApplyFilters(
