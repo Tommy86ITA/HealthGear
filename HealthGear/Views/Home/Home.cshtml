@@ -1,0 +1,195 @@
+﻿@using HealthGear.Helpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model HomeViewModel
+
+<h1 class="mb-4">Benvenuto in HealthGear!</h1>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">Dispositivi</div>
+            <div class="card-body">
+                <h5 class="card-title">@Model.NumberOfDevices dispositivi registrati</h5>
+                <p class="card-text">Gestisci i dispositivi presenti nel sistema.</p>
+                <a href="/Device" class="btn btn-light">Vai ai dispositivi</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Interventi</div>
+            <div class="card-body">
+                <h5 class="card-title">@Model.NumberOfInterventions interventi registrati</h5>
+                <p class="card-text">Storico e gestione degli interventi.</p>
+                <a href="/InterventionHistory/List" class="btn btn-light">Vai allo storico</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3><i class="fas fa-bell"></i> Scadenze Imminenti</h3>
+@if (Model.UpcomingDueDates.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th>Dispositivo</th>
+                <th>Scadenze</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var device in Model.UpcomingDueDates)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="Details" asp-controller="Device" asp-route-id="@device.Id">
+                            @device.Brand @device.Model (@device.Name)
+                        </a>
+                    </td>
+                    <td>
+                        @{
+                            var today = DateTime.Today;
+                            var threshold = today.AddMonths(2);
+                            var scadenze = new List<string>();
+
+                            // Manutenzione
+                            if (device.NextMaintenanceDue.HasValue)
+                            {
+                                if (device.NextMaintenanceDue.Value < today)
+                                {
+                                    // Scaduto
+                                    scadenze.Add($"<span class='text-danger'><i class='fas fa-exclamation-circle'></i> Manutenzione Preventiva scaduta ({device.NextMaintenanceDue.Value:dd/MM/yyyy})</span>");
+                                }
+                                else if (device.NextMaintenanceDue.Value <= threshold)
+                                {
+                                    // In scadenza
+                                    scadenze.Add($"<span class='text-warning'><i class='fas fa-exclamation-triangle'></i> Manutenzione Preventiva in scadenza ({device.NextMaintenanceDue.Value:dd/MM/yyyy})</span>");
+                                }
+                            }
+
+                            // Verifica Elettrica
+                            if (device.NextElectricalTestDue.HasValue)
+                            {
+                                if (device.NextElectricalTestDue.Value < today)
+                                {
+                                    scadenze.Add($"<span class='text-danger'><i class='fas fa-exclamation-circle'></i> Verifica Elettrica scaduta ({device.NextElectricalTestDue.Value:dd/MM/yyyy})</span>");
+                                }
+                                else if (device.NextElectricalTestDue.Value <= threshold)
+                                {
+                                    scadenze.Add($"<span class='text-warning'><i class='fas fa-exclamation-triangle'></i> Verifica Elettrica in scadenza ({device.NextElectricalTestDue.Value:dd/MM/yyyy})</span>");
+                                }
+                            }
+
+                            // Verifica Fisica
+                            if (device.NextPhysicalInspectionDue.HasValue)
+                            {
+                                if (device.NextPhysicalInspectionDue.Value < today)
+                                {
+                                    scadenze.Add($"<span class='text-danger'><i class='fas fa-exclamation-circle'></i> Verifica Fisica scaduta ({device.NextPhysicalInspectionDue.Value:dd/MM/yyyy})</span>");
+                                }
+                                else if (device.NextPhysicalInspectionDue.Value <= threshold)
+                                {
+                                    scadenze.Add($"<span class='text-warning'><i class='fas fa-exclamation-triangle'></i> Verifica Fisica in scadenza ({device.NextPhysicalInspectionDue.Value:dd/MM/yyyy})</span>");
+                                }
+                            }
+
+                            if (scadenze.Any())
+                            {
+                                // Unisce le righe con <br/> per mostrare ogni scadenza su una riga separata
+                                @Html.Raw(string.Join("<br/>", scadenze))
+                            }
+                            else
+                            {
+                                // Se non c'è nulla di scaduto/in scadenza, mostra un trattino o “OK”
+                                <span class="text-muted">Nessuna scadenza critica</span>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted">Nessuna scadenza critica.</p>
+}
+
+
+<!-- Ultimi Interventi -->
+<h3><i class="fas fa-history"></i> Ultimi Interventi</h3>
+@if (Model.RecentInterventions.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered text-center shadow-sm">
+            <thead>
+            <tr>
+                <th class="col-1">Data</th>
+                <th class="col-4">Dispositivo</th>
+                <th class="col-4">Tipo</th>
+                <th class="col-2">Esito</th>
+                <th class="col-1 text-center">Azioni</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var intervention in Model.RecentInterventions)
+            {
+                <tr>
+                    <td>@intervention.Date.ToShortDateString()</td>
+                    <td>
+                        <a asp-action="Details"
+                           asp-controller="Device"
+                           asp-route-id="@intervention.Device?.Id">
+                            @intervention.Device!.Brand @intervention.Device.Model (@intervention.Device?.Name)
+                        </a>
+                    </td>
+                    <td>
+                        <i class="@(intervention.Type switch
+                                  {
+                                      InterventionType.Maintenance => "fas fa-wrench",
+                                      InterventionType.ElectricalTest => "fas fa-bolt",
+                                      _ => "fas fa-radiation"
+                                  })"></i>
+                        @InterventionHelper.GetInterventionDisplayName(intervention)
+                    </td>
+                    <td>
+                        @if (intervention.Type == InterventionType.Maintenance)
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                        else if (intervention.Passed.HasValue)
+                        {
+                            <span class="badge @(intervention.Passed.Value ? "bg-success" : "bg-danger")">
+                            @(intervention.Passed.Value ? "Superato" : "Non Superato")
+                        </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted"> - </span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <div class="d-inline-flex gap-1">
+                            <!-- Pulsante Dettagli -->
+                            <a asp-action="Details"
+                               asp-controller="Intervention"
+                               asp-route-id="@intervention.Id"
+                               class="btn btn-info btn-sm"
+                               title="Dettagli Intervento">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted">Nessun intervento registrato di recente.</p>
+}
+

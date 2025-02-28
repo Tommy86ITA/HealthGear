@@ -28,7 +28,8 @@ public class ReportController(
     {
         var devices = await GetFilteredDevices(statusFilter);
         var excelBytes = await excelReportGenerator.GenerateDeviceListReportAsync(devices);
-        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report_Dispositivi.xlsx");
+        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Report_Dispositivi.xlsx");
     }
 
 // 📌 Metodo per filtrare i dispositivi in base alla selezione dell'utente
@@ -45,7 +46,7 @@ public class ReportController(
 
         return await query.ToListAsync();
     }
-    
+
     // 📌 Genera il report PDF per un singolo dispositivo
     [HttpGet("GenerateDeviceDetailPdf/{id:int}")]
     public async Task<IActionResult> GenerateDeviceDetailPdf(int id)

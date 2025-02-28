@@ -1,0 +1,55 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Amministrazione - Attività";
+}
+
+<div class="container mt-5">
+    <h2>Amministrazione - Attività</h2>
+    <hr />
+    
+    <!-- Sezione per il cleanup dei file orfani -->
+    <div class="mb-3">
+        <button id="cleanupBtn" class="btn btn-danger">
+            <i class="fas fa-broom"></i> Pulisci file orfani
+        </button>
+        <span id="cleanupStatus" class="ms-3"></span>
+    </div>
+    
+    <!-- Report del cleanup -->
+    <div id="cleanupReport" class="alert alert-info" style="display:none;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function(){
+            $('#cleanupBtn').on('click', function(){
+                var btn = $(this);
+                // Disabilita il pulsante per evitare click multipli e mostra lo stato
+                btn.prop('disabled', true);
+                $('#cleanupStatus').html('In esecuzione...');
+                $('#cleanupReport').hide().html('');
+                
+                // Esegue la chiamata AJAX all'endpoint di cleanup
+                $.ajax({
+                    url: '@Url.Action("CleanupOrphanedFilesAjax", "FileAttachments")',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response){
+                        // Aggiorna il report con il numero di record analizzati e rimossi
+                        $('#cleanupReport').html(
+                            '<p>Sono stati analizzati <strong>' + response.totalRecords + '</strong> record.</p>' +
+                            '<p>Sono stati rimossi <strong>' + response.removedCount + '</strong> record.</p>'
+                        ).fadeIn();
+                        $('#cleanupStatus').html('Operazione completata.');
+                    },
+                    error: function(){
+                        $('#cleanupStatus').html('Errore durante la pulizia.');
+                    },
+                    complete: function(){
+                        btn.prop('disabled', false);
+                    }
+                });
+            });
+        });
+    </script>
+}

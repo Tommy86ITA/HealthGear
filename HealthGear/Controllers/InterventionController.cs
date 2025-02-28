@@ -15,7 +15,7 @@ namespace HealthGear.Controllers;
 public class InterventionController(ApplicationDbContext context) : Controller
 {
     private const int PageSize = 10;
-    
+
 // 🔍 GET: /Intervention/Index/{deviceId}
 // Mostra la lista degli interventi per un dispositivo specifico
     [HttpGet("Index/{deviceId:int}")]
@@ -24,14 +24,15 @@ public class InterventionController(ApplicationDbContext context) : Controller
         // Recupera il dispositivo dal database con le informazioni necessarie
         var device = await context.Devices
             .Where(d => d.Id == deviceId)
-            .Select(d => new 
-            { 
-                d.Id, 
-                d.Name, 
-                d.Brand, 
-                d.Model, 
+            .Select(d => new
+            {
+                d.Id,
+                d.Name,
+                d.Brand,
+                d.Model,
                 d.SerialNumber,
-                d.InventoryNumber 
+                d.InventoryNumber,
+                d.FileAttachments
             })
             .FirstOrDefaultAsync();
 
@@ -81,25 +82,28 @@ public class InterventionController(ApplicationDbContext context) : Controller
         return View("Create", intervention);
     }
 
-    // 📝 POST: /Intervention/Create/{deviceId}
     [HttpPost("Create/{deviceId:int}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int deviceId, Intervention intervention)
     {
-        if (deviceId <= 0) return BadRequest("DeviceId non valido.");
+        // Verifica che il deviceId sia valido
+        if (deviceId <= 0)
+            return BadRequest("DeviceId non valido.");
 
-        var device = await context.Devices
-            .Include(d => d.Interventions)
-            .FirstOrDefaultAsync(d => d.Id == deviceId);
+        // Recupera il dispositivo dal database per associarlo all'intervento
+        var device = await context.Devices.FindAsync(deviceId);
+        if (device == null)
+            return NotFound("Dispositivo non trovato.");
 
-        if (device == null) return NotFound();
-
+        // Associa l'intervento al dispositivo
         intervention.DeviceId = deviceId;
         intervention.Device = device;
 
-        if (!ModelState.IsValid) return View("Create", intervention);
+        // Se il modello non è valido, ritorna la view di creazione con i dati inseriti
+        if (!ModelState.IsValid)
+            return View("Create", intervention);
 
-        // 🛠 Reset dei campi opzionali in base al tipo di intervento
+        // Reset dei campi opzionali in base al tipo di intervento
         intervention.MaintenanceCategory = intervention.Type == InterventionType.Maintenance
             ? intervention.MaintenanceCategory
             : null;
@@ -108,25 +112,18 @@ public class InterventionController(ApplicationDbContext context) : Controller
                 ? intervention.Passed
                 : null;
 
-        // 💾 Salviamo l'intervento
+        // Aggiunge l'intervento al contesto e salva, così da ottenere un ID generato dal database
         context.Interventions.Add(intervention);
         await context.SaveChangesAsync();
 
-        // 🔄 Aggiorniamo le scadenze del dispositivo
-        DueDateHelper.UpdateNextDueDate(device, context);
-        context.Update(device);
-        await context.SaveChangesAsync();
+        TempData["SuccessMessage"] =
+            "Intervento aggiunto con successo! Ora puoi caricare i documenti relativi all’intervento oppure tornare ai dettagli del dispositivo.";
 
-        TempData["SuccessMessage"] = "Intervento aggiunto con successo!";
-
-        if (!string.IsNullOrEmpty(Request.Headers.Referer) &&
-            Request.Headers.Referer.ToString()
-                .Contains("/InterventionHistory/List", StringComparison.OrdinalIgnoreCase))
-            return RedirectToAction("List", "InterventionHistory", new { deviceId });
-
-        // ✅ Altrimenti, torniamo ai dettagli del dispositivo
-        return RedirectToAction("Details", "Device", new { id = deviceId });
+        // Dopo il salvataggio, l'intervento ha un ID valido. 
+        // Reindirizza alla pagina dei dettagli dell'intervento, dove sarà disponibile la funzionalità di upload file.
+        return RedirectToAction("Details", "Intervention", new { id = intervention.Id });
     }
+
 
     // ✨ GET: /Intervention/Details/{id}
     [HttpGet("Details/{id:int}")]
@@ -134,6 +131,7 @@ public class InterventionController(ApplicationDbContext context) : Controller
     {
         var intervention = await context.Interventions
             .Include(i => i.Device)
+            .Include(i => i.Attachments) // Aggiungi questa Include per caricare i file
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (intervention == null) return NotFound();
@@ -159,7 +157,7 @@ public class InterventionController(ApplicationDbContext context) : Controller
     public async Task<IActionResult> Edit(int id, string? returnUrl = null)
     {
         var intervention = await context.Interventions
-            .Include(i => i.Device) // 🔹 Assicuriamoci di caricare il dispositivo
+            .Include(i => i.Attachments).Include(intervention => intervention.Device)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (intervention == null) return NotFound();
@@ -183,28 +181,21 @@ public class InterventionController(ApplicationDbContext context) : Controller
         if (!ModelState.IsValid) return View("Edit", intervention);
 
         var existingIntervention = await context.Interventions
-            .Include(i => i.Device) // 🔹 Carichiamo il dispositivo per passare il nome
+            .Include(i => i.Device)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (existingIntervention == null) return NotFound();
 
-        // 🔄 Aggiorniamo i campi
+        // Aggiorna i campi principali...
         existingIntervention.Date = intervention.Date;
         existingIntervention.PerformedBy = intervention.PerformedBy;
         existingIntervention.Notes = intervention.Notes;
-
-        existingIntervention.MaintenanceCategory = existingIntervention.Type == InterventionType.Maintenance
-            ? intervention.MaintenanceCategory
-            : null; // Reset se non è manutenzione
-
-        existingIntervention.Passed =
-            existingIntervention.Type is InterventionType.ElectricalTest or InterventionType.PhysicalInspection
-                ? intervention.Passed
-                : null; // Reset se non è test elettrico/fisico
+        // Ecc.
 
         context.Update(existingIntervention);
         await context.SaveChangesAsync();
 
+        // Se vuoi aggiornare il device per calcolare scadenze
         var device = existingIntervention.Device;
         if (device != null)
         {
@@ -215,11 +206,9 @@ public class InterventionController(ApplicationDbContext context) : Controller
 
         TempData["SuccessMessage"] = "Modifica salvata con successo!";
 
-        // ✅ Se returnUrl è valido, usiamolo
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
 
-        // ✅ Se l'utente proviene dallo storico, torniamo lì con il nome del dispositivo
         return RedirectToAction("List", "InterventionHistory",
             new { deviceId = existingIntervention.DeviceId, deviceName = device?.Name });
     }
@@ -277,10 +266,8 @@ public class InterventionController(ApplicationDbContext context) : Controller
 
         // Se abbiamo un returnUrl valido, reindirizziamo lì
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-        {
             //Console.WriteLine($"✅ Reindirizzamento a: {returnUrl}");
             return Redirect(returnUrl);
-        }
 
         // 🔄 Fallback: Torniamo ai dettagli del dispositivo se tutto il resto fallisce
         Console.WriteLine($"🛠 Eliminazione intervento {id} completata.");

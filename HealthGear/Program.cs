@@ -23,9 +23,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Aggiunta dei servizi MVC con supporto per le viste Razor
 builder.Services.AddControllersWithViews();
 
-// Aggiunta del servizio di gestione dei file
-builder.Services.AddScoped<FileService>();
-
 // Aggiunta del servizio di calcolo delle scadenze
 builder.Services.AddScoped<DeadlineService>();
 
@@ -66,20 +63,26 @@ else
 
 app.UseHttpsRedirection(); // Forza l'uso di HTTPS
 app.UseStaticFiles(); // Abilita la gestione dei file statici (CSS, JS, immagini)
+app.UseRouting();
 
-app.UseRouting(); // Abilita il sistema di routing
+// Route di default: adesso il controller predefinito è Home e l'azione predefinita è "Home" (che restituisce la view "Home.cshtml")
+app.MapControllerRoute(
+    "default",
+    "{controller=Home}/{action=Home}/{id?}"
+);
 
-// Registrazione delle rotte con approccio consigliato (evita ASP0014)
+// Redirect esplicito della root ("/") a "/Home"
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/Home");
+    return Task.CompletedTask;
+});
+
+// Route per il DeviceController: tutte le richieste che iniziano con "Device" verranno gestite da DeviceController
 app.MapControllerRoute(
     "device",
     "Device/{action=Index}/{id?}",
     new { controller = "Device" }
-);
-
-// Route per la home page (HomeController)
-app.MapControllerRoute(
-    "default",
-    "{controller=Home}/{action=Index}/{id?}"
 );
 
 // Verifica che il database esista e crealo se necessario
@@ -88,29 +91,5 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.EnsureCreated(); // Crea il database se non esiste
 }
-
-
-/*using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var inventoryNumberService = scope.ServiceProvider.GetRequiredService<InventoryNumberService>();
-
-    // Recuperiamo tutti i dispositivi che non hanno ancora un numero di inventario
-    var devicesToUpdate = await dbContext.Devices
-        .Where(d => string.IsNullOrEmpty(d.InventoryNumber))
-        .ToListAsync();
-
-    // Per ogni dispositivo senza numero di inventario, generiamo e aggiorniamo il numero
-    foreach (var device in devicesToUpdate)
-    {
-        var inventoryNumber = await inventoryNumberService.GenerateInventoryNumberAsync(device.DataCollaudo.Year);
-        device.SetInventoryNumber(inventoryNumber); // Impostiamo il numero di inventario
-    }
-
-    // Salviamo i cambiamenti nel database
-    await dbContext.SaveChangesAsync();
-
-    Console.WriteLine($"Generati numeri di inventario per {devicesToUpdate.Count} dispositivi.");
-}*/
 
 app.Run();

@@ -29,7 +29,7 @@
     </span>
 </div>
 
-<hr />
+<hr/>
 <table class="table">
     <tr>
         <th><i class="fas fa-folder-open"></i> Numero di Inventario</th>
@@ -66,7 +66,7 @@
 
 <!-- 📌 Manutenzione e Controlli -->
 <h4 class="mt-5"><i class="fas fa-tools"></i> Manutenzione e Controlli</h4>
-<hr />
+<hr/>
 <table class="table">
     @if (Model.Status == DeviceStatus.Dismesso)
     {
@@ -104,7 +104,7 @@
 
 <!-- 📌 Storico Interventi Recenti -->
 <h4 class="mt-5"><i class="fas fa-history"></i> Interventi Recenti</h4>
-<hr />
+<hr/>
 <div class="d-flex gap-2 mb-3">
     <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@Model.Id" class="btn btn-success mb-3">
         <i class="fas fa-plus"></i> Aggiungi Intervento
@@ -162,16 +162,21 @@
                     }
                 </td>
                 <td class="text-center">
-                    <a asp-action="Details" asp-controller="Intervention" asp-route-id="@intervention.Id" class="btn btn-info btn-sm" title="Dettagli">
+                    <a asp-action="Details" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                       class="btn btn-info btn-sm" title="Dettagli">
                         <i class="fas fa-eye"></i>
                     </a>
-                    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id" class="btn btn-warning btn-sm" title="Modifica">
+                    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                       class="btn btn-warning btn-sm" title="Modifica">
                         <i class="fas fa-edit"></i>
                     </a>
                     <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
                           method="post" class="d-inline">
-                        <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Device", new { id = Model.Id })" />
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');" title="Elimina">
+                        <input type="hidden" name="returnUrl"
+                               value="@Url.Action("Details", "Device", new { id = Model.Id })"/>
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');"
+                                title="Elimina">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -185,6 +190,16 @@ else
 {
     <p class="text-muted">Nessun intervento registrato per questo dispositivo.</p>
 }
+
+<div id="attachmentsContainer">
+    @await Html.PartialAsync("_FileUploadPartial", new
+    {
+        DeviceId = Model.Id,
+        InterventionId = (int?)null,
+        Model.FileAttachments
+    })
+</div>
+
 
 <!-- Pulsanti di Azione per il dispositivo -->
 <div class="d-flex justify-content-between mt-4">
@@ -211,11 +226,13 @@ else
 </div>
 
 <!-- Modal per la scelta del formato del report -->
-<div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel" aria-hidden="true">
+<div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exportReportModalLabel"><i class="fas fa-file-alt"></i> Scegli il formato del report</h5>
+                <h5 class="modal-title" id="exportReportModalLabel"><i class="fas fa-file-alt"></i> Scegli il formato
+                    del report</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
             </div>
             <div class="modal-body text-center">
@@ -230,7 +247,8 @@ else
 </div>
 
 <!-- Modal per conferma eliminazione dispositivo -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -261,6 +279,8 @@ else
         </div>
     </div>
 </div>
+
+@*SEZIONE SCRIPT*@
 
 @section Scripts {
     <script>

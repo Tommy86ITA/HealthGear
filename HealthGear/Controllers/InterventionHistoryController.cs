@@ -14,19 +14,17 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
 {
     private const int PageSize = 10;
 
-    [HttpGet("")]
     [HttpGet("Index")]
     public async Task<IActionResult> List(
-        int deviceId, 
-        string? searchQuery, 
-        string? typeFilter, 
-        string? passedFilter, 
+        int deviceId,
+        string? searchQuery,
+        string? typeFilter,
+        string? passedFilter,
         DateTime? dateFrom,
-        DateTime? dateTo, 
-        string? sortBy, 
+        DateTime? dateTo,
+        string? sortBy,
         int page = 1)
     {
-
         // Recupera il dispositivo (solo i campi necessari per il titolo)
         var device = await context.Devices
             .Where(d => d.Id == deviceId)
@@ -75,6 +73,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
             query = query.Where(i => i.Date >= dateFrom.Value);
             Console.WriteLine($"[DEBUG] Filtro Data Da: {dateFrom.Value}");
         }
+
         if (dateTo.HasValue)
         {
             query = query.Where(i => i.Date <= dateTo.Value);
@@ -83,20 +82,16 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
 
         // Ordinamento: se sortBy non viene passato, ordina per data decrescente
         if (string.IsNullOrEmpty(sortBy))
-        {
             query = query.OrderByDescending(i => i.Date);
-        }
         else
-        {
             query = sortBy switch
             {
-                "Date"   => query.OrderBy(i => i.Date),
-                "-Date"  => query.OrderByDescending(i => i.Date),
-                "Type"   => query.OrderBy(i => i.Type),
+                "Date" => query.OrderBy(i => i.Date),
+                "-Date" => query.OrderByDescending(i => i.Date),
+                "Type" => query.OrderBy(i => i.Type),
                 "Passed" => query.OrderBy(i => i.Passed),
-                _        => query.OrderByDescending(i => i.Date)
+                _ => query.OrderByDescending(i => i.Date)
             };
-        }
 
         // Calcola il totale degli interventi
         var totalItems = await query.CountAsync();
@@ -134,9 +129,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
 
         // Se la richiesta è AJAX, restituisci la PartialView
         if (Request.Headers.XRequestedWith == "XMLHttpRequest")
-        {
             return PartialView("_InterventionHistoryPartial", viewModel);
-        }
 
         return View("List", viewModel);
     }

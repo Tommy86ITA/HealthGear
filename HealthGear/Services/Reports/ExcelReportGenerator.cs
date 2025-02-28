@@ -9,5 +9,4 @@ public class ExcelReportGenerator(DeadlineService deadlineService)
     {
         return Task.FromResult(DeviceListExcel.Generate(devices, deadlineService));
     }
-
 }

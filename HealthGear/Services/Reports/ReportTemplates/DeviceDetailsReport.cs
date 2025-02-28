@@ -117,7 +117,7 @@ public static class DeviceDetailsReport
                                 false => "Non superato",
                                 _ => "N/A"
                             }).FontColor(intervention.Passed == false ? Colors.Red.Medium : Colors.Green.Medium);
-                            
+
                             // 📌 **Aggiunta delle note sotto l'intervento (solo se presenti)**
                             table.Cell().ColumnSpan(4).PaddingTop(5).BorderBottom(1).Row(row =>
                             {

@@ -7,6 +7,6 @@ public class PdfReportGenerator
 {
     public static Task<byte[]> GenerateDeviceListReportAsync(List<Device> devices, string statusFilter)
     {
-        return Task.FromResult(DeviceListReport.Generate(devices, statusFilter)); 
+        return Task.FromResult(DeviceListReport.Generate(devices, statusFilter));
     }
 }

@@ -5,7 +5,7 @@
 }
 
 <h2 class="mb-2">
-    <i class="fas fa-clock-rotate-left"></i> Storico Interventi per 
+    <i class="fas fa-clock-rotate-left"></i> Storico Interventi per
     <strong>@ViewBag.DeviceBrand @ViewBag.DeviceModel</strong>
 </h2>
 <p class="text-muted">
@@ -16,7 +16,7 @@
 
 <!-- Form per i filtri -->
 <form id="filtersForm" method="get" action="@Url.Action("List", "InterventionHistory")" class="row mb-4">
-    <input type="hidden" name="deviceId" value="@ViewBag.DeviceId" />
+    <input type="hidden" name="deviceId" value="@ViewBag.DeviceId"/>
 
     <!-- Barra di ricerca su tutta la larghezza -->
     <div class="col-md-12 mb-3">
@@ -24,7 +24,7 @@
         <input type="text" name="searchQuery" id="searchQuery"
                class="form-control"
                placeholder="Cerca nelle note..."
-               value="@ViewBag.SearchQuery" />
+               value="@ViewBag.SearchQuery"/>
     </div>
 
     <!-- Altra riga per i restanti campi di filtro (Tipo, Date, Esito) -->
@@ -32,7 +32,7 @@
         <label for="typeFilter" class="form-label">Tipo Intervento</label>
         <select name="typeFilter" id="typeFilter" class="form-select">
             <option value="">-- Tutti --</option>
-            @if ((ViewBag.TypeFilter as string) == "Maintenance")
+            @if (ViewBag.TypeFilter as string == "Maintenance")
             {
                 <option value="Maintenance" selected>Manutenzione</option>
             }
@@ -40,7 +40,7 @@
             {
                 <option value="Maintenance">Manutenzione</option>
             }
-            @if ((ViewBag.TypeFilter as string) == "ElectricalTest")
+            @if (ViewBag.TypeFilter as string == "ElectricalTest")
             {
                 <option value="ElectricalTest" selected>Verifica Elettrica</option>
             }
@@ -48,7 +48,7 @@
             {
                 <option value="ElectricalTest">Verifica Elettrica</option>
             }
-            @if ((ViewBag.TypeFilter as string) == "PhysicalInspection")
+            @if (ViewBag.TypeFilter as string == "PhysicalInspection")
             {
                 <option value="PhysicalInspection" selected>Verifica Fisica</option>
             }
@@ -61,12 +61,12 @@
 
     <div class="col-md-3">
         <label for="dateFrom" class="form-label">Da</label>
-        <input type="date" name="dateFrom" id="dateFrom" class="form-control" value="@ViewBag.DateFrom" />
+        <input type="date" name="dateFrom" id="dateFrom" class="form-control" value="@ViewBag.DateFrom"/>
     </div>
 
     <div class="col-md-3">
         <label for="dateTo" class="form-label">A</label>
-        <input type="date" name="dateTo" id="dateTo" class="form-control" value="@ViewBag.DateTo" />
+        <input type="date" name="dateTo" id="dateTo" class="form-control" value="@ViewBag.DateTo"/>
     </div>
 
     <div class="col-md-3">
@@ -81,7 +81,7 @@
                 <option value="">Qualsiasi</option>
             }
 
-            @if ((ViewBag.PassedFilter as string) == "true")
+            @if (ViewBag.PassedFilter as string == "true")
             {
                 <option value="true" selected>Superato</option>
             }
@@ -90,7 +90,7 @@
                 <option value="true">Superato</option>
             }
 
-            @if ((ViewBag.PassedFilter as string) == "false")
+            @if (ViewBag.PassedFilter as string == "false")
             {
                 <option value="false" selected>Non Superato</option>
             }
@@ -107,18 +107,21 @@
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-filter"></i> Filtra
             </button>
-            <a href="@Url.Action("List", "InterventionHistory", new { deviceId = ViewBag.DeviceId })" class="btn btn-secondary">
+            <a href="@Url.Action("List", "InterventionHistory", new { deviceId = ViewBag.DeviceId })"
+               class="btn btn-secondary">
                 <i class="fas fa-redo"></i> Reset
             </a>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@ViewBag.DeviceId" class="btn btn-success">
+            <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@ViewBag.DeviceId"
+               class="btn btn-success">
                 <i class="fas fa-plus"></i> Aggiungi Intervento
             </a>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportReportModal">
                 <i class="fas fa-file-download"></i> Scarica Report
             </button>
-            <a asp-action="Details" asp-controller="Device" asp-route-id="@ViewBag.DeviceId" class="btn btn-outline-dark">
+            <a asp-action="Details" asp-controller="Device" asp-route-id="@ViewBag.DeviceId"
+               class="btn btn-outline-dark">
                 <i class="fas fa-arrow-left"></i> Torna al Dispositivo
             </a>
         </div>

@@ -1,3 +1,5 @@
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+
 namespace HealthGear.Models;
 
 public class ErrorViewModel

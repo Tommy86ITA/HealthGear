@@ -1,5 +1,7 @@
 using X.PagedList;
 
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+
 namespace HealthGear.Models;
 
 public class InterventionHistoryViewModel
@@ -8,7 +10,6 @@ public class InterventionHistoryViewModel
     public int DeviceId { get; set; }
 
     // La lista paginata degli interventi
-    public IPagedList<Intervention> Interventions { get; set; } = new StaticPagedList<Intervention>(new List<Intervention>(), 1, 10, 0);
-
-    // Puoi eventualmente aggiungere altre proprietà per filtri o dati extra
+    public IPagedList<Intervention> Interventions { get; set; } =
+        new StaticPagedList<Intervention>(new List<Intervention>(), 1, 10, 0);
 }

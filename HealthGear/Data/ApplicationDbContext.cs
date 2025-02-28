@@ -1,9 +1,5 @@
-#region
-
 using HealthGear.Models;
 using Microsoft.EntityFrameworkCore;
-
-#endregion
 
 namespace HealthGear.Data;
 
@@ -11,8 +7,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Device> Devices { get; set; }
     public DbSet<Intervention> Interventions { get; set; }
-    public DbSet<FileDocument> FileDocuments { get; set; }
     public DbSet<MaintenanceSettings> MaintenanceSettings { get; set; }
+
+    // Aggiungi la nuova proprietà per i file allegati
+    public DbSet<FileAttachment> FileAttachments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

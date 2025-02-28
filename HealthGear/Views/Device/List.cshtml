@@ -1,4 +1,4 @@
-@model HealthGear.Models.DeviceListViewModel
+@model DeviceListViewModel
 @{
     ViewData["Title"] = "Elenco Dispositivi";
 }
@@ -18,51 +18,52 @@
 <!-- Form per la ricerca e i filtri -->
 <form id="filtersForm" method="get" action="@Url.Action("Index", "Device")" class="mb-3">
     <div class="input-group">
-        <input type="text" name="searchQuery" class="form-control" placeholder="Cerca dispositivo..." value="@ViewBag.SearchQuery" />
+        <input type="text" name="searchQuery" class="form-control" placeholder="Cerca dispositivo..."
+               value="@ViewBag.SearchQuery"/>
         <select name="dueDateFilter" class="form-select">
             @{
                 var filter = ViewBag.DueDateFilter as string ?? "all";
-                switch(filter)
+                switch (filter)
                 {
                     case "expired":
-                        {
-                            <option value="all">Tutti</option>
-                            <option value="expired" selected="selected">Scaduti</option>
-                            <option value="soon">In Scadenza</option>
-                            <option value="ok">Regolari</option>
-                            break;
-                        }
+                    {
+                        <option value="all">Tutti</option>
+                        <option value="expired" selected="selected">Scaduti</option>
+                        <option value="soon">In Scadenza</option>
+                        <option value="ok">Regolari</option>
+                        break;
+                    }
                     case "soon":
-                        {
-                            <option value="all">Tutti</option>
-                            <option value="expired">Scaduti</option>
-                            <option value="soon" selected="selected">In Scadenza</option>
-                            <option value="ok">Regolari</option>
-                            break;
-                        }
+                    {
+                        <option value="all">Tutti</option>
+                        <option value="expired">Scaduti</option>
+                        <option value="soon" selected="selected">In Scadenza</option>
+                        <option value="ok">Regolari</option>
+                        break;
+                    }
                     case "ok":
-                        {
-                            <option value="all">Tutti</option>
-                            <option value="expired">Scaduti</option>
-                            <option value="soon">In Scadenza</option>
-                            <option value="ok" selected="selected">Regolari</option>
-                            break;
-                        }
+                    {
+                        <option value="all">Tutti</option>
+                        <option value="expired">Scaduti</option>
+                        <option value="soon">In Scadenza</option>
+                        <option value="ok" selected="selected">Regolari</option>
+                        break;
+                    }
                     default:
-                        {
-                            <option value="all" selected="selected">Tutti</option>
-                            <option value="expired">Scaduti</option>
-                            <option value="soon">In Scadenza</option>
-                            <option value="ok">Regolari</option>
-                            break;
-                        }
+                    {
+                        <option value="all" selected="selected">Tutti</option>
+                        <option value="expired">Scaduti</option>
+                        <option value="soon">In Scadenza</option>
+                        <option value="ok">Regolari</option>
+                        break;
+                    }
                 }
             }
         </select>
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-filter"></i> Filtra
         </button>
-        @if (!string.IsNullOrEmpty(ViewBag.SearchQuery) || (ViewBag.DueDateFilter as string) != "all")
+        @if (!string.IsNullOrEmpty(ViewBag.SearchQuery) || ViewBag.DueDateFilter as string != "all")
         {
             <a href="@Url.Action("Index", "Device")" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Reset
@@ -84,18 +85,20 @@
             <div class="modal-body">
                 <p>Seleziona i dispositivi da includere nel report:</p>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="reportFilter" id="allDevices" value="all" checked />
+                    <input class="form-check-input" type="radio" name="reportFilter" id="allDevices" value="all"
+                           checked/>
                     <label class="form-check-label" for="allDevices">Tutti i dispositivi</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="reportFilter" id="activeDevices" value="attivi" />
+                    <input class="form-check-input" type="radio" name="reportFilter" id="activeDevices" value="attivi"/>
                     <label class="form-check-label" for="activeDevices">Solo dispositivi attivi</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="reportFilter" id="archivedDevices" value="dismessi" />
+                    <input class="form-check-input" type="radio" name="reportFilter" id="archivedDevices"
+                           value="dismessi"/>
                     <label class="form-check-label" for="archivedDevices">Solo dispositivi dismessi</label>
                 </div>
-                <hr />
+                <hr/>
                 <p>Seleziona il formato del report:</p>
                 <div class="d-flex justify-content-center gap-3">
                     <button type="button" class="btn btn-success" id="exportExcel">
@@ -115,12 +118,14 @@
 <!-- Tabs per dispositivi attivi e dismessi -->
 <ul class="nav nav-tabs">
     <li class="nav-item">
-        <a class="nav-link @(Model.StatusFilter == "attivi" ? "active" : "")" asp-action="Index" asp-route-statusFilter="attivi">
+        <a class="nav-link @(Model.StatusFilter == "attivi" ? "active" : "")" asp-action="Index"
+           asp-route-statusFilter="attivi">
             Attivi (@Model.ActiveDevices.TotalItemCount)
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link @(Model.StatusFilter == "dismessi" ? "active" : "")" asp-action="Index" asp-route-statusFilter="dismessi">
+        <a class="nav-link @(Model.StatusFilter == "dismessi" ? "active" : "")" asp-action="Index"
+           asp-route-statusFilter="dismessi">
             Dismessi (@Model.ArchivedDevices.TotalItemCount)
         </a>
     </li>
@@ -147,17 +152,17 @@ else
             $.ajax({
                 url: url,
                 type: "GET",
-                success: function(data) {
+                success: function (data) {
                     $("#devicesList").html(data);
                 },
-                error: function() {
+                error: function () {
                     alert("Si è verificato un errore durante il caricamento dei dispositivi.");
                 }
             });
         }
 
         // Intercetta il submit del form dei filtri
-        $("#filtersForm").submit(function(e) {
+        $("#filtersForm").submit(function (e) {
             e.preventDefault();
             let url = $(this).attr("action");
             let queryString = $(this).serialize();
@@ -165,7 +170,7 @@ else
         });
 
         // Intercetta i click sui link di paginazione
-        $(document).on("click", ".pagination a", function(e) {
+        $(document).on("click", ".pagination a", function (e) {
             e.preventDefault();
             let url = $(this).attr("href");
             loadDevices(url);

@@ -1,0 +1,98 @@
+@using HealthGear.Helpers
+@using X.PagedList.Mvc.Core
+@model InterventionHistoryViewModel
+
+<!-- Tabella dello storico degli interventi -->
+<table class="table table-striped table-bordered text-center">
+    <thead class="thead-dark">
+    <tr>
+        <th class="col-1">Data</th>
+        <th class="col-3">Tipo Intervento</th>
+        <th class="col-4">Note</th>
+        <th class="col-2">Esito</th>
+        <th class="col-4 text-center">Azioni</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model.Interventions.Any())
+    {
+        @foreach (var intervention in Model.Interventions.OrderByDescending(i => i.Date))
+        {
+            <tr>
+                <td>@intervention.Date.ToShortDateString()</td>
+                <td>
+                    <i class="@(intervention.Type switch
+                              {
+                                  InterventionType.Maintenance => "fas fa-wrench",
+                                  InterventionType.ElectricalTest => "fas fa-bolt",
+                                  _ => "fas fa-radiation"
+                              })"></i>
+                    @InterventionHelper.GetInterventionDisplayName(intervention)
+                </td>
+                <td>
+                    @(string.IsNullOrWhiteSpace(intervention.Notes)
+                        ? "<span class='text-muted'>Nessuna nota</span>"
+                        : intervention.Notes)
+                </td>
+                <td>
+                    @if (intervention.Type == InterventionType.Maintenance)
+                    {
+                        <span class="text-muted">N/A</span>
+                    }
+                    else if (intervention.Passed.HasValue)
+                    {
+                        <span class="badge @(intervention.Passed.Value ? "bg-success" : "bg-danger")">
+                                @(intervention.Passed.Value ? "Superato" : "Non Superato")
+                            </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <a asp-action="Details" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                       class="btn btn-info btn-sm" title="Dettagli">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                       class="btn btn-warning btn-sm" title="Modifica">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                          asp-route-returnUrl="@Url.Action("List", "InterventionHistory", new { deviceId = ViewBag.DeviceId })"
+                          method="post" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');"
+                                title="Elimina">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="5" class="text-muted">Nessun intervento registrato per questo dispositivo.</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<!-- Paginazione per lo storico degli interventi -->
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(Model.Interventions, page =>
+            Url.Action("List", new { deviceId = ViewBag.DeviceId, page, typeFilter = ViewBag.TypeFilter, passedFilter = ViewBag.PassedFilter, dateFrom = ViewBag.DateFrom, dateTo = ViewBag.DateTo }),
+        new PagedListRenderOptions
+        {
+            DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+            DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
+            DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
+            UlElementClasses = ["pagination", "justify-content-center"],
+            LiElementClasses = ["page-item"],
+            PageClasses = ["page-link"]
+        })
+</div>

@@ -1,0 +1,16 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Pulizia File Allegati Orfani";
+}
+
+<div class="container mt-5">
+    <h2>Pulizia file allegati orfani</h2>
+    <hr />
+    <div class="alert alert-info shadow-sm">
+        <p>Sono stati analizzati <strong>@ViewBag.TotalRecords</strong> record.</p>
+        <p><strong>@ViewBag.RemovedCount</strong> record sono stati rimossi perché il file fisico non è più presente sul server.</p>
+    </div>
+    <a href="javascript:history.back()" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Torna indietro
+    </a>
+</div>

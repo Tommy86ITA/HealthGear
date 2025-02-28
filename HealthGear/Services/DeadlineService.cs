@@ -74,7 +74,7 @@ public class DeadlineService(ApplicationDbContext context)
         Console.WriteLine($"[DEBUG] {device.Name} - Calculated Next Electrical Test Due: {nextDueDate}");
         return nextDueDate;
     }
-    
+
     /// <summary>
     ///     Calcola la prossima scadenza per il controllo fisico.
     /// </summary>

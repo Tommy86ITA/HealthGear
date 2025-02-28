@@ -10,7 +10,7 @@ namespace HealthGear.Helpers;
 public static class DueDateHelper
 {
     /// <summary>
-    /// Restituisce una classe CSS in base allo stato della scadenza.
+    ///     Restituisce una classe CSS in base allo stato della scadenza.
     /// </summary>
     public static string GetDueDateClass(DateTime? dueDate)
     {
@@ -22,12 +22,12 @@ public static class DueDateHelper
         if (due < today)
             return "text-danger font-weight-bold"; // 🔴 Scaduto
         return due < twoMonthsLater
-            ? "text-warning"  // 🟡 In scadenza
+            ? "text-warning" // 🟡 In scadenza
             : "text-success"; // 🟢 OK
     }
 
     /// <summary>
-    /// Restituisce la data di scadenza in formato leggibile, oppure un messaggio di avviso se mancante.
+    ///     Restituisce la data di scadenza in formato leggibile, oppure un messaggio di avviso se mancante.
     /// </summary>
     public static string GetDueDateText(DateTime? dueDate)
     {
@@ -37,18 +37,16 @@ public static class DueDateHelper
     }
 
     /// <summary>
-    /// Aggiorna le prossime scadenze di manutenzione, verifiche elettriche e controlli fisici in base all'ultimo
-    /// intervento registrato. Se il dispositivo è dismesso, non vengono ricalcolate le scadenze.
+    ///     Aggiorna le prossime scadenze di manutenzione, verifiche elettriche e controlli fisici in base all'ultimo
+    ///     intervento registrato. Se il dispositivo è dismesso, non vengono ricalcolate le scadenze.
     /// </summary>
     public static void UpdateNextDueDate(Device device, ApplicationDbContext context)
     {
         // Se il dispositivo è dismesso, non aggiornare le scadenze.
         if (device.Status == DeviceStatus.Dismesso)
-        {
             // Puoi anche decidere di resettare le scadenze a null se preferisci,
             // oppure lasciare le date già impostate per indicare l'ultimo intervento periodico.
             return;
-        }
 
         // Recupera le impostazioni di manutenzione
         var settings = context.MaintenanceSettings.FirstOrDefault();

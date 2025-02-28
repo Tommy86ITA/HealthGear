@@ -15,191 +15,140 @@ namespace HealthGear.Controllers;
 public class DeviceController(
     ApplicationDbContext context,
     DeadlineService deadlineService,
-    InventoryNumberService inventoryNumberService)
+    InventoryNumberService inventoryNumberService,
+    IWebHostEnvironment env)
     : Controller
 
 {
     // 📌 GET: /Device
-// Mostra la lista dei dispositivi attivi e dismessi con ricerca
-[HttpGet("")]
-[HttpGet("Index")]
-public async Task<IActionResult> Index(
-    string statusFilter = "attivi",
-    string? searchQuery = null,
-    string dueDateFilter = "all",
-    int? pageAttivi = 1,
-    int? pageDismessi = 1)
-{
-    const int pageSize = 10;
-
-    // Recupera la query di base (tutti i dispositivi)
-    var devicesQuery = context.Devices.AsNoTracking().AsQueryable();
-
-    // Filtro per ricerca
-    if (!string.IsNullOrEmpty(searchQuery))
+    // Mostra la lista dei dispositivi attivi e dismessi con ricerca
+    [HttpGet("")]
+    [HttpGet("Index")]
+    public async Task<IActionResult> Index(
+        string statusFilter = "attivi",
+        string? searchQuery = null,
+        string dueDateFilter = "all",
+        int? pageAttivi = 1,
+        int? pageDismessi = 1)
     {
-        searchQuery = searchQuery.Trim().ToLower();
-        devicesQuery = devicesQuery.Where(d =>
-            d.Name.ToLower().Contains(searchQuery) ||
-            d.Brand.ToLower().Contains(searchQuery) ||
-            d.Model.ToLower().Contains(searchQuery) ||
-            d.SerialNumber.ToLower().Contains(searchQuery));
+        const int pageSize = 10;
+
+        // Recupera la query di base (tutti i dispositivi)
+        var devicesQuery = context.Devices.AsNoTracking().AsQueryable();
+
+        // Filtro per ricerca
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            searchQuery = searchQuery.Trim().ToLower();
+            devicesQuery = devicesQuery.Where(d =>
+                d.Name.ToLower().Contains(searchQuery) ||
+                d.Brand.ToLower().Contains(searchQuery) ||
+                d.Model.ToLower().Contains(searchQuery) ||
+                d.SerialNumber.ToLower().Contains(searchQuery));
+        }
+
+        // Filtro per stato delle scadenze
+        var today = DateTime.Today;
+        var soonThreshold = today.AddMonths(2);
+        devicesQuery = dueDateFilter switch
+        {
+            "expired" => devicesQuery.Where(d =>
+                d.NextMaintenanceDue < today || d.NextElectricalTestDue < today || d.NextPhysicalInspectionDue < today),
+            "soon" => devicesQuery.Where(d =>
+                (d.NextMaintenanceDue >= today && d.NextMaintenanceDue < soonThreshold) ||
+                (d.NextElectricalTestDue >= today && d.NextElectricalTestDue < soonThreshold) ||
+                (d.NextPhysicalInspectionDue >= today && d.NextPhysicalInspectionDue < soonThreshold)),
+            "ok" => devicesQuery.Where(d =>
+                d.NextMaintenanceDue >= soonThreshold && d.NextElectricalTestDue >= soonThreshold &&
+                d.NextPhysicalInspectionDue >= soonThreshold),
+            _ => devicesQuery
+        };
+
+        // Applica la paginazione separata per dispositivi attivi e dismessi
+        var activeDevices = await devicesQuery
+            .Where(d => d.Status == DeviceStatus.Attivo)
+            .OrderBy(d => d.InventoryNumber)
+            .ToPagedListAsync(pageAttivi ?? 1, pageSize);
+
+        var archivedDevices = await devicesQuery
+            .Where(d => d.Status == DeviceStatus.Dismesso)
+            .OrderBy(d => d.InventoryNumber)
+            .ToPagedListAsync(pageDismessi ?? 1, pageSize);
+
+        // Crea il ViewModel
+        var viewModel = new DeviceListViewModel
+        {
+            ActiveDevices = activeDevices,
+            ArchivedDevices = archivedDevices,
+            StatusFilter = statusFilter
+        };
+
+        // Passiamo i parametri alla view (o partial) tramite ViewBag
+        ViewBag.PageAttivi = pageAttivi;
+        ViewBag.PageDismessi = pageDismessi;
+        ViewBag.SearchQuery = searchQuery;
+        ViewBag.DueDateFilter = dueDateFilter;
+
+        // 🔑 Controlla se la richiesta è AJAX
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+            // Se è una richiesta AJAX, restituiamo la partial view (senza layout)
+            return PartialView("_DeviceListPartial", viewModel);
+
+        // Altrimenti, restituiamo la view completa
+        return View("List", viewModel);
     }
-
-    // Filtro per stato delle scadenze
-    var today = DateTime.Today;
-    var soonThreshold = today.AddMonths(2);
-    if (dueDateFilter == "expired")
-    {
-        devicesQuery = devicesQuery.Where(d =>
-            d.NextMaintenanceDue < today ||
-            d.NextElectricalTestDue < today ||
-            d.NextPhysicalInspectionDue < today);
-    }
-    else if (dueDateFilter == "soon")
-    {
-        devicesQuery = devicesQuery.Where(d =>
-            (d.NextMaintenanceDue >= today && d.NextMaintenanceDue < soonThreshold) ||
-            (d.NextElectricalTestDue >= today && d.NextElectricalTestDue < soonThreshold) ||
-            (d.NextPhysicalInspectionDue >= today && d.NextPhysicalInspectionDue < soonThreshold));
-    }
-    else if (dueDateFilter == "ok")
-    {
-        devicesQuery = devicesQuery.Where(d =>
-            (d.NextMaintenanceDue >= soonThreshold) &&
-            (d.NextElectricalTestDue >= soonThreshold) &&
-            (d.NextPhysicalInspectionDue >= soonThreshold));
-    }
-
-    // Applica la paginazione separata per dispositivi attivi e dismessi
-    var activeDevices = await devicesQuery
-        .Where(d => d.Status == DeviceStatus.Attivo)
-        .OrderBy(d => d.InventoryNumber)
-        .ToPagedListAsync(pageAttivi ?? 1, pageSize);
-
-    var archivedDevices = await devicesQuery
-        .Where(d => d.Status == DeviceStatus.Dismesso)
-        .OrderBy(d => d.InventoryNumber)
-        .ToPagedListAsync(pageDismessi ?? 1, pageSize);
-
-    // Crea il ViewModel
-    var viewModel = new DeviceListViewModel
-    {
-        ActiveDevices = activeDevices,
-        ArchivedDevices = archivedDevices,
-        StatusFilter = statusFilter
-    };
-
-    // Passiamo i parametri alla view (o partial) tramite ViewBag
-    ViewBag.PageAttivi = pageAttivi;
-    ViewBag.PageDismessi = pageDismessi;
-    ViewBag.SearchQuery = searchQuery;
-    ViewBag.DueDateFilter = dueDateFilter;
-
-    // 🔑 Controlla se la richiesta è AJAX
-    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-    {
-        // Se è una richiesta AJAX, restituiamo la partial view (senza layout)
-        return PartialView("_DeviceListPartial", viewModel);
-    }
-
-    // Altrimenti, restituiamo la view completa
-    return View("List", viewModel);
-}
-/*
-// 🔹 Metodo helper per filtrare i dispositivi
-private static IQueryable<Device> ApplyFilters(
-    IQueryable<Device> query, 
-    string statusFilter, 
-    string? searchQuery, 
-    string dueDateFilter)
-{
-    var today = DateTime.Today;
-    var soonThreshold = today.AddMonths(2);
-
-    // 🔹 Filtra per stato attivo/dismesso
-    if (statusFilter == "attivi")
-    {
-        query = query.Where(d => d.Status != DeviceStatus.Dismesso);
-    }
-    else if (statusFilter == "dismessi")
-    {
-        query = query.Where(d => d.Status == DeviceStatus.Dismesso);
-    }
-
-    // 🔹 Filtra per ricerca
-    if (!string.IsNullOrEmpty(searchQuery))
-    {
-        searchQuery = searchQuery.Trim().ToLower();
-        query = query.Where(d => d.Name.ToLower().Contains(searchQuery) ||
-                                 d.Brand.ToLower().Contains(searchQuery) ||
-                                 d.Model.ToLower().Contains(searchQuery) ||
-                                 d.SerialNumber.ToLower().Contains(searchQuery));
-    }
-
-    // 🔹 Filtra per stato delle scadenze
-    if (dueDateFilter == "expired")
-    {
-        query = query.Where(d =>
-            d.NextMaintenanceDue < today ||
-            d.NextElectricalTestDue < today ||
-            d.NextPhysicalInspectionDue < today);
-    }
-    else if (dueDateFilter == "soon")
-    {
-        query = query.Where(d =>
-            (d.NextMaintenanceDue >= today && d.NextMaintenanceDue < soonThreshold) ||
-            (d.NextElectricalTestDue >= today && d.NextElectricalTestDue < soonThreshold) ||
-            (d.NextPhysicalInspectionDue >= today && d.NextPhysicalInspectionDue < soonThreshold));
-    }
-    else if (dueDateFilter == "ok")
-    {
-        query = query.Where(d =>
-            (d.NextMaintenanceDue >= soonThreshold) &&
-            (d.NextElectricalTestDue >= soonThreshold) &&
-            (d.NextPhysicalInspectionDue >= soonThreshold));
-    }
-
-    return query;
-}
-*/
 
     // 📌 GET: /Device/Details/{id}
     [HttpGet("Details/{id:int}")]
     public async Task<IActionResult> Details(int id)
     {
         var device = await context.Devices
+            .Include(d => d.FileAttachments) // Includi i file direttamente allegati al dispositivo
             .Include(d => d.Interventions)
-            .ThenInclude(i => i.Attachments)
+            .ThenInclude(i => i.Attachments) // Includi i file allegati agli interventi
             .FirstOrDefaultAsync(d => d.Id == id);
 
-        if (device == null) return NotFound();
+        if (device == null)
+            return NotFound();
+
         return View("ViewDetails", device);
     }
 
-    // 📌 GET: /Device/Add
+    // GET: /Device/Add
     [HttpGet("Add")]
     public IActionResult Create()
     {
+        // Restituisce la view "Add" per la creazione del dispositivo
         return View("Add");
     }
 
-    // 📌 POST: /Device/Add
+// POST: /Device/Add
     [HttpPost("Add")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Device device)
     {
+        // Rimuove "InventoryNumber" dalla validazione, poiché verrà generato automaticamente
         ModelState.Remove("InventoryNumber");
-        if (!ModelState.IsValid) return View("Add", device);
+        if (!ModelState.IsValid)
+            return View("Add", device);
 
-        // ✅ Generazione automatica del numero di inventario basato sull'anno di collaudo
+        // Genera automaticamente il numero di inventario in base all'anno di collaudo
         device.SetInventoryNumber(await inventoryNumberService.GenerateInventoryNumberAsync(device.DataCollaudo.Year));
 
+        // Aggiunge il dispositivo al contesto e salva le modifiche
         context.Devices.Add(device);
         await context.SaveChangesAsync();
+
+        // Aggiorna le prossime scadenze (se necessario)
         await deadlineService.UpdateNextDueDatesAsync(device);
 
-        return RedirectToAction(nameof(Index));
+        // Imposta un messaggio di successo (facoltativo)
+        TempData["SuccessMessage"] =
+            "Dispositivo creato con successo! Ora puoi caricare i documenti relativi al dispositivo.";
+
+        // Reindirizza alla pagina dei dettagli del dispositivo appena creato,
+        // dove l'utente potrà caricare i file tramite la partial
+        return RedirectToAction("Details", "Device", new { id = device.Id });
     }
 
     // 📌 GET: /Device/Modify/{id}
@@ -281,7 +230,8 @@ private static IQueryable<Device> ApplyFilters(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, string confirmName)
     {
-        var device = await context.Devices.Include(d => d.Interventions).FirstOrDefaultAsync(d => d.Id == id);
+        var device = await context.Devices.Include(d => d.Interventions).Include(device => device.FileAttachments)
+            .FirstOrDefaultAsync(d => d.Id == id);
         if (device == null) return NotFound();
 
         if (device.Interventions.Count > 0)
@@ -297,6 +247,27 @@ private static IQueryable<Device> ApplyFilters(
         }
 
         // ✅ Eliminazione definitiva del dispositivo
+        // Rimuovi i record dei file dal database
+
+        foreach (var attachment in device.FileAttachments)
+        {
+            var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
+            if (System.IO.File.Exists(filePath))
+                try
+                {
+                    System.IO.File.Delete(filePath);
+                    Console.WriteLine($"File eliminato: {filePath}");
+                }
+                catch (Exception ex)
+                {
+                    // Log dell'errore; potresti anche decidere di interrompere l'operazione se è critico
+                    await Console.Error.WriteLineAsync($"Errore eliminando file {attachment.FileName}: {ex.Message}");
+                }
+            else
+                Console.WriteLine($"File non trovato: {filePath}");
+        }
+
+        context.FileAttachments.RemoveRange(device.FileAttachments);
         context.Devices.Remove(device);
         await context.SaveChangesAsync();
 

@@ -25,7 +25,7 @@
 <select asp-for="Type" class="form-select" disabled>
     <option value="Maintenance" selected="@(Model.Type == InterventionType.Maintenance ? "selected" : null)">Manutenzione</option>
     <option value="ElectricalTest" selected="@(Model.Type == InterventionType.ElectricalTest ? "selected" : null)">Verifica Elettrica</option>
-    @if ((ViewBag.SupportsPhysicalInspection as bool?) ?? false)
+    @if (ViewBag.SupportsPhysicalInspection as bool? ?? false)
     {
         <option value="PhysicalInspection" selected="@(Model.Type == InterventionType.PhysicalInspection ? "selected" : null)">Controllo Fisico Sanitario</option>
     }
@@ -68,16 +68,27 @@
         <span asp-validation-for="Notes" class="text-danger"></span>
     </div>
 
+<div id="attachmentsContainer">
+    @await Html.PartialAsync("_FileUploadPartial", new {
+        // Intervento = Model => Passiamo i dati necessari alla partial
+        InterventionId = Model.Id,
+        DeviceId = (int?)null,
+        // Qui passiamo la lista di allegati
+        FileAttachments = Model.Attachments 
+    })
+</div>
+
     <!-- Pulsanti -->
     <div class="col-12 d-flex justify-content-between mt-4">
         <button type="submit" class="btn btn-primary">
-            💾 Salva Modifiche
+<i class="fa-solid fa-floppy-disk"></i> Salva Modifiche
         </button>
 <a href="@ViewBag.ReturnUrl" class="btn btn-secondary">
-    ❌ Annulla
+<i class="fas fa-arrow-left"></i> Annulla
 </a>
     </div>
 </form>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial"/>

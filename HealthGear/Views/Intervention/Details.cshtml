@@ -44,14 +44,21 @@
     </tr>
 </table>
 
+<div id="attachmentsContainer">
+    @await Html.PartialAsync("_FileUploadPartial", new
+    {
+        InterventionId = Model.Id,
+        DeviceId = (int?)null,
+        FileAttachments = Model.Attachments
+    })
+</div>
+
 <div class="mt-4 d-flex justify-content-between">
     <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@Model.Id" asp-route-returnUrl="@ViewBag.ReturnUrl"
-       class="btn btn-warning">
-        <i class="fas fa-edit"></i> Modifica
+       class="btn btn-warning"> <i class="fas fa-edit"></i> Modifica
     </a>
 
     <a href="@(ViewBag.ReturnUrl ?? Url.Action("List", "InterventionHistory", new { deviceId = Model.DeviceId }))"
-       class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Torna indietro
+       class="btn btn-outline-dark"> <i class="fas fa-arrow-left"></i> Torna al Dispositivo
     </a>
 </div>

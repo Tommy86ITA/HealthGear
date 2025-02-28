@@ -9,13 +9,13 @@ public static class DeviceListReport
     public static byte[] Generate(List<Device> devices, string statusFilter)
     {
         // 🔹 Determina il titolo del report in base al filtro
-        string reportTitle = statusFilter switch
+        var reportTitle = statusFilter switch
         {
             "attivi" => "Report Dispositivi Attivi",
             "dismessi" => "Report Dispositivi Dismessi",
             _ => "Report Completo Dispositivi"
         };
-        
+
         var pdf = Document.Create(container =>
         {
             container.Page(page =>
@@ -65,15 +65,15 @@ public static class DeviceListReport
                             deviceSection.Item().Text($"{device.Brand} {device.Model}")
                                 .Bold().FontSize(14);
 
-                                deviceSection.Item().Row(row =>
-                                {
-                                    row.RelativeItem().Text($"{device.Name} - S/N: {device.SerialNumber}")
-                                        .Italic().FontSize(10);
-    
-                                    row.RelativeItem().AlignRight().Text($"Stato: {device.Status}")
-                                        .Italic().FontSize(10);
-                                });
-                                
+                            deviceSection.Item().Row(row =>
+                            {
+                                row.RelativeItem().Text($"{device.Name} - S/N: {device.SerialNumber}")
+                                    .Italic().FontSize(10);
+
+                                row.RelativeItem().AlignRight().Text($"Stato: {device.Status}")
+                                    .Italic().FontSize(10);
+                            });
+
                             deviceSection.Item().Height(5);
                             deviceSection.Item().LineHorizontal(1);
                             deviceSection.Item().Height(5);

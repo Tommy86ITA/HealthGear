@@ -85,46 +85,44 @@ namespace HealthGear.Migrations
                     b.ToTable("Devices");
                 });
 
-            modelBuilder.Entity("HealthGear.Models.FileDocument", b =>
+            modelBuilder.Entity("HealthGear.Models.FileAttachment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("DeviceName")
+                    b.Property<string>("ContentType")
                         .IsRequired()
-                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DeviceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
-                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("InterventionId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("InterventionType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ParentEntityId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UploadedAt")
+                    b.Property<DateTime>("UploadDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeviceId");
+
                     b.HasIndex("InterventionId");
 
-                    b.ToTable("FileDocuments");
+                    b.ToTable("FileAttachments");
                 });
 
             modelBuilder.Entity("HealthGear.Models.Intervention", b =>
@@ -187,11 +185,19 @@ namespace HealthGear.Migrations
                     b.ToTable("MaintenanceSettings");
                 });
 
-            modelBuilder.Entity("HealthGear.Models.FileDocument", b =>
+            modelBuilder.Entity("HealthGear.Models.FileAttachment", b =>
                 {
-                    b.HasOne("HealthGear.Models.Intervention", null)
+                    b.HasOne("HealthGear.Models.Device", "Device")
+                        .WithMany("FileAttachments")
+                        .HasForeignKey("DeviceId");
+
+                    b.HasOne("HealthGear.Models.Intervention", "Intervention")
                         .WithMany("Attachments")
                         .HasForeignKey("InterventionId");
+
+                    b.Navigation("Device");
+
+                    b.Navigation("Intervention");
                 });
 
             modelBuilder.Entity("HealthGear.Models.Intervention", b =>
@@ -207,6 +213,8 @@ namespace HealthGear.Migrations
 
             modelBuilder.Entity("HealthGear.Models.Device", b =>
                 {
+                    b.Navigation("FileAttachments");
+
                     b.Navigation("Interventions");
                 });
 

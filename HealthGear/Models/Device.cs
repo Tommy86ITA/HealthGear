@@ -3,6 +3,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+
 #endregion
 
 namespace HealthGear.Models;
@@ -62,9 +64,9 @@ public class Device
     [DataType(DataType.Date)]
     [Required(ErrorMessage = "La data di collaudo è obbligatoria.")]
     public required DateTime DataCollaudo { get; set; }
-    
+
     /// <summary>
-    ///  DATA DI DISMISSIONE
+    ///     DATA DI DISMISSIONE
     /// </summary>
     public DateTime? DataDismissione { get; set; }
 
@@ -121,6 +123,11 @@ public class Device
     /// <summary>Note opzionali relative al dispositivo.</summary>
     [MaxLength(2000)]
     public string? Notes { get; set; } = "";
+
+    /// <summary>
+    ///     Collezione dei file allegati al dispositivo (ad es. verbale di collaudo, certificazione CE, manuale, ecc.).
+    /// </summary>
+    public ICollection<FileAttachment> FileAttachments { get; set; } = new List<FileAttachment>();
 
     /// <summary>
     ///     Imposta il numero di inventario solo se non è già stato assegnato.

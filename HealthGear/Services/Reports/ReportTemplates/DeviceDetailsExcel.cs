@@ -20,7 +20,7 @@ public static class DeviceDetailsExcel
         worksheet.Cell("A3").Value = "Dati Principali";
         worksheet.Range("A3:E3").Merge().Style.Font.SetBold().Font.SetFontSize(12);
         worksheet.Range("A3:E3").Style.Fill.BackgroundColor = XLColor.LightGray;
-        
+
         worksheet.Style.Font.FontName = "Arial Unicode MS";
 
         // 📌 Dati principali del dispositivo

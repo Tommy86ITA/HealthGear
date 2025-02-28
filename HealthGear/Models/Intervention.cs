@@ -3,6 +3,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+
 #endregion
 
 // ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
@@ -35,7 +37,6 @@ public class Intervention
 
     [ForeignKey("DeviceId")] public Device? Device { get; set; }
 
-    // ReSharper disable once PropertyCanBeMadeInitOnly.Global
     [Required] public InterventionType Type { get; set; }
 
     [Required] public DateTime Date { get; set; }
@@ -43,13 +44,15 @@ public class Intervention
     // Solo per verifiche elettriche e controlli fisici
     public bool? Passed { get; set; }
 
-    [Required] [MaxLength(50)] public string PerformedBy { get; set; } = string.Empty; // Assicuriamoci che non sia null
+    [Required] [MaxLength(50)] public string PerformedBy { get; set; } = string.Empty;
 
     // Solo per manutenzioni
     public MaintenanceType? MaintenanceCategory { get; set; }
 
     public string Notes { get; set; } = string.Empty;
 
-    // ReSharper disable once PropertyCanBeMadeInitOnly.Global
-    public List<FileDocument> Attachments { get; set; } = [];
+    /// <summary>
+    ///     Collezione dei file allegati all'intervento (ad es. verbale di manutenzione, report, ecc.).
+    /// </summary>
+    public List<FileAttachment> Attachments { get; set; } = [];
 }
