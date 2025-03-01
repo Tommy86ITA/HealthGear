@@ -3,32 +3,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <!-- Meta tag per la codifica e il responsive design -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Titolo della pagina: viene usato il titolo specificato nella ViewData -->
     <title>@ViewData["Title"] - HealthGear</title>
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- CSS: Font Awesome e Bootstrap da CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
 
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="@Url.Content("~/css/site.css")" asp-append-version="true"/>
-    <link rel="stylesheet" href="@Url.Content("~/css/HealthGear.styles.css")" asp-append-version="true"/>
+    <!-- CSS personalizzati: site.css e HealthGear.styles.css (con versioning per il caching) -->
+    <link rel="stylesheet" href="@Url.Content("~/css/site.css")" asp-append-version="true" />
+    <link rel="stylesheet" href="@Url.Content("~/css/HealthGear.styles.css")" asp-append-version="true" />
 
-    <!-- Datepicker -->
+    <!-- CSS per il Datepicker -->
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
 </head>
 <body>
+<!-- Header con Navbar -->
 <header>
     <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom shadow-sm mb-3">
         <div class="container-fluid">
+            <!-- Brand: Link alla Home -->
             <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Home">HealthGear</a>
+            <!-- Pulsante per il collapse della navbar sui dispositivi mobili -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav"
-                    aria-expanded="false" aria-label="Toggle navigation">
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            <!-- Elementi della navbar -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav flex-grow-1">
                     <li class="nav-item">
@@ -38,44 +44,61 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Device" asp-action="Index">Gestione
-                            Dispositivi</a>
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Device" asp-action="Index">
+                            Gestione Dispositivi
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-controller="Settings" asp-action="Index">Impostazioni</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-controller="Admin" asp-action="AdminTasks"> Amministrazione</a>
+                        <a class="nav-link text-dark" asp-controller="Admin" asp-action="AdminTasks">
+                            Amministrazione
+                        </a>
                     </li>
+                </ul>
+                <!-- Sezione per lo stato dell'utente -->
+                <ul class="navbar-nav ms-auto">
+                    @if (User.Identity is { IsAuthenticated: true })
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user"></i> @User.Identity.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
+                                        <i class="fas fa-user-cog"></i> Modifica Profilo
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                    }
                 </ul>
             </div>
         </div>
     </nav>
 </header>
 
-<div class="container">
-    <main role="main" class="pb-3">
-        @RenderBody()
-    </main>
-</div>
-
-<footer class="border-top footer text-muted text-center mt-4">
-    <div class="container">
-        &copy; 2025 - HealthGear - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-    </div>
-</footer>
-
-<!-- JavaScript -->
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script src="@Url.Content("~/js/site.js")" asp-append-version="true"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-<script
-    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.it.min.js"></script>
-
-@await RenderSectionAsync("Scripts", false)
-@Html.RenderScriptBlocks()
-
+<!-- Eventuale messaggio di successo (ad es. dopo una registrazione) -->
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success text-center">
@@ -83,6 +106,29 @@
     </div>
 }
 
+<!-- Corpo principale della pagina -->
+<div class="container">
+    <main role="main" class="pb-3">
+        @RenderBody()
+    </main>
+</div>
 
+<!-- Footer -->
+<footer class="border-top footer text-muted text-center mt-4">
+    <div class="container">
+        &copy; 2025 - HealthGear - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    </div>
+</footer>
+
+<!-- JavaScript: jQuery, Bootstrap e altri script personalizzati -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="@Url.Content("~/js/site.js")" asp-append-version="true"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.it.min.js"></script>
+
+<!-- Sezione per script aggiuntivi, se presenti -->
+@await RenderSectionAsync("Scripts", false)
+@Html.RenderScriptBlocks()
 </body>
 </html>
