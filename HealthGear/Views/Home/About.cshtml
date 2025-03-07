@@ -1,0 +1,112 @@
+@model HealthGear.Models.ViewModels.AboutViewModel
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">
+                        <i class="fas fa-info-circle"></i> Informazioni su <strong>HealthGear</strong>
+                    </h3>
+
+                    <hr/>
+
+                    <!-- 📌 Dettagli Applicazione -->
+                    <div class="mb-4 text-center">
+                        <span class="me-3"><strong>Versione:</strong> @Model.Versione</span>
+                        <span><strong>Data build:</strong> @Model.DataBuild.ToShortDateString()</span>
+                    </div>
+
+                    <!-- 📌 Sezione Licenza -->
+                    <div class="license-section p-4 rounded">
+                        <h4 class="mb-3"><i class="fas fa-balance-scale"></i> Licenza</h4>
+                        <p>HealthGear è distribuito sotto <strong>licenza proprietaria</strong>.</p>
+
+                        <div class="license-content">
+                            <h6 class="fw-bold">Copyright</h6>
+                            <p>&copy; 2025 Thomas Amaranto</p>
+
+                            <h6 class="fw-bold mt-3">Proprietà</h6>
+                            <p>Il software <strong>HealthGear</strong> è di proprietà esclusiva di <strong>Thomas
+                                    Amaranto</strong>.</p>
+
+                            <h6 class="fw-bold mt-3">Licenza d'uso per Studio C.R.E.A.</h6>
+                            <p>È concessa allo Studio C.R.E.A. una licenza d’uso non esclusiva e non trasferibile,
+                                limitata all’uso interno presso la propria struttura.</p>
+
+                            <h6 class="fw-bold mt-3">Restrizioni</h6>
+                            <p>Qualsiasi modifica, distribuzione, concessione a terzi o utilizzo al di fuori della
+                                struttura è espressamente vietato senza il consenso scritto dell’Autore.</p>
+
+                            <h6 class="fw-bold mt-3">Esclusione di garanzia</h6>
+                            <p>Il software è fornito "così com’è", senza alcuna garanzia espressa o implicita, incluse,
+                                a titolo esemplificativo, le garanzie di commerciabilità, idoneità per un fine
+                                particolare e non violazione di diritti altrui.</p>
+
+                            <h6 class="fw-bold mt-3">Limitazione di responsabilità</h6>
+                            <p>In nessun caso l’autore potrà essere ritenuto responsabile per eventuali danni derivanti
+                                dall’uso del software.</p>
+
+                            <!-- 📌 Testo centrato -->
+                            <p class="mt-3 text-center"><em>Tutti i diritti sono riservati.</em></p>
+                        </div>
+                    </div>
+
+                    <!-- 📌 Sezione Componenti di Terze Parti spostata più in alto -->
+                    <div class="mt-4">
+                        <h4>
+                            <i class="fas fa-cubes"></i> Componenti di Terze Parti
+                        </h4>
+                        <p class="text-muted">
+                            Questo software utilizza i seguenti componenti di terze parti, con le relative licenze di
+                            utilizzo.
+                        </p>
+                        <button class="btn btn-link" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#thirdPartyTable">
+                            <i class="fas fa-chevron-down"></i> Mostra/Nascondi elenco
+                        </button>
+
+                        <div class="collapse show" id="thirdPartyTable">
+                            @if (Model.ThirdPartyComponents.Any())
+                            {
+                                <table class="table table-striped table-bordered mt-3">
+                                    <thead>
+                                    <tr>
+                                        <th>Componente</th>
+                                        <th>Versione</th>
+                                        <th>Licenza</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var component in Model.ThirdPartyComponents)
+                                    {
+                                        <tr>
+                                            <td>@component.Name</td>
+                                            <td>@component.Version</td>
+                                            <td>
+                                                @if (Uri.IsWellFormedUriString(component.License, UriKind.Absolute))
+                                                {
+                                                    <a href="@component.License" target="_blank">🔗 Link</a>
+                                                }
+                                                else
+                                                {
+                                                    @component.License
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <p class="text-muted">Nessun componente di terze parti registrato.</p>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

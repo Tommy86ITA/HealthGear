@@ -1,8 +1,11 @@
 #region
 
+using HealthGear.Constants;
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Models.ViewModels;
 using HealthGear.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using X.PagedList.EF;
@@ -24,6 +27,7 @@ public class DeviceController(
     // Mostra la lista dei dispositivi attivi e dismessi con ricerca
     [HttpGet("")]
     [HttpGet("Index")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
     public async Task<IActionResult> Index(
         string statusFilter = "attivi",
         string? searchQuery = null,
@@ -100,6 +104,7 @@ public class DeviceController(
 
     // 📌 GET: /Device/Details/{id}
     [HttpGet("Details/{id:int}")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
     public async Task<IActionResult> Details(int id)
     {
         var device = await context.Devices
@@ -116,6 +121,7 @@ public class DeviceController(
 
     // GET: /Device/Add
     [HttpGet("Add")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
     public IActionResult Create()
     {
         // Restituisce la view "Add" per la creazione del dispositivo
@@ -125,6 +131,7 @@ public class DeviceController(
 // POST: /Device/Add
     [HttpPost("Add")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
     public async Task<IActionResult> Create(Device device)
     {
         // Rimuove "InventoryNumber" dalla validazione, poiché verrà generato automaticamente
@@ -153,6 +160,7 @@ public class DeviceController(
 
     // 📌 GET: /Device/Modify/{id}
     [HttpGet("Modify/{id:int}")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
     public async Task<IActionResult> Edit(int id)
     {
         var device = await context.Devices.FindAsync(id);
@@ -163,6 +171,7 @@ public class DeviceController(
     // 📌 POST: /Device/Modify/{id}
     [HttpPost("Modify/{id:int}")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
     public async Task<IActionResult> Edit(int id, Device updatedDevice)
     {
         if (id != updatedDevice.Id) return BadRequest();
@@ -189,6 +198,7 @@ public class DeviceController(
     // 📌 POST: /Device/Archive/{id}
     [HttpPost("Archive/{id:int}")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Archive(int id)
     {
         var device = await context.Devices.FindAsync(id);
@@ -228,6 +238,7 @@ public class DeviceController(
     // 📌 POST: /Device/Delete/{id}
     [HttpPost("Delete/{id:int}")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Delete(int id, string confirmName)
     {
         var device = await context.Devices.Include(d => d.Interventions).Include(device => device.FileAttachments)

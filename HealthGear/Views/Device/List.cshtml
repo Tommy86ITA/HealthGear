@@ -1,16 +1,20 @@
-@model DeviceListViewModel
+@using HealthGear.Constants
+@model HealthGear.Models.ViewModels.DeviceListViewModel
 @{
     ViewData["Title"] = "Elenco Dispositivi";
 }
 
 <h2 class="mb-4"><i class="fas fa-clipboard-list"></i> Elenco Dispositivi</h2>
 
-<!-- Pulsante per creare un nuovo dispositivo -->
-<a asp-action="Create" class="btn btn-success mb-3">
-    <i class="fas fa-plus"></i> Aggiungi Dispositivo
-</a>
+<!-- Pulsante per creare un nuovo dispositivo: visibile solo ad Admin e Tecnico -->
+@if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
+{
+    <a asp-action="Create" class="btn btn-success mb-3">
+        <i class="fas fa-plus"></i> Aggiungi Dispositivo
+    </a>
+}
 
-<!-- Pulsante per scaricare il report -->
+<!-- Pulsante per scaricare il report: visibile a tutti i ruoli -->
 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#reportModal">
     <i class="fas fa-file-download"></i> Scarica Report
 </button>
@@ -26,37 +30,29 @@
                 switch (filter)
                 {
                     case "expired":
-                    {
                         <option value="all">Tutti</option>
                         <option value="expired" selected="selected">Scaduti</option>
                         <option value="soon">In Scadenza</option>
                         <option value="ok">Regolari</option>
                         break;
-                    }
                     case "soon":
-                    {
                         <option value="all">Tutti</option>
                         <option value="expired">Scaduti</option>
                         <option value="soon" selected="selected">In Scadenza</option>
                         <option value="ok">Regolari</option>
                         break;
-                    }
                     case "ok":
-                    {
                         <option value="all">Tutti</option>
                         <option value="expired">Scaduti</option>
                         <option value="soon">In Scadenza</option>
                         <option value="ok" selected="selected">Regolari</option>
                         break;
-                    }
                     default:
-                    {
                         <option value="all" selected="selected">Tutti</option>
                         <option value="expired">Scaduti</option>
                         <option value="soon">In Scadenza</option>
                         <option value="ok">Regolari</option>
                         break;
-                    }
                 }
             }
         </select>
@@ -72,7 +68,7 @@
     </div>
 </form>
 
-<!-- Modal per la generazione del report -->
+<!-- Modal per la generazione del report (visibile a tutti) -->
 <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -147,7 +143,6 @@ else
 
 @section Scripts {
     <script>
-        // Funzione per caricare la lista dei dispositivi via AJAX
         function loadDevices(url) {
             $.ajax({
                 url: url,
@@ -161,7 +156,6 @@ else
             });
         }
 
-        // Intercetta il submit del form dei filtri
         $("#filtersForm").submit(function (e) {
             e.preventDefault();
             let url = $(this).attr("action");
@@ -169,7 +163,6 @@ else
             loadDevices(url + "?" + queryString);
         });
 
-        // Intercetta i click sui link di paginazione
         $(document).on("click", ".pagination a", function (e) {
             e.preventDefault();
             let url = $(this).attr("href");

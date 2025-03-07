@@ -1,5 +1,7 @@
+using HealthGear.Constants;
 using HealthGear.Data;
 using HealthGear.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
@@ -16,10 +18,10 @@ public class FileAttachmentsController(
 {
     // Cartella in wwwroot dove verranno salvati i file
     private const string UploadsFolder = "uploads";
-    
+
     // Limite massimo di dimensione dei file (500 MB)
     private const long MaxFileSize = 500 * 1024 * 1024;
-    
+
     // Estensioni consentite
     private readonly string[] _allowedExtensions =
     [
@@ -31,10 +33,10 @@ public class FileAttachmentsController(
     // I campi context, env e viewEngine vengono passati tramite dependency injection
 
     /// <summary>
-    /// AjaxUpload: Carica i file inviati via AJAX.
-    /// Per ogni file valido (dimensione, estensione) viene salvato fisicamente
-    /// e viene creato un record FileAttachment associato a DeviceId e/o InterventionId.
-    /// Al termine, viene renderizzata la partial che mostra i file allegati.
+    ///     AjaxUpload: Carica i file inviati via AJAX.
+    ///     Per ogni file valido (dimensione, estensione) viene salvato fisicamente
+    ///     e viene creato un record FileAttachment associato a DeviceId e/o InterventionId.
+    ///     Al termine, viene renderizzata la partial che mostra i file allegati.
     /// </summary>
     /// <param name="deviceId">ID del dispositivo (se presente)</param>
     /// <param name="interventionId">ID dell'intervento (se presente)</param>
@@ -43,7 +45,9 @@ public class FileAttachmentsController(
     /// <returns>JSON con success = true e il markup aggiornato della partial oppure un messaggio di errore</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AjaxUpload(int? deviceId, int? interventionId, List<IFormFile>? files, string documentType)
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
+    public async Task<IActionResult> AjaxUpload(int? deviceId, int? interventionId, List<IFormFile>? files,
+        string documentType)
     {
         try
         {
@@ -81,7 +85,8 @@ public class FileAttachmentsController(
                 catch (Exception exFile)
                 {
                     // In caso di errore durante il salvataggio, logghiamo l'errore e passiamo al file successivo
-                    await Console.Error.WriteLineAsync("Errore durante la copia del file " + file.FileName + ": " + exFile);
+                    await Console.Error.WriteLineAsync("Errore durante la copia del file " + file.FileName + ": " +
+                                                       exFile);
                     continue;
                 }
 
@@ -149,49 +154,46 @@ public class FileAttachmentsController(
     }
 
     /// <summary>
-    /// Download: scarica un file allegato.
-    /// Cerca il record nel database, scarica il file fisico se presente,
-    /// e se non è presente invia alla pagina 404.
+    ///     Download: scarica un file allegato.
+    ///     Cerca il record nel database, scarica il file fisico se presente,
+    ///     e se non è presente invia alla pagina 404.
     /// </summary>
     /// <param name="id">ID dell'allegato da scaricare</param>
     /// <returns>File allegato o redirect a pagina 404</returns>
     [HttpGet]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
     public async Task<IActionResult> Download(int id)
     {
         // Recupera il record dell'allegato dal database in base all'ID fornito.
         var attachment = await context.FileAttachments.FindAsync(id);
         if (attachment == null)
-        {
             // Se il record non esiste, restituisce un NotFound.
             return NotFound("Il file richiesto non è stato trovato nel database.");
-        }
 
         // Costruisce il percorso fisico del file combinando la root del sito con il percorso salvato,
         // rimuovendo eventuali '/' iniziali.
         var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
 
         // Verifica se il file esiste sul filesystem.
-        if (!System.IO.File.Exists(filePath))
-        {
-            // Se il file non esiste, imposta un messaggio in ViewBag e restituisce la view "FileNotAvailable".
-            ViewBag.ErrorMessage = "Il file non è presente sul server. Potrebbe essere stato rimosso manualmente.";
-            return View("FileNotAvailable");
-        }
+        if (System.IO.File.Exists(filePath)) return PhysicalFile(filePath, attachment.ContentType, attachment.FileName);
+        // Se il file non esiste, imposta un messaggio in ViewBag e restituisce la view "FileNotAvailable".
+        ViewBag.ErrorMessage = "Il file non è presente sul server. Potrebbe essere stato rimosso manualmente.";
+        return View("FileNotAvailable");
 
         // Se tutto è a posto, restituisce il file fisico per il download.
-        return PhysicalFile(filePath, attachment.ContentType, attachment.FileName);
     }
-    
-    
+
+
     /// <summary>
-    /// Delete: Elimina un file allegato.
-    /// Cerca il record nel database, elimina il file fisico se presente,
-    /// rimuove il record e restituisce un JSON con success = true oppure un messaggio d'errore.
+    ///     Delete: Elimina un file allegato.
+    ///     Cerca il record nel database, elimina il file fisico se presente,
+    ///     rimuove il record e restituisce un JSON con success = true oppure un messaggio d'errore.
     /// </summary>
     /// <param name="id">ID dell'allegato da eliminare</param>
     /// <returns>JSON con success = true o un messaggio di errore</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
     public async Task<IActionResult> Delete(int id)
     {
         // Trova il record dell'allegato
@@ -208,11 +210,13 @@ public class FileAttachmentsController(
                 System.IO.File.Delete(filePath);
             else
                 // Se il file non esiste, logga un warning e procedi comunque
-                await Console.Error.WriteLineAsync($"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
+                await Console.Error.WriteLineAsync(
+                    $"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, errorMessage = "Errore durante l'eliminazione del file: " + ex.Message });
+            return Json(new
+                { success = false, errorMessage = "Errore durante l'eliminazione del file: " + ex.Message });
         }
 
         // Rimuove il record dal database
@@ -223,8 +227,8 @@ public class FileAttachmentsController(
     }
 
     /// <summary>
-    /// RenderPartialViewToString: Helper per rendere una partial view come stringa.
-    /// Utile per aggiornamenti via AJAX.
+    ///     RenderPartialViewToString: Helper per rendere una partial view come stringa.
+    ///     Utile per aggiornamenti via AJAX.
     /// </summary>
     /// <param name="viewName">Nome della partial view</param>
     /// <param name="model">Modello da passare alla partial</param>
@@ -253,29 +257,28 @@ public class FileAttachmentsController(
         await viewResult.View.RenderAsync(viewContext);
         return sw.ToString();
     }
-    
-    
+
+
     /// <summary>
-    /// CleanupOrphanedFiles
-    /// Pulisce il database dai file rimossi dal file system ma ancora registrati nel DB.
+    ///     CleanupOrphanedFiles
+    ///     Pulisce il database dai file rimossi dal file system ma ancora registrati nel DB.
     /// </summary>
     [HttpGet]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> CleanupOrphanedFilesAjax()
     {
         // Recupera tutti i record di file allegati dal database
         var allAttachments = await context.FileAttachments.ToListAsync();
-        int removedCount = 0;
+        var removedCount = 0;
 
         // Per ogni record, controlla se il file esiste nel filesystem
         foreach (var attachment in allAttachments)
         {
             var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
-            if (!System.IO.File.Exists(filePath))
-            {
-                // Se il file non esiste, rimuovi il record
-                context.FileAttachments.Remove(attachment);
-                removedCount++;
-            }
+            if (System.IO.File.Exists(filePath)) continue;
+            // Se il file non esiste, rimuovi il record
+            context.FileAttachments.Remove(attachment);
+            removedCount++;
         }
 
         // Salva le modifiche al database

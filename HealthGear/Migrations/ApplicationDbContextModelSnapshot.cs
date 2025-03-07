@@ -29,6 +29,13 @@ namespace HealthGear.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DeactivationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeactivationReason")
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");

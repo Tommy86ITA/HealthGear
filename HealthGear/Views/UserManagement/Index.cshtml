@@ -1,0 +1,148 @@
+@using HealthGear.Models.ViewModels
+@using Microsoft.AspNetCore.Identity
+@model IEnumerable<HealthGear.Models.ViewModels.UserViewModel>
+
+@{
+    ViewData["Title"] = "Gestione Utenti";
+}
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var currentUserId = UserManager.GetUserId(User);
+}
+
+<h2 class="mb-4"><i class="fas fa-users-cog"></i> Gestione Utenti</h2>
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-success">
+        <i class="fas fa-user-plus"></i> Crea Nuovo Utente
+    </a>
+</div>
+
+<table class="table table-bordered table-striped table-hover align-middle">
+    <thead class="table-dark">
+    <tr>
+        <th>Nome Completo</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Ruolo</th>
+        <th>Ultimo Accesso</th>
+        <th>Stato</th>
+        <th>Azioni</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model.Any())
+    {
+        @foreach (var user in Model)
+        {
+            var isCurrentUser = user.Id == currentUserId;
+
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+                <td>@user.Role</td>
+                <td>@(user.LastLoginDate.HasValue ? user.LastLoginDate.Value.ToString("dd/MM/yyyy HH:mm") : "Mai")</td>
+                <td>
+                    @if (user.IsActive)
+                    {
+                        <span class="badge bg-success">Attivo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Disattivato</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <!-- Pulsante Dettagli -->
+                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-info btn-sm"
+                       title="Visualizza Dettagli">
+                        <i class="fas fa-eye"></i>
+                    </a>
+
+                    <!-- Pulsante Modifica -->
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-warning btn-sm" title="Modifica Utente">
+                        <i class="fas fa-edit"></i>
+                    </a>
+
+                    <!-- Disattivazione o Riattivazione -->
+                    @if (isCurrentUser)
+                    {
+                        <!-- Se stesso - Disattivazione disabilitata -->
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                title="Non puoi disattivare il tuo stesso account" disabled>
+                            <i class="fas fa-user-slash"></i>
+                        </button>
+                    }
+                    else if (user.IsActive)
+                    {
+                        <!-- Utente attivo - Mostra bottone che apre il modal -->
+                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deactivateUserModal-@user.Id"
+                                title="Disattiva Utente">
+                            <i class="fas fa-user-slash"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <!-- Utente disattivato - Mostra bottone riattivazione -->
+                        <form asp-action="Reactivate" asp-route-id="@user.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-success btn-sm" title="Riattiva Utente">
+                                <i class="fas fa-user-check"></i>
+                            </button>
+                        </form>
+                    }
+
+                    <!-- Eliminazione -->
+                    @if (isCurrentUser)
+                    {
+                        <!-- Se stesso - Eliminazione disabilitata -->
+                        <button type="button" class="btn btn-danger btn-sm"
+                                title="Non puoi eliminare il tuo stesso account" disabled>
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <!-- Altri utenti - Eliminazione abilitata -->
+                        <form asp-action="Delete" asp-route-id="@user.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Sei sicuro di voler eliminare questo utente?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger btn-sm" title="Elimina Utente">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    }
+                </td>
+            </tr>
+
+            <!-- Modal per la disattivazione -->
+            @await Html.PartialAsync("_DeactivateUserModal", new DeactivateUserModalViewModel
+            {
+                UserId = user.Id,
+                FullName = user.FullName,
+                IsCurrentlyActive = user.IsActive
+            })
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="7" class="text-center text-muted">Nessun utente trovato.</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<!-- Script per attivare i tooltip Bootstrap -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.forEach(function (el) {
+            new bootstrap.Tooltip(el);
+        });
+    });
+</script>

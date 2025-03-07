@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "parameters": "",
+  "projects": [
+    {
+      "path": "/Users/thomasamaranto/RiderProjects/HealthGear/HealthGear/HealthGear.csproj",
+      "frameworks": [
+        {
+          "framework": "net9.0",
+          "topLevelPackages": [
+            {
+              "id": "ClosedXML",
+              "requestedVersion": "0.105.0-rc",
+              "resolvedVersion": "0.105.0-rc"
+            },
+            {
+              "id": "FastReport.OpenSource.Export.PdfSimple",
+              "requestedVersion": "2025.1.0",
+              "resolvedVersion": "2025.1.0"
+            },
+            {
+              "id": "HtmlSanitizer",
+              "requestedVersion": "9.1.878-beta",
+              "resolvedVersion": "9.1.878-beta"
+            },
+            {
+              "id": "MailKit",
+              "requestedVersion": "4.10.0",
+              "resolvedVersion": "4.10.0"
+            },
+            {
+              "id": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "requestedVersion": "9.0.2",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "Microsoft.AspNetCore.Identity.UI",
+              "requestedVersion": "9.0.2",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "Microsoft.EntityFrameworkCore.Design",
+              "requestedVersion": "9.0.2",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "Microsoft.EntityFrameworkCore.Sqlite.Core",
+              "requestedVersion": "9.0.2",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "Microsoft.EntityFrameworkCore.SqlServer",
+              "requestedVersion": "9.0.2",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "Microsoft.EntityFrameworkCore.Tools",
+              "requestedVersion": "9.0.2",
+              "resolvedVersion": "9.0.2"
+            },
+            {
+              "id": "Microsoft.VisualStudio.Web.CodeGeneration.Design",
+              "requestedVersion": "9.0.0",
+              "resolvedVersion": "9.0.0"
+            },
+            {
+              "id": "QuestPDF",
+              "requestedVersion": "2025.1.1",
+              "resolvedVersion": "2025.1.1"
+            },
+            {
+              "id": "SQLitePCLRaw.bundle_e_sqlite3",
+              "requestedVersion": "2.1.10",
+              "resolvedVersion": "2.1.10"
+            },
+            {
+              "id": "X.PagedList",
+              "requestedVersion": "10.5.7",
+              "resolvedVersion": "10.5.7"
+            },
+            {
+              "id": "X.PagedList.EF",
+              "requestedVersion": "10.5.7",
+              "resolvedVersion": "10.5.7"
+            },
+            {
+              "id": "X.PagedList.Mvc.Core",
+              "requestedVersion": "10.5.7",
+              "resolvedVersion": "10.5.7"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,6 @@
+@using HealthGear.Constants
 @using HealthGear.Helpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model Device
 
 @{
@@ -106,9 +108,16 @@
 <h4 class="mt-5"><i class="fas fa-history"></i> Interventi Recenti</h4>
 <hr/>
 <div class="d-flex gap-2 mb-3">
-    <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@Model.Id" class="btn btn-success mb-3">
-        <i class="fas fa-plus"></i> Aggiungi Intervento
-    </a>
+
+    <!-- Aggiungi intervento: visibile solo a Admin e Tecnico -->
+    @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
+    {
+        <a asp-action="Create" asp-controller="Intervention" asp-route-deviceId="@Model.Id"
+           class="btn btn-success mb-3">
+            <i class="fas fa-plus"></i> Aggiungi Intervento
+        </a>
+    }
+
     <a asp-action="List" asp-controller="InterventionHistory" asp-route-deviceId="@Model.Id" class="btn btn-info mb-3">
         <i class="fas fa-clock-rotate-left"></i> Apri Storico Completo
     </a>
@@ -166,20 +175,23 @@
                        class="btn btn-info btn-sm" title="Dettagli">
                         <i class="fas fa-eye"></i>
                     </a>
-                    <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                       class="btn btn-warning btn-sm" title="Modifica">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
-                          method="post" class="d-inline">
-                        <input type="hidden" name="returnUrl"
-                               value="@Url.Action("Details", "Device", new { id = Model.Id })"/>
-                        <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Sei sicuro di voler eliminare questo intervento?');"
-                                title="Elimina">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
+                    @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
+                    {
+                        <a asp-action="Edit" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                           class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        @if (User.IsInRole(Roles.Admin))
+                        {
+                            <form asp-action="Delete" asp-controller="Intervention" asp-route-id="@intervention.Id"
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Eliminare questo intervento?');">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        }
+                    }
                 </td>
             </tr>
         }
@@ -204,26 +216,36 @@ else
 <!-- Pulsanti di Azione per il dispositivo -->
 <div class="d-flex justify-content-between mt-4">
     <div>
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
-            <i class="fas fa-edit"></i> Modifica Dispositivo
-        </a>
+        @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Modifica
+            </a>
+        }
         <a asp-action="Index" class="btn btn-outline-dark">
             <i class="fas fa-arrow-left"></i> Torna all'elenco
         </a>
     </div>
     <div>
-        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal"
-                @(Model.Interventions.Any() ? "hidden" : "")>
-            <i class="fas fa-trash"></i> Elimina Dispositivo
-        </button>
-        <form asp-action="Archive" asp-controller="Device" asp-route-id="@Model.Id" method="post" class="d-inline">
-            <button type="submit" class="btn @(Model.Status == DeviceStatus.Dismesso ? "btn-success" : "btn-dark")">
-                <i class="fas @(Model.Status == DeviceStatus.Dismesso ? "fas fa-undo" : "fa-archive")"></i>
-                @(Model.Status == DeviceStatus.Dismesso ? "Riattiva Dispositivo" : "Archivia Dispositivo")
+        @if (User.IsInRole(Roles.Admin))
+        {
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal"
+                    @(Model.Interventions.Any() ? "hidden" : "")>
+                <i class="fas fa-trash"></i> Elimina Dispositivo
             </button>
-        </form>
+        }
+        @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
+        {
+            <form asp-action="Archive" asp-controller="Device" asp-route-id="@Model.Id" method="post" class="d-inline">
+                <button type="submit" class="btn @(Model.Status == DeviceStatus.Dismesso ? "btn-success" : "btn-dark")">
+                    <i class="fas @(Model.Status == DeviceStatus.Dismesso ? "fas fa-undo" : "fa-archive")"></i>
+                    @(Model.Status == DeviceStatus.Dismesso ? "Riattiva Dispositivo" : "Archivia Dispositivo")
+                </button>
+            </form>
+        }
     </div>
 </div>
+
 
 <!-- Modal per la scelta del formato del report -->
 <div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel"
@@ -280,7 +302,7 @@ else
     </div>
 </div>
 
-@*SEZIONE SCRIPT*@
+@*SEZIONE SCRIPT ----------------------------------------------------------------------------------------------------*@
 
 @section Scripts {
     <script>

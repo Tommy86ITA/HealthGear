@@ -1,0 +1,50 @@
+@model HealthGear.Models.ViewModels.ForgotPasswordViewModel
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="mb-3 text-center">
+                <i class="fas fa-key me-2"></i> Recupero Password
+            </h2>
+
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-info text-center">
+                    @TempData["InfoMessage"]
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="/Identity/Account/Login" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Torna al Login
+                    </a>
+                </div>
+            }
+            else
+            {
+                <p class="text-center text-muted">
+                    Inserisci l'indirizzo email che hai utilizzato per registrarti. Ti invieremo le istruzioni per
+                    reimpostare la password.
+                </p>
+
+                <form method="post" class="card p-4 shadow-sm">
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">Indirizzo Email</label>
+                        <input asp-for="Email" class="form-control" id="Email" autocomplete="email"
+                               placeholder="esempio@email.com"/>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i> Invia richiesta
+                        </button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

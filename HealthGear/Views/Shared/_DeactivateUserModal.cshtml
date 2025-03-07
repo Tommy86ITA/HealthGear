@@ -1,0 +1,31 @@
+@model HealthGear.Models.ViewModels.DeactivateUserModalViewModel
+
+<div class="modal fade" id="deactivateUserModal-@Model.UserId" tabindex="-1"
+     aria-labelledby="deactivateUserModalLabel-@Model.UserId" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="deactivateUserModalLabel-@Model.UserId">Disattiva Utente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body">
+                <p>Inserisci il motivo della disattivazione per l'utente <strong>@Model.FullName</strong>.</p>
+                <form id="deactivateForm-@Model.UserId" asp-action="Deactivate" asp-controller="UserManagement"
+                      method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="UserId" value="@Model.UserId"/>
+                    <div class="mb-3">
+                        <label for="Reason" class="form-label">Motivo</label>
+                        <textarea name="Reason" class="form-control" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-warning"
+                        onclick="document.getElementById('deactivateForm-@Model.UserId').submit();">Disattiva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

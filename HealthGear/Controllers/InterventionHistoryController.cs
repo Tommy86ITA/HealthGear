@@ -1,7 +1,10 @@
 #region
 
+using HealthGear.Constants;
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using X.PagedList;
@@ -15,6 +18,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
     private const int PageSize = 10;
 
     [HttpGet("Index")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
     public async Task<IActionResult> List(
         int deviceId,
         string? searchQuery,

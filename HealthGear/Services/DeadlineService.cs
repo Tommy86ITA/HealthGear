@@ -2,6 +2,7 @@
 
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Models.Settings;
 using Microsoft.EntityFrameworkCore;
 
 #endregion

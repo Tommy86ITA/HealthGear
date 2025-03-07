@@ -4,25 +4,42 @@ using Microsoft.AspNetCore.Identity;
 namespace HealthGear.Models;
 
 /// <summary>
-/// Rappresenta l'utente dell'applicazione. Estende IdentityUser per integrare il sistema di autenticazione di ASP.NET Core Identity.
+///     Rappresenta l'utente dell'applicazione.
+///     Estende IdentityUser per integrare il sistema di autenticazione di ASP.NET Core Identity.
 /// </summary>
 public class ApplicationUser : IdentityUser
 {
-    // FullName: Il nome completo dell'utente.
-    // L'attributo [Required] impone che venga specificato e [MaxLength(100)] limita la lunghezza a 100 caratteri.
-    // Il modificatore "required" (C# 11) indica che questa proprietà deve essere inizializzata.
+    /// <summary>
+    ///     Nome completo dell'utente.
+    /// </summary>
     [Required(ErrorMessage = "Il nome completo è obbligatorio.")]
     [MaxLength(100, ErrorMessage = "Il nome completo non può superare 100 caratteri.")]
     public required string FullName { get; set; }
 
-    // IsActive: Indica se l'account dell'utente è attivo.
-    // Anche se il tipo bool è non-nullable, l'attributo [Required] serve per enfatizzare che questo campo è fondamentale.
+    /// <summary>
+    ///     Indica se l'account è attivo.
+    /// </summary>
     [Required]
     public bool IsActive { get; set; }
 
-    // RegistrationDate: La data in cui l'utente si è registrato.
+    /// <summary>
+    ///     Data di registrazione.
+    /// </summary>
     public DateTime RegistrationDate { get; set; }
 
-    // LastLoginDate: La data dell'ultimo accesso. Può essere null se l'utente non ha mai effettuato il login.
+    /// <summary>
+    ///     Data dell'ultimo login.
+    /// </summary>
     public DateTime? LastLoginDate { get; set; }
+
+    /// <summary>
+    ///     Data di eventuale disattivazione dell'account.
+    /// </summary>
+    public DateTime? DeactivationDate { get; set; }
+
+    /// <summary>
+    ///     Motivo della disattivazione.
+    /// </summary>
+    [MaxLength(250)]
+    public string? DeactivationReason { get; set; }
 }

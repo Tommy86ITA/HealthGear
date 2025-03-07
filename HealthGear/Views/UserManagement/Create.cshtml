@@ -1,0 +1,90 @@
+@using HealthGear.Models.Settings
+@model HealthGear.Models.ViewModels.UserViewModel
+
+@{
+    ViewData["Title"] = "Crea Nuovo Utente";
+    var passwordRules = ViewData["PasswordRules"] as PasswordRules;
+}
+
+<h2 class="mb-4"><i class="fas fa-user-plus"></i> Crea Nuovo Utente</h2>
+
+<!-- Form per la creazione di un nuovo utente -->
+<form asp-action="Create" method="post" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Nome Completo -->
+            <div class="mb-3">
+                <label asp-for="FullName" class="form-label">Nome Completo</label>
+                <input asp-for="FullName" class="form-control" required/>
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+
+            <!-- Username -->
+            <div class="mb-3">
+                <label asp-for="UserName" class="form-label">Username</label>
+                <input asp-for="UserName" class="form-control" required/>
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" type="email" required/>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <!-- Ruolo (Dropdown) -->
+            <div class="mb-3">
+                <label asp-for="Role" class="form-label">Ruolo</label>
+                <select asp-for="Role" class="form-select" asp-items="new SelectList(Model.AvailableRoles)">
+                    <option value="">Seleziona un ruolo...</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <!-- Checkbox per lo stato attivo -->
+            <div class="form-check mb-3">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox"/>
+                <label asp-for="IsActive" class="form-check-label">Attivo</label>
+            </div>
+
+            <!-- Messaggio sulle password -->
+            @if (passwordRules != null)
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    La password iniziale verrà generata automaticamente e comunicata all'utente.
+                    <ul class="mt-2">
+                        <li>Minimo: @passwordRules.MinLength caratteri</li>
+                        <li>@(passwordRules.RequireUppercase ? "Almeno una lettera maiuscola" : "Lettere maiuscole non richieste")</li>
+                        <li>@(passwordRules.RequireLowercase ? "Almeno una lettera minuscola" : "Lettere minuscole non richieste")</li>
+                        <li>@(passwordRules.RequireDigit ? "Almeno una cifra" : "Cifre non richieste")</li>
+                        <li>@(passwordRules.RequireNonAlphanumeric ? "Almeno un carattere speciale" : "Caratteri speciali non richiesti")</li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Pulsanti di salvataggio e ritorno -->
+    <div class="mt-4">
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-save"></i> Salva
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Torna alla lista
+        </a>
+    </div>
+</form>
+
+<!-- Inclusione script di validazione lato client -->
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

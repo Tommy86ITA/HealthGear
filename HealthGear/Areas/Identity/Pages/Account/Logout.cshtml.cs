@@ -1,5 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+
 #nullable disable
 
 using HealthGear.Models;
@@ -20,12 +21,9 @@ public class LogoutModel(SignInManager<ApplicationUser> signInManager, ILogger<L
 
         // Reindirizza sempre alla pagina di Login, ignorando eventuali returnUrl
         var loginUrl = Url.Page("/Account/Login", new { area = "Identity" });
-        if (loginUrl is null)
-        {
-            throw new InvalidOperationException("L'URL di login non può essere null.");
-        }
+        if (loginUrl is null) throw new InvalidOperationException("L'URL di login non può essere null.");
         return LocalRedirect(loginUrl);
-            
+
         // Se preferisci rispettare returnUrl se presente, potresti fare:
         // if (!string.IsNullOrEmpty(returnUrl))
         // {

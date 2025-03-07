@@ -1,67 +1,71 @@
 using System.Globalization;
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Models.Settings;
 using HealthGear.Services;
 using HealthGear.Services.Reports;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF;
 using QuestPDF.Infrastructure;
 using SQLitePCL;
 
-// Inizializzazione necessaria per SQLite
+// Inizializzazione necessaria per SQLite su Linux/macOS
 Batteries.Init();
 
 var builder = WebApplication.CreateBuilder(args);
 
 //
-// 1. Configurazione del DbContext e di ASP.NET Core Identity
+// 1. Configurazione DbContext e Identity
 //
-
-// Configura il DbContext per utilizzare SQLite, leggendo la connection string da appsettings.json.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configura Identity per usare la classe ApplicationUser e IdentityRole.
-// Qui usiamo AddIdentity per supportare i ruoli; rimuoviamo quindi AddDefaultIdentity per evitare duplicazioni.
+var passwordRules = new PasswordRules();
+builder.Configuration.GetSection("PasswordRules").Bind(passwordRules);
+builder.Services.AddSingleton(passwordRules);
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
-        // Configurazione delle opzioni per la password
-        options.Password.RequireDigit = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireNonAlphanumeric = false;
-        options.Password.RequireUppercase = true;
-        options.Password.RequiredLength = 6;
-        // Richiede email unica per ogni utente
+        options.Password.RequireDigit = passwordRules.RequireDigit;
+        options.Password.RequireLowercase = passwordRules.RequireLowercase;
+        options.Password.RequireUppercase = passwordRules.RequireUppercase;
+        options.Password.RequireNonAlphanumeric = passwordRules.RequireNonAlphanumeric;
+        options.Password.RequiredLength = passwordRules.MinLength;
         options.User.RequireUniqueEmail = true;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
-// Registrazione dello stub per l'invio email (FakeEmailSender)
-builder.Services.AddSingleton<IEmailSender, FakeEmailSender>();
+    .AddDefaultTokenProviders()
+    .AddErrorDescriber<ItalianIdentityErrorDescriber>();
 
 //
-// 2. Registrazione degli altri servizi dell'applicazione
+// 2. Registrazione dei servizi applicativi custom
 //
-
-// Aggiunge il supporto per controllers con views.
-builder.Services.AddControllersWithViews();
-
-// Aggiunge il supporto per le Razor Pages (necessario per le pagine di Identity).
-builder.Services.AddRazorPages();
-
-// Registra i servizi personalizzati.
+builder.Services.AddSingleton<PasswordGenerator>();
+builder.Services.AddScoped<PasswordValidator>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<EmailSender>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<DeadlineService>();
 builder.Services.AddScoped<InventoryNumberService>();
 builder.Services.AddScoped<PdfReportGenerator>();
 builder.Services.AddScoped<ExcelReportGenerator>();
+builder.Services.AddSingleton<TemporaryPasswordCacheService>();
+builder.Services.AddSingleton<ThirdPartyService>();
 
-// Configura la licenza di QuestPDF (Community License).
+//
+// 3. Configurazione servizi MVC, Razor Pages e Session/TempData
+//
+builder.Services.AddSession();
+builder.Services.AddControllersWithViews()
+    .AddSessionStateTempDataProvider();
+builder.Services.AddRazorPages();
+
 Settings.License = LicenseType.Community;
 
-// Configura il logging: rimuove provider esistenti e aggiunge il console logger.
+//
+// 4. Configurazione logging (utile per debug su console di Rider o terminale)
+//
 builder.Services.AddLogging(logging =>
 {
     logging.ClearProviders();
@@ -69,96 +73,91 @@ builder.Services.AddLogging(logging =>
 });
 
 //
-// 3. Costruzione dell'applicazione
+// 5. Costruzione applicazione
 //
-
 var app = builder.Build();
 
 //
-// 4. Configurazione della cultura
+// 6. Configurazione Cultura (italiana)
 //
-
-// Imposta la cultura italiana per date e numeri.
 var cultureInfo = new CultureInfo("it-IT");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 //
-// 5. Configurazione degli errori e della sicurezza
+// 7. Middleware per ambienti di sviluppo/produzione
 //
-
 if (app.Environment.IsDevelopment())
 {
-    // Usa la Developer Exception Page in ambiente di sviluppo.
     app.UseDeveloperExceptionPage();
 }
 else
 {
-    // In produzione, usa un gestore degli errori e HSTS.
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// Abilita prima l'autenticazione e poi l'autorizzazione.
+//
+// 8. Log globale di debug per intercettare TUTTE le richieste
+//
+/*app.Use(async (context, next) =>
+{
+    Console.WriteLine($"[DEBUG] Richiesta: {context.Request.Method} {context.Request.Path}");
+    await next();
+});*/
+
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession();
 
 //
-// 6. Configurazione del routing
+// 9. Configurazione rotte principali
 //
-
-// Route di default: se non specificato, il controller predefinito è Home e l'azione predefinita è Home.
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Home}/{id?}"
-);
+    "default",
+    "{controller=Home}/{action=Home}/{id?}");
 
-// Redirect esplicito della root ("/") alla pagina Home.
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/Home");
-    return Task.CompletedTask;
-});
-
-// Route per il DeviceController: tutte le richieste che iniziano con "Device" vengono gestite da DeviceController.
-app.MapControllerRoute(
-    name: "device",
-    pattern: "Device/{action=Index}/{id?}",
-    defaults: new { controller = "Device" }
-);
-
-// Mappa le Razor Pages (necessario per le pagine di Identity e altre Razor Pages).
 app.MapRazorPages();
 
 //
-// 7. Verifica e creazione del database, e seeding dei ruoli
+// 10. Redirect di default (se l'utente è autenticato, va a /Home/Home, altrimenti al login)
 //
+app.MapGet("/", async context =>
+{
+    if (context.User.Identity?.IsAuthenticated ?? false)
+        context.Response.Redirect("/Home/Home");
+    else
+        context.Response.Redirect("/Identity/Account/Login");
 
+    await Task.CompletedTask;
+});
+
+//
+// 11. Inizializzazione database e seeding
+//
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // Applica le migrazioni e crea tutte le tabelle necessarie (comprese quelle di Identity)
-    dbContext.Database.Migrate();
+    var services = scope.ServiceProvider;
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
 
-    // Seeding dei ruoli: crea i ruoli "Admin" e "User" se non esistono
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roleNames = ["Admin", "User"];
-    foreach (var roleName in roleNames)
+    try
     {
-        if (!roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult())
-        {
-            roleManager.CreateAsync(new IdentityRole(roleName)).GetAwaiter().GetResult();
-        }
+        dbContext.Database.Migrate();
+        await DbInitializer.SeedDataAsync(services, builder.Configuration);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Errore durante l'inizializzazione del database.");
+        throw;
     }
 }
 
 //
-// 8. Avvio dell'applicazione
+// 12. Avvio applicazione
 //
-
 app.Run();

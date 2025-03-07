@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Conferma Creazione Utente";
+    var userName = ViewData["UserName"] as string;
+    var generatedPassword = ViewData["GeneratedPassword"] as string;
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Utente Creato con Successo!</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-3">L'utente <strong>@userName</strong> è stato creato correttamente.</p>
+
+            @if (!string.IsNullOrEmpty(generatedPassword))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <strong>Attenzione:</strong> Questa è la password generata automaticamente per il nuovo utente.
+                    Assicurati di comunicarla all'utente in modo sicuro.
+                    <div class="mt-2">
+                        <code
+                            style="font-size: 1.25rem; padding: 0.5rem; display: inline-block; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+                            @generatedPassword
+                        </code>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-danger">
+                    <strong>Errore:</strong> Non è stato possibile recuperare la password generata.
+                </div>
+            }
+
+            <hr/>
+
+            <div class="d-flex justify-content-end">
+                <a asp-action="Index" class="btn btn-primary me-2">Torna alla lista utenti</a>
+            </div>
+        </div>
+    </div>
+</div>

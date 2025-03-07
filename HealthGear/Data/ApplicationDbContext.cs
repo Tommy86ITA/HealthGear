@@ -1,17 +1,18 @@
 using HealthGear.Models;
+using HealthGear.Models.Settings;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Data;
 
 /// <summary>
-/// ApplicationDbContext: il contesto del database per HealthGear che integra ASP.NET Identity
-/// (tramite IdentityDbContext<ApplicationUser/>) insieme alle entità personalizzate.
+///     ApplicationDbContext: il contesto del database per HealthGear che integra ASP.NET Identity
+///     (tramite IdentityDbContext<ApplicationUser />) insieme alle entità personalizzate.
 /// </summary>
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     /// <summary>
-    /// Costruttore: riceve le opzioni del DbContext e le passa alla base.
+    ///     Costruttore: riceve le opzioni del DbContext e le passa alla base.
     /// </summary>
     /// <param name="options">Opzioni del DbContext</param>
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -32,7 +33,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<FileAttachment> FileAttachments { get; set; }
 
     /// <summary>
-    /// OnModelCreating: configura le relazioni e altre impostazioni del modello.
+    ///     OnModelCreating: configura le relazioni e altre impostazioni del modello.
     /// </summary>
     /// <param name="modelBuilder">Il ModelBuilder da utilizzare</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

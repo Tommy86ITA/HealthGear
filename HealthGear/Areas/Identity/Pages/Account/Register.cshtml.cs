@@ -1,170 +1,94 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+
 #nullable disable
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using HealthGear.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
 
 namespace HealthGear.Areas.Identity.Pages.Account;
 
-public class RegisterModel : PageModel
+public class RegisterModel(
+    UserManager<ApplicationUser> userManager,
+    IUserStore<ApplicationUser> userStore,
+    SignInManager<ApplicationUser> signInManager,
+    ILogger<RegisterModel> logger,
+    IEmailSender emailSender)
+    : PageModel
 {
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IUserStore<ApplicationUser> _userStore;
-    private readonly IUserEmailStore<ApplicationUser> _emailStore;
-    private readonly ILogger<RegisterModel> _logger;
-    private readonly IEmailSender _emailSender;
+    [BindProperty] public InputModel Input { get; set; }
 
-    public RegisterModel(
-        UserManager<ApplicationUser> userManager,
-        IUserStore<ApplicationUser> userStore,
-        SignInManager<ApplicationUser> signInManager,
-        ILogger<RegisterModel> logger,
-        IEmailSender emailSender)
-    {
-        _userManager = userManager;
-        _userStore = userStore;
-        _emailStore = GetEmailStore();
-        _signInManager = signInManager;
-        _logger = logger;
-        _emailSender = emailSender;
-    }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
-    [BindProperty]
-    public InputModel Input { get; set; }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     public string ReturnUrl { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     public IList<AuthenticationScheme> ExternalLogins { get; set; }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
-    public class InputModel
-    {
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; }
-            
-        [Required(ErrorMessage = "Il nome completo è obbligatorio.")]
-        [Display(Name = "Nome Completo")]
-        public string FullName { get; set; }
-    }
-
 
     public async Task OnGetAsync(string returnUrl = null)
     {
         ReturnUrl = returnUrl;
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
     }
 
     public async Task<IActionResult> OnPostAsync(string returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-        if (ModelState.IsValid)
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+        if (!ModelState.IsValid) return Page();
+        var user = CreateUser();
+
+        // Imposta i campi personalizzati
+        user.FullName = Input.FullName;
+        user.IsActive = true;
+        user.RegistrationDate = DateTime.UtcNow;
+
+        // Qui salviamo lo UserName direttamente, eliminando il legame con l'Email
+        await userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
+        // Se vuoi conservare l'email per eventuali notifiche interne, puoi tenerla
+        if (userManager.SupportsUserEmail)
+            await ((IUserEmailStore<ApplicationUser>)userStore).SetEmailAsync(user,
+                Input.Email ?? $"{Input.UserName}@healthgear.local", CancellationToken.None);
+
+        var result = await userManager.CreateAsync(user, Input.Password);
+
+        if (result.Succeeded)
         {
-            var user = CreateUser();
-                
-            user.FullName = Input.FullName;
-            user.IsActive = true;
-            user.RegistrationDate = DateTime.UtcNow;
+            logger.LogInformation("User created a new account with password.");
 
-            await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-            await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-            var result = await _userManager.CreateAsync(user, Input.Password);
-                
+            TempData["SuccessMessage"] = "Account creato con successo! Benvenuto su HealthGear.";
 
-
-            if (result.Succeeded)
+            if (userManager.Options.SignIn.RequireConfirmedAccount)
             {
-                _logger.LogInformation("User created a new account with password.");
-                    
-                // Memorizza il messaggio di successo in TempData
-                TempData["SuccessMessage"] = "Account creato con successo! Benvenuto su HealthGear.";
-                    
-                var userId = await _userManager.GetUserIdAsync(user);
-                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var userId = await userManager.GetUserIdAsync(user);
+                var code = await userManager.GenerateEmailConfirmationTokenAsync(user);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                 var callbackUrl = Url.Page(
                     "/Account/ConfirmEmail",
-                    pageHandler: null,
-                    values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                    protocol: Request.Scheme);
+                    null,
+                    new { area = "Identity", userId, code, returnUrl },
+                    Request.Scheme);
 
-                await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                if (callbackUrl != null)
+                    await emailSender.SendEmailAsync(Input.Email, "Conferma il tuo account",
+                        $"Conferma il tuo account cliccando <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>qui</a>.");
 
-                if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                {
-                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                }
-                else
-                {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
-                }
+                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
             }
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
+
+            await signInManager.SignInAsync(user, false);
+            return LocalRedirect(returnUrl);
         }
 
-        // If we got this far, something failed, redisplay form
+        foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description);
+
+        // Se ci sono errori, torna alla pagina con i messaggi di errore
         return Page();
     }
 
@@ -182,12 +106,31 @@ public class RegisterModel : PageModel
         }
     }
 
-    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    public class InputModel
     {
-        if (!_userManager.SupportsUserEmail)
-        {
-            throw new NotSupportedException("The default UI requires a user store with email support.");
-        }
-        return (IUserEmailStore<ApplicationUser>)_userStore;
+        [Required(ErrorMessage = "Il nome utente è obbligatorio.")]
+        [Display(Name = "Nome utente")]
+        public string UserName { get; set; }
+
+        [Required(ErrorMessage = "Il nome completo è obbligatorio.")]
+        [Display(Name = "Nome completo")]
+        public string FullName { get; set; }
+
+        // Email diventa opzionale, ma puoi anche rimuoverla del tutto
+        [EmailAddress]
+        [Display(Name = "Email (opzionale)")]
+        public string Email { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "La {0} deve essere almeno {2} e al massimo {1} caratteri.",
+            MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Conferma password")]
+        [Compare("Password", ErrorMessage = "La password e la conferma password non coincidono.")]
+        public string ConfirmPassword { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 #region
 
 using HealthGear.Data;
-using HealthGear.Models;
+using HealthGear.Models.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

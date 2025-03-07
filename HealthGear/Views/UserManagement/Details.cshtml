@@ -1,0 +1,70 @@
+@model HealthGear.Models.ViewModels.UserViewModel
+
+@{
+    ViewData["Title"] = "Dettagli Utente";
+}
+
+<h2><i class="fas fa-user"></i> Dettagli Utente - @Model.FullName</h2>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <table class="table table-bordered">
+            <tbody>
+            <tr>
+                <th>Nome Completo</th>
+                <td>@Model.FullName</td>
+            </tr>
+            <tr>
+                <th>Username</th>
+                <td>@Model.UserName</td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td>@Model.Email</td>
+            </tr>
+            <tr>
+                <th>Ruolo</th>
+                <td>@Model.Role</td>
+            </tr>
+            <tr>
+                <th>Stato</th>
+                <td>
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success">Attivo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Disattivato</span>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <th>Registrato il</th>
+                <td>@(Model.RegistrationDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+            </tr>
+            <tr>
+                <th>Ultimo Accesso</th>
+                <td>@(Model.LastLoginDate?.ToString("dd/MM/yyyy HH:mm") ?? "Mai")</td>
+            </tr>
+            <tr>
+                <th>Data Disattivazione</th>
+                <td>@(Model.DeactivationDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+            </tr>
+            <tr>
+                <th>Motivo Disattivazione</th>
+                <td>@(string.IsNullOrEmpty(Model.DeactivationReason) ? "-" : Model.DeactivationReason)</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="mt-4 d-flex justify-content-end">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary me-2">
+                <i class="fas fa-edit"></i> Modifica
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-list"></i> Torna alla lista
+            </a>
+        </div>
+    </div>
+</div>

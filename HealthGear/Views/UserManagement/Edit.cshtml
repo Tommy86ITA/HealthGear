@@ -1,0 +1,141 @@
+@model HealthGear.Models.ViewModels.UserViewModel
+
+@{
+    ViewData["Title"] = "Modifica Utente";
+}
+
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var isCurrentUser = Model.Id == UserManager.GetUserId(User);
+    var isCurrentUserAdmin = isCurrentUser && Model.Role == "Admin";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-user-edit"></i> Modifica Utente
+    </h2>
+    <div>
+        @if (Model.IsActive)
+        {
+            <span class="badge bg-success fs-5 px-3 py-2">Attivo</span>
+        }
+        else
+        {
+            <span class="badge bg-danger fs-5 px-3 py-2">Disattivato</span>
+        }
+    </div>
+</div>
+
+<!-- Form principale per la modifica delle informazioni utente -->
+<form asp-action="Edit" method="post" class="row g-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="col-md-6">
+        <label asp-for="FullName" class="form-label fw-bold">Nome Completo *</label>
+        <input asp-for="FullName" class="form-control" required />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="UserName" class="form-label fw-bold">Username</label>
+        <input asp-for="UserName" class="form-control" readonly />
+        <small class="text-muted">Lo username non può essere modificato.</small>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Email" class="form-label fw-bold">Email *</label>
+        <input asp-for="Email" class="form-control" type="email" required />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Role" class="form-label fw-bold">Ruolo *</label>
+        @if (isCurrentUserAdmin)
+        {
+            <select class="form-select" disabled>
+                <option>@Model.Role</option>
+            </select>
+            <input type="hidden" asp-for="Role" />
+            <small class="text-muted">Non puoi modificare il tuo ruolo di amministratore.</small>
+        }
+        else
+        {
+            <select asp-for="Role" asp-items="new SelectList(Model.AvailableRoles)" required class="form-select">
+                <option value="">Seleziona un ruolo...</option>
+            </select>
+            <span asp-validation-for="Role" class="text-danger"></span>
+        }
+    </div>
+
+    <div class="col-12 text-muted text-center">
+        <small>* indica campi obbligatori</small>
+    </div>
+
+    <div class="col-12 d-flex justify-content-between mt-4">
+        <div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Salva
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-times"></i> Annulla
+            </a>
+        </div>
+    </div>
+</form>
+
+<!-- Azioni extra: Reset Password, Disattiva/Riattiva, Elimina -->
+<div class="d-flex justify-content-between mt-4">
+    <div></div>
+    <div>
+        @if (!isCurrentUser)
+        {
+            <!-- Reset Password -->
+            <form asp-controller="UserManagement" asp-action="ResetPassword" asp-route-id="@Model.Id" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-key"></i> Reset Password
+                </button>
+            </form>
+
+            <!-- Disattiva/Riattiva Utente -->
+            @if (Model.IsActive)
+            {
+                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#deactivateUserModal-@Model.Id">
+                    <i class="fas fa-user-slash"></i> Disattiva
+                </button>
+            }
+            else
+            {
+                <form asp-action="Reactivate" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-success">
+                        <i class="fas fa-user-check"></i> Riattiva
+                    </button>
+                </form>
+            }
+
+            <!-- Elimina Utente -->
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare questo utente?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="fas fa-trash"></i> Elimina
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+<!-- Partial Modal - DeactivateUserModal -->
+@await Html.PartialAsync("_DeactivateUserModal", new HealthGear.Models.ViewModels.DeactivateUserModalViewModel
+{
+    UserId = Model.Id,
+    FullName = Model.FullName,
+    IsCurrentlyActive = Model.IsActive
+})
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

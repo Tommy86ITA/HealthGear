@@ -1,3 +1,4 @@
+@using HealthGear.Constants
 @using HealthGear.Helpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model dynamic
@@ -26,7 +27,7 @@
                 <td>@attachment.DocumentType</td>
                 <td>@attachment.UploadDate.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>
-                    <!-- Pulsante per scaricare il file -->
+                    <!-- Pulsante per scaricare il file (sempre visibile) -->
                     <a asp-action="Download"
                        asp-controller="FileAttachments"
                        asp-route-id="@attachment.Id"
@@ -35,21 +36,24 @@
                         <i class="fas fa-download"></i>
                     </a>
 
-                    <!-- Pulsante per eliminare il file -->
-                    <form method="post"
-                          asp-action="Delete"
-                          asp-controller="FileAttachments"
-                          asp-route-id="@attachment.Id"
-                          class="d-inline deleteAttachmentForm"
-                          data-attachment-id="@attachment.Id">
-                        @Html.AntiForgeryToken()
-                        <button type="submit"
-                                class="btn btn-danger btn-sm"
-                                onclick="return confirm('Eliminare il file @attachment.FileName?');"
-                                title="Elimina File">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
+                    <!-- Pulsante per eliminare il file (solo Admin e Tecnico) -->
+                    @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
+                    {
+                        <form method="post"
+                              asp-action="Delete"
+                              asp-controller="FileAttachments"
+                              asp-route-id="@attachment.Id"
+                              class="d-inline deleteAttachmentForm"
+                              data-attachment-id="@attachment.Id">
+                            @Html.AntiForgeryToken()
+                            <button type="submit"
+                                    class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Eliminare il file @attachment.FileName?');"
+                                    title="Elimina File">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    }
                 </td>
             </tr>
         }
@@ -70,51 +74,52 @@ else
     </p>
 }
 
-<hr/>
+<!-- Sezione Upload visibile solo a Admin e Tecnico -->
+@if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
+{
+    <hr/>
 
-<!-- Form di upload -->
-<form id="ajaxUploadForm" method="post" enctype="multipart/form-data" class="row g-3">
-    @Html.AntiForgeryToken()
+    <form id="ajaxUploadForm" method="post" enctype="multipart/form-data" class="row g-3">
+        @Html.AntiForgeryToken()
 
-    <!-- Campi hidden per ID dispositivo/intervento -->
-    <input type="hidden" name="deviceId" value="@Model.DeviceId"/>
-    @if (Model.InterventionId != null)
-    {
-        <input type="hidden" name="interventionId" value="@Model.InterventionId"/>
-    }
+        <input type="hidden" name="deviceId" value="@Model.DeviceId"/>
 
-    <div class="col-md-4">
-        <label for="documentType" class="form-label">Tipo Documento</label>
         @if (Model.InterventionId != null)
         {
-            <!-- Per gli interventi: dropdown fisso (puoi modificarlo se desideri) -->
-            <select name="documentType" id="documentType" class="form-select">
-                <option value="Verbale">Verbale intervento</option>
-            </select>
+            <input type="hidden" name="interventionId" value="@Model.InterventionId"/>
         }
-        else
-        {
-            <!-- Per i dispositivi: dropdown con opzioni -->
-            <select name="documentType" id="documentType" class="form-select">
-                <option value="Collaudo">Collaudo</option>
-                <option value="Certificazione">Certificazione</option>
-                <option value="Manuale">Manuale</option>
-                <option value="Altro">Altro</option>
-            </select>
-        }
-    </div>
 
-    <div class="col-md-8">
-        <label for="files" class="form-label">Seleziona file</label>
-        <input type="file" name="files" id="files" multiple class="form-control"/>
-    </div>
+        <div class="col-md-4">
+            <label for="documentType" class="form-label">Tipo Documento</label>
+            @if (Model.InterventionId != null)
+            {
+                <select name="documentType" id="documentType" class="form-select">
+                    <option value="Verbale">Verbale intervento</option>
+                </select>
+            }
+            else
+            {
+                <select name="documentType" id="documentType" class="form-select">
+                    <option value="Collaudo">Collaudo</option>
+                    <option value="Certificazione">Certificazione</option>
+                    <option value="Manuale">Manuale</option>
+                    <option value="Altro">Altro</option>
+                </select>
+            }
+        </div>
 
-    <div class="col-12">
-        <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
-            <i class="fas fa-upload"></i> Carica file
-        </button>
-    </div>
-</form>
+        <div class="col-md-8">
+            <label for="files" class="form-label">Seleziona file</label>
+            <input type="file" name="files" id="files" multiple class="form-control"/>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                <i class="fas fa-upload"></i> Carica file
+            </button>
+        </div>
+    </form>
+}
 
 @{
     // Registra gli script via helper per gestire l'upload e la cancellazione in AJAX.

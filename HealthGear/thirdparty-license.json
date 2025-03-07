@@ -1,0 +1,82 @@
+[
+  {
+    "Name": "ClosedXML",
+    "Version": "0.105.0-rc",
+    "License": "MIT"
+  },
+  {
+    "Name": "FastReport.OpenSource.Export.PdfSimple",
+    "Version": "2025.1.0",
+    "License": "MIT"
+  },
+  {
+    "Name": "HtmlSanitizer",
+    "Version": "9.1.878-beta",
+    "License": "MIT"
+  },
+  {
+    "Name": "MailKit",
+    "Version": "4.10.0",
+    "License": "MIT"
+  },
+  {
+    "Name": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+    "Version": "9.0.2",
+    "License": "Apache-2.0"
+  },
+  {
+    "Name": "Microsoft.AspNetCore.Identity.UI",
+    "Version": "9.0.2",
+    "License": "Apache-2.0"
+  },
+  {
+    "Name": "Microsoft.EntityFrameworkCore.Design",
+    "Version": "9.0.2",
+    "License": "Apache-2.0"
+  },
+  {
+    "Name": "Microsoft.EntityFrameworkCore.Sqlite.Core",
+    "Version": "9.0.2",
+    "License": "Apache-2.0"
+  },
+  {
+    "Name": "Microsoft.EntityFrameworkCore.SqlServer",
+    "Version": "9.0.2",
+    "License": "Apache-2.0"
+  },
+  {
+    "Name": "Microsoft.EntityFrameworkCore.Tools",
+    "Version": "9.0.2",
+    "License": "Apache-2.0"
+  },
+  {
+    "Name": "Microsoft.VisualStudio.Web.CodeGeneration.Design",
+    "Version": "9.0.0",
+    "License": "Apache-2.0"
+  },
+  {
+    "Name": "QuestPDF",
+    "Version": "2025.1.1",
+    "License": "MIT"
+  },
+  {
+    "Name": "SQLitePCLRaw.bundle_e_sqlite3",
+    "Version": "2.1.10",
+    "License": "MIT"
+  },
+  {
+    "Name": "X.PagedList",
+    "Version": "10.5.7",
+    "License": "MIT"
+  },
+  {
+    "Name": "X.PagedList.EF",
+    "Version": "10.5.7",
+    "License": "MIT"
+  },
+  {
+    "Name": "X.PagedList.Mvc.Core",
+    "Version": "10.5.7",
+    "License": "MIT"
+  }
+]
