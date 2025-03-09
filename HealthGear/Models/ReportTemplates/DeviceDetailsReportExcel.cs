@@ -1,9 +1,8 @@
 using ClosedXML.Excel;
-using HealthGear.Models;
 
-namespace HealthGear.Services.Reports.ReportTemplates;
+namespace HealthGear.Models.ReportTemplates;
 
-public static class DeviceDetailsExcel
+public static class DeviceDetailsReportExcel
 {
     public static byte[] Generate(Device device)
     {

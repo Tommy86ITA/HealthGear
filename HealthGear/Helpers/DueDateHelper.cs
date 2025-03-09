@@ -42,11 +42,14 @@ public static class DueDateHelper
     /// </summary>
     public static void UpdateNextDueDate(Device device, ApplicationDbContext context)
     {
+        Console.WriteLine($"🔧 Avvio aggiornamento scadenze per dispositivo {device.Id}");
+
         // Se il dispositivo è dismesso, non aggiornare le scadenze.
         if (device.Status == DeviceStatus.Dismesso)
-            // Puoi anche decidere di resettare le scadenze a null se preferisci,
-            // oppure lasciare le date già impostate per indicare l'ultimo intervento periodico.
+        {
+            Console.WriteLine($"❌ Dispositivo {device.Id} dismesso, nessun aggiornamento.");
             return;
+        }
 
         // Recupera le impostazioni di manutenzione
         var settings = context.MaintenanceSettings.FirstOrDefault();
@@ -63,6 +66,8 @@ public static class DueDateHelper
                         i.MaintenanceCategory == MaintenanceType.Preventive)
             .OrderByDescending(i => i.Date)
             .FirstOrDefault();
+
+        Console.WriteLine($"📅 Ultima manutenzione per {device.Id}: {lastMaintenance?.Date}");
 
         // ✅ Aggiorna la prossima scadenza della manutenzione
         device.NextMaintenanceDue = lastMaintenance != null
@@ -97,8 +102,14 @@ public static class DueDateHelper
                     ? settings.MammographyInspectionIntervalMonths
                     : settings.PhysicalInspectionIntervalMonths);
 
+        // 🔄 Logga il valore aggiornato
+        Console.WriteLine($"🔄 Nuova scadenza manutenzione: {device.NextMaintenanceDue}");
+        Console.WriteLine($"⚡ Nuova scadenza verifica elettrica: {device.NextElectricalTestDue}");
+        Console.WriteLine($"☢️ Nuova scadenza controllo fisico: {device.NextPhysicalInspectionDue}");
+
         // 💾 Salva le modifiche nel database
         context.Update(device);
         context.SaveChanges();
+        Console.WriteLine($"✅ Scadenze aggiornate per dispositivo {device.Id}");
     }
 }

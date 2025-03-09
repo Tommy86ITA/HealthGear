@@ -1,12 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using HealthGear.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace HealthGear.Services.Reports.ReportTemplates;
+namespace HealthGear.Models.ReportTemplates;
 
-public static class DeviceDetailsReport
+public static class DeviceDetailsReportPdf
 {
     public static byte[] Generate(Device device)
     {

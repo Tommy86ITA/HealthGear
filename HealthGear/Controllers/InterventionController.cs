@@ -147,6 +147,7 @@ public class InterventionController(ApplicationDbContext context) : Controller
                 : null;
 
         // ✅ Salvataggio nel database
+        DueDateHelper.UpdateNextDueDate(device, context);
         context.Interventions.Add(intervention);
         await context.SaveChangesAsync();
 

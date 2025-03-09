@@ -1,10 +1,9 @@
-using HealthGear.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 
-namespace HealthGear.Services.Reports.ReportTemplates;
+namespace HealthGear.Models.ReportTemplates;
 
-public static class DeviceListReport
+public static class DeviceListReportPdf
 {
     public static byte[] Generate(List<Device> devices, string statusFilter)
     {
@@ -39,7 +38,7 @@ public static class DeviceListReport
                     header.Item().AlignRight().Text("Made with HealthGear v. 1.0");
                     header.Item().LineHorizontal(2).LineColor(Colors.Blue.Darken2);
                 });
-
+                
                 // 📌 Contenuto del report
                 page.Content().Column(content =>
                 {
@@ -54,7 +53,7 @@ public static class DeviceListReport
                             .Where(i => i.Type == InterventionType.ElectricalTest)
                             .OrderByDescending(i => i.Date)
                             .FirstOrDefault();
-
+                        
                         var lastPhysicalInspection = device.Interventions
                             .Where(i => i.Type == InterventionType.PhysicalInspection)
                             .OrderByDescending(i => i.Date)
@@ -111,18 +110,21 @@ public static class DeviceListReport
                                     .Text($"{device.NextElectricalTestDue?.ToString("dd/MM/yyyy") ?? "N/A"}");
                             });
 
-                            // 📌 Ultimo controllo fisico e scadenza
-                            deviceSection.Item().Row(row =>
+                            // 📌 Ultimo controllo fisico e scadenza da mostrare solo per i dispositivi radiologici e RM
+                            if (device.RequiresPhysicalInspection)
                             {
-                                row.ConstantItem(10).Image("Assets/Icons/radiation.png");
-                                row.RelativeItem().Text(" Ultimo controllo fisico:").Bold();
-                                row.RelativeItem()
-                                    .Text($"{lastPhysicalInspection?.Date.ToString("dd/MM/yyyy") ?? "N/A"}");
-                                row.ConstantItem(10).Image("Assets/Icons/calendar-x-mark.png");
-                                row.RelativeItem().Text(" Scadenza:").Bold();
-                                row.RelativeItem()
-                                    .Text($"{device.NextPhysicalInspectionDue?.ToString("dd/MM/yyyy") ?? "N/A"}");
-                            });
+                                deviceSection.Item().Row(row =>
+                                {
+                                    row.ConstantItem(10).Image("Assets/Icons/radiation.png");
+                                    row.RelativeItem().Text(" Ultimo controllo fisico:").Bold();
+                                    row.RelativeItem()
+                                        .Text($"{lastPhysicalInspection?.Date.ToString("dd/MM/yyyy") ?? "N/A"}");
+                                    row.ConstantItem(10).Image("Assets/Icons/calendar-x-mark.png");
+                                    row.RelativeItem().Text(" Scadenza:").Bold();
+                                    row.RelativeItem()
+                                        .Text($"{device.NextPhysicalInspectionDue?.ToString("dd/MM/yyyy") ?? "N/A"}");
+                                });
+                            }
                         });
                     }
                 });

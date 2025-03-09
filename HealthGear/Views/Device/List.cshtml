@@ -169,4 +169,40 @@ else
             loadDevices(url);
         });
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let exportExcelBtn = document.getElementById("exportExcel");
+            let exportPdfBtn = document.getElementById("exportPdf");
+            let allDevicesRadio = document.getElementById("allDevices");
+            let activeDevicesRadio = document.getElementById("activeDevices");
+            let archivedDevicesRadio = document.getElementById("archivedDevices");
+
+            // Recuperiamo il numero di dispositivi dismessi dallo span nel tab
+            let archivedCount = parseInt((document.querySelector("a[href*='statusFilter=dismessi']")?.textContent.match(/\d+/) ?? ["0"])[0], 10);
+            if (archivedCount === 0) {
+                archivedDevicesRadio.disabled = true;
+                archivedDevicesRadio.parentElement.classList.add("text-muted"); // Opzionale: rende l'etichetta più chiara
+                activeDevicesRadio.checked = true; // Seleziona automaticamente "Dispositivi attivi"
+            }
+
+            function getSelectedFilter() {
+                return document.querySelector("input[name='reportFilter']:checked").value;
+            }
+
+            function generateReport(format) {
+                let statusFilter = getSelectedFilter();
+                let baseUrl = format === "pdf" ? "/Report/GenerateDeviceListPdf" : "/Report/GenerateDeviceListExcel";
+                window.location.href = `${baseUrl}?statusFilter=${statusFilter}`;
+            }
+
+            exportExcelBtn.addEventListener("click", function () {
+                generateReport("excel");
+            });
+
+            exportPdfBtn.addEventListener("click", function () {
+                generateReport("pdf");
+            });
+        });
+    </script>
 }
