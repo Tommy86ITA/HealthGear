@@ -38,7 +38,7 @@ public static class DeviceListReportPdf
                     header.Item().AlignRight().Text("Made with HealthGear v. 1.0");
                     header.Item().LineHorizontal(2).LineColor(Colors.Blue.Darken2);
                 });
-                
+
                 // 📌 Contenuto del report
                 page.Content().Column(content =>
                 {
@@ -53,7 +53,7 @@ public static class DeviceListReportPdf
                             .Where(i => i.Type == InterventionType.ElectricalTest)
                             .OrderByDescending(i => i.Date)
                             .FirstOrDefault();
-                        
+
                         var lastPhysicalInspection = device.Interventions
                             .Where(i => i.Type == InterventionType.PhysicalInspection)
                             .OrderByDescending(i => i.Date)
@@ -112,7 +112,6 @@ public static class DeviceListReportPdf
 
                             // 📌 Ultimo controllo fisico e scadenza da mostrare solo per i dispositivi radiologici e RM
                             if (device.RequiresPhysicalInspection)
-                            {
                                 deviceSection.Item().Row(row =>
                                 {
                                     row.ConstantItem(10).Image("Assets/Icons/radiation.png");
@@ -124,7 +123,6 @@ public static class DeviceListReportPdf
                                     row.RelativeItem()
                                         .Text($"{device.NextPhysicalInspectionDue?.ToString("dd/MM/yyyy") ?? "N/A"}");
                                 });
-                            }
                         });
                     }
                 });

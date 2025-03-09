@@ -35,13 +35,10 @@ public static class DbInitializer
 
                 var result = await roleManager.CreateAsync(new IdentityRole(roleName));
                 if (result.Succeeded)
-                {
                     Console.WriteLine($"✅ Ruolo creato: {roleName}");
-                }
                 else
-                {
-                    Console.WriteLine($"❌ Errore nella creazione del ruolo {roleName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-                }
+                    Console.WriteLine(
+                        $"❌ Errore nella creazione del ruolo {roleName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
 
             var adminConfig = new AdminConfig();
@@ -77,17 +74,15 @@ public static class DbInitializer
                     Console.WriteLine("✅ Utente Admin creato correttamente.");
                     var assignRole = await userManager.AddToRoleAsync(adminUser, adminConfig.Role);
                     if (assignRole.Succeeded)
-                    {
                         Console.WriteLine($"✅ Ruolo '{adminConfig.Role}' assegnato correttamente.");
-                    }
                     else
-                    {
-                        Console.WriteLine($"❌ Errore nell'assegnazione del ruolo: {string.Join(", ", assignRole.Errors.Select(e => e.Description))}");
-                    }
+                        Console.WriteLine(
+                            $"❌ Errore nell'assegnazione del ruolo: {string.Join(", ", assignRole.Errors.Select(e => e.Description))}");
                 }
                 else
                 {
-                    Console.WriteLine($"❌ Errore nella creazione dell'utente Admin: {string.Join(", ", createAdmin.Errors.Select(e => e.Description))}");
+                    Console.WriteLine(
+                        $"❌ Errore nella creazione dell'utente Admin: {string.Join(", ", createAdmin.Errors.Select(e => e.Description))}");
                 }
             }
             else

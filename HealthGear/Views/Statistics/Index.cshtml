@@ -1,0 +1,68 @@
+@model HealthGear.Models.ViewModels.StatisticsViewModel
+
+@{
+    ViewData["Title"] = "Dashboard Statistiche";
+}
+
+<h2><i class="fas fa-chart-bar"></i> Dashboard Statistiche</h2>
+
+<div class="row mt-3">
+    <!-- Sezione 1: Dati Generali -->
+    <div class="col-md-6">
+        <div class="card text-white bg-success mb-2">
+            <div class="card-header">Totale Interventi e Distribuzione</div>
+            <div class="card-body">
+                <h3 class="card-title">Totale interventi: @Model.TotalInterventions</h3>
+                <ul>
+                    <li>Manutenzioni preventive: @Model.PreventiveMaintenances.Sum(m => m.Value)</li>
+                    <li>Manutenzioni correttive: @Model.CorrectiveMaintenances.Sum(m => m.Value)</li>
+                    <li>Verifiche
+                        elettriche: @(Model.InterventionsByType.ContainsKey("ElectricalTest") ? Model.InterventionsByType["ElectricalTest"] : 0)</li>
+                    <li>Verifiche
+                        fisiche: @(Model.InterventionsByType.ContainsKey("PhysicalInspection") ? Model.InterventionsByType["PhysicalInspection"] : 0)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sezione 2: Analisi Manutenzioni Correttive -->
+    <div class="col-md-6">
+        <div class="card text-white bg-warning mb-2">
+            <div class="card-header">Dispositivi con più Manutenzioni Correttive</div>
+            <div class="card-body">
+                <ul>
+                    @foreach (var device in Model.TopDevicesWithCorrectiveMaintenance)
+                    {
+                        <li><strong>@device.DeviceName:</strong> @device.CorrectiveMaintenanceCount manutenzioni
+                            correttive
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sezione 3: Manutenzioni Correttive -->
+    <div class="col-md-6">
+        <div class="card text-white bg-danger mb-2">
+            <div class="card-header">Totale Manutenzioni Correttive</div>
+            <div class="card-body">
+                <h3 class="card-title">@Model.CorrectiveMaintenanceCount</h3>
+                <p class="card-text">Interventi non pianificati effettuati per risolvere guasti.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sezione 4: Statistiche sui Guasti -->
+    <div class="col-md-6">
+        <div class="card text-white bg-info mb-2">
+            <div class="card-header">Frequenza guasti (media)</div>
+            <div class="card-body">
+                <h3 class="card-title">@Model.AverageTimeBetweenCorrectiveMaintenances giorni</h3>
+                <p class="card-text">Tempo medio tra un guasto e l'altro.</p>
+            </div>
+        </div>
+    </div>
+</div>

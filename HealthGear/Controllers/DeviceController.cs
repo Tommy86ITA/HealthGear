@@ -117,10 +117,7 @@ public class DeviceController(
         if (device == null)
             return NotFound();
 
-        if (User.Identity?.IsAuthenticated ?? false)
-        {
-            return View("ViewDetails", device);
-        }
+        if (User.Identity?.IsAuthenticated ?? false) return View("ViewDetails", device);
         return View("PublicDetails", device);
     }
 
