@@ -143,16 +143,24 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var dbContext = services.GetRequiredService<ApplicationDbContext>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
 
     try
     {
-        dbContext.Database.Migrate();
+        logger.LogInformation("🔄 Verifica e creazione database se necessario...");
+        dbContext.Database.EnsureCreated(); // Garantisce che il database esista
+
+        logger.LogInformation("🔄 Avvio della migrazione del database...");
+        dbContext.Database.Migrate(); // Applica le migrazioni
+        logger.LogInformation("✅ Migrazione completata con successo!");
+
+        logger.LogInformation("🏁 Avvio del seeding dei dati...");
         await DbInitializer.SeedDataAsync(services, builder.Configuration);
+        logger.LogInformation("✅ Seeding completato con successo!");
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Errore durante l'inizializzazione del database.");
+        logger.LogError(ex, "❌ Errore durante l'inizializzazione del database.");
         throw;
     }
 }
@@ -160,4 +168,5 @@ using (var scope = app.Services.CreateScope())
 //
 // 12. Avvio applicazione
 //
+
 app.Run();

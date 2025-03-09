@@ -1,5 +1,5 @@
 using HealthGear.Models;
-using HealthGear.Services.Reports.ReportTemplates;
+using HealthGear.Models.ReportTemplates;
 
 namespace HealthGear.Services.Reports;
 
@@ -7,6 +7,6 @@ public class ExcelReportGenerator(DeadlineService deadlineService)
 {
     public Task<byte[]> GenerateDeviceListReportAsync(List<Device> devices)
     {
-        return Task.FromResult(DeviceListExcel.Generate(devices, deadlineService));
+        return Task.FromResult(DeviceListReportExcel.Generate(devices, deadlineService));
     }
 }

@@ -1,9 +1,9 @@
 using ClosedXML.Excel;
-using HealthGear.Models;
+using HealthGear.Services;
 
-namespace HealthGear.Services.Reports.ReportTemplates;
+namespace HealthGear.Models.ReportTemplates;
 
-public static class DeviceListExcel
+public static class DeviceListReportExcel
 {
     public static byte[] Generate(List<Device> devices, DeadlineService deadlineService)
     {

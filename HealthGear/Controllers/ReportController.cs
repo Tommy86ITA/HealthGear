@@ -1,7 +1,7 @@
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Models.ReportTemplates;
 using HealthGear.Services.Reports;
-using HealthGear.Services.Reports.ReportTemplates;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,7 +57,7 @@ public class ReportController(
 
         if (device == null) return NotFound();
 
-        var pdfBytes = DeviceDetailsReport.Generate(device);
+        var pdfBytes = DeviceDetailsReportPdf.Generate(device);
         return File(pdfBytes, "application/pdf", $"Report_{device.Name}.pdf");
     }
 
@@ -71,7 +71,7 @@ public class ReportController(
 
         if (device == null) return NotFound();
 
-        var fileContents = DeviceDetailsExcel.Generate(device);
+        var fileContents = DeviceDetailsReportExcel.Generate(device);
 
         return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"Report_{device.Name}.xlsx");

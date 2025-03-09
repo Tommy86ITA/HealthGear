@@ -133,6 +133,32 @@
     @await Html.PartialAsync("_InterventionHistoryPartial", Model)
 </div>
 
+<!-- Modal per la scelta del formato del report -->
+<div class="modal fade" id="exportReportModal" tabindex="-1" aria-labelledby="exportReportModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportReportModalLabel">
+                    <i class="fas fa-file-alt"></i> Scegli il formato del report
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>In quale formato vuoi scaricare il report?</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-success" id="exportExcelBtn">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button type="button" class="btn btn-danger" id="exportPdfBtn">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         // Funzione per caricare via AJAX la partial dello storico interventi
@@ -164,4 +190,46 @@
             loadInterventions(url);
         });
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Recupera l'elemento modal e crea l'istanza Bootstrap
+            let modalEl = document.getElementById("exportReportModal");
+            if (!modalEl) {
+                console.error("Modal 'exportReportModal' non trovato.");
+                return;
+            }
+            let reportModal = new bootstrap.Modal(modalEl);
+
+            // Recupera i pulsanti del modal
+            let exportExcelBtn = document.getElementById("exportExcelBtn");
+            let exportPdfBtn = document.getElementById("exportPdfBtn");
+
+            // Funzione per il download del report
+            function downloadReport(format) {
+                // Assicurati che ViewBag.DeviceId sia valorizzato
+                let deviceId = "@ViewBag.DeviceId";
+                if (format === "pdf") {
+                    window.location.href = `/Report/GenerateDeviceDetailPdf/${deviceId}`;
+                } else {
+                    window.location.href = `/Report/GenerateDeviceDetailExcel/${deviceId}`;
+                }
+                // Nascondi il modal
+                reportModal.hide();
+            }
+
+            // Collega gli eventi di click ai pulsanti
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener("click", function () {
+                    downloadReport("excel");
+                });
+            }
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener("click", function () {
+                    downloadReport("pdf");
+                });
+            }
+        });
+    </script>
+    
 }

@@ -25,50 +25,79 @@ public static class DbInitializer
 
         Console.WriteLine("🏁 Avvio seeding ruoli e utente admin di default...");
 
-        string[] roleNames = [Roles.Admin, Roles.Tecnico, Roles.Office];
-
-        foreach (var roleName in roleNames)
+        try
         {
-            if (await RoleExists(roleManager, roleName)) continue;
-            await roleManager.CreateAsync(new IdentityRole(roleName));
-            Console.WriteLine($"✅ Ruolo creato: {roleName}");
-        }
+            string[] roleNames = [Roles.Admin, Roles.Tecnico, Roles.Office];
 
-        var adminConfig = new AdminConfig();
-
-        configuration.GetSection("DefaultAdmin").Bind(adminConfig);
-        // Controlla che tutti i valori richiesti siano presenti nei User Secrets
-        if (string.IsNullOrWhiteSpace(adminConfig.UserName) ||
-            string.IsNullOrWhiteSpace(adminConfig.Email) ||
-            string.IsNullOrWhiteSpace(adminConfig.Password) ||
-            string.IsNullOrWhiteSpace(adminConfig.Role) ||
-            string.IsNullOrWhiteSpace(adminConfig.FullName))
-        {
-            Console.WriteLine("⚠️ Configurazione Admin incompleta nei User Secrets.");
-            return;
-        }
-
-        var adminUser = await userManager.FindByEmailAsync(adminConfig.Email);
-        if (adminUser == null)
-        {
-            adminUser = new ApplicationUser
+            foreach (var roleName in roleNames)
             {
-                UserName = adminConfig.UserName,
-                FullName = adminConfig.FullName,
-                Email = adminConfig.Email,
-                IsActive = true,
-                RegistrationDate = DateTime.UtcNow,
-                EmailConfirmed = true
-            };
+                if (await RoleExists(roleManager, roleName)) continue;
 
-            var createAdmin = await userManager.CreateAsync(adminUser, adminConfig.Password);
-            if (createAdmin.Succeeded)
-            {
-                Console.WriteLine("✅ Utente Admin creato correttamente.");
-                var assignRole = await userManager.AddToRoleAsync(adminUser, adminConfig.Role);
-                if (assignRole.Succeeded)
-                    Console.WriteLine($"✅ Ruolo '{adminConfig.Role}' assegnato correttamente.");
+                var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+                if (result.Succeeded)
+                {
+                    Console.WriteLine($"✅ Ruolo creato: {roleName}");
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Errore nella creazione del ruolo {roleName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                }
             }
+
+            var adminConfig = new AdminConfig();
+            configuration.GetSection("DefaultAdmin").Bind(adminConfig);
+
+            // Controlla che tutti i valori richiesti siano presenti nei User Secrets
+            if (string.IsNullOrWhiteSpace(adminConfig.UserName) ||
+                string.IsNullOrWhiteSpace(adminConfig.Email) ||
+                string.IsNullOrWhiteSpace(adminConfig.Password) ||
+                string.IsNullOrWhiteSpace(adminConfig.Role) ||
+                string.IsNullOrWhiteSpace(adminConfig.FullName))
+            {
+                Console.WriteLine("⚠️ Configurazione Admin incompleta nei User Secrets. Verifica i valori.");
+                return;
+            }
+
+            var adminUser = await userManager.FindByEmailAsync(adminConfig.Email);
+            if (adminUser == null)
+            {
+                adminUser = new ApplicationUser
+                {
+                    UserName = adminConfig.UserName,
+                    FullName = adminConfig.FullName,
+                    Email = adminConfig.Email,
+                    IsActive = true,
+                    RegistrationDate = DateTime.UtcNow,
+                    EmailConfirmed = true
+                };
+
+                var createAdmin = await userManager.CreateAsync(adminUser, adminConfig.Password);
+                if (createAdmin.Succeeded)
+                {
+                    Console.WriteLine("✅ Utente Admin creato correttamente.");
+                    var assignRole = await userManager.AddToRoleAsync(adminUser, adminConfig.Role);
+                    if (assignRole.Succeeded)
+                    {
+                        Console.WriteLine($"✅ Ruolo '{adminConfig.Role}' assegnato correttamente.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"❌ Errore nell'assegnazione del ruolo: {string.Join(", ", assignRole.Errors.Select(e => e.Description))}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Errore nella creazione dell'utente Admin: {string.Join(", ", createAdmin.Errors.Select(e => e.Description))}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("ℹ️ L'utente Admin esiste già.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Errore durante il seeding del database: {ex.Message}");
         }
     }
 
