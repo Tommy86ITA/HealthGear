@@ -105,6 +105,7 @@ public class DeviceController(
     // 📌 GET: /Device/Details/{id}
     [HttpGet("Details/{id:int}")]
     [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
+    [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
         var device = await context.Devices
@@ -116,7 +117,11 @@ public class DeviceController(
         if (device == null)
             return NotFound();
 
-        return View("ViewDetails", device);
+        if (User.Identity?.IsAuthenticated ?? false)
+        {
+            return View("ViewDetails", device);
+        }
+        return View("PublicDetails", device);
     }
 
     // GET: /Device/Add
@@ -284,5 +289,18 @@ public class DeviceController(
 
         TempData["SuccessMessage"] = "Dispositivo eliminato con successo!";
         return RedirectToAction("Index");
+    }
+
+    // 📌 GET: /Device/GenerateQr/{id}
+    // Genera il QR Code per il dispositivo con l'ID specificato
+    [HttpGet("GenerateQr/{id:int}")]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
+    public IActionResult GenerateQr(int id, [FromServices] QrCodeService qrCodeService)
+    {
+        var device = context.Devices.Find(id);
+        if (device == null) return NotFound();
+
+        var qrCodeImage = qrCodeService.GenerateQrCode(id);
+        return File(qrCodeImage, "image/png");
     }
 }

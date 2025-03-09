@@ -64,6 +64,11 @@
               "resolvedVersion": "9.0.0"
             },
             {
+              "id": "QRCoder",
+              "requestedVersion": "1.6.0",
+              "resolvedVersion": "1.6.0"
+            },
+            {
               "id": "QuestPDF",
               "requestedVersion": "2025.1.1",
               "resolvedVersion": "2025.1.1"

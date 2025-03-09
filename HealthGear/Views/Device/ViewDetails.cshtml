@@ -21,14 +21,19 @@
 <!-- 📌 Dati Generali -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4><i class="fas fa-box"></i> Dati Generali</h4>
-    <span class="badge bg-@(Model.Status switch
-                          {
-                              DeviceStatus.Attivo => "success",
-                              _ => "secondary"
-                          })"
-          style="font-size: 1.2em; padding: 0.5em 1em;">
-        @Model.Status.ToString()
-    </span>
+    <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary" onclick="showQrCodeModal()">
+            <i class="fas fa-qrcode"></i> QR Code
+        </button>
+        <span class="badge bg-@(Model.Status switch
+                              {
+                                  DeviceStatus.Attivo => "success",
+                                  _ => "secondary"
+                              })"
+              style="font-size: 1.2em; padding: 0.5em 1em;">
+            @Model.Status.ToString()
+        </span>
+    </div>
 </div>
 
 <hr/>
@@ -302,6 +307,29 @@ else
     </div>
 </div>
 
+
+<!-- Modal per QR Code -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrModalLabel">QR Code per accesso rapido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="qrImage" src="" alt="QR Code Dispositivo" class="img-fluid">
+                <br>
+                <a id="qrDownload" href="#" download="QRCode_Dispositivo.png" class="btn btn-primary mt-3">
+                    <i class="fas fa-download"></i> Scarica QR Code
+                </a>
+                <button onclick="printQrCode()" class="btn btn-secondary mt-3">
+                    <i class="fas fa-print"></i> Stampa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @*SEZIONE SCRIPT ----------------------------------------------------------------------------------------------------*@
 
 @section Scripts {
@@ -345,7 +373,8 @@ else
             let exportReportModal = new bootstrap.Modal(document.getElementById("exportReportModal"));
 
             function downloadReport(format) {
-                let deviceId = "@ViewBag.DeviceId";
+                let deviceId = "@Model.Id"; // Usa il Model.Id direttamente
+                console.log("Generazione report per ID dispositivo:", deviceId);
                 window.location.href = format === "pdf"
                     ? `/Report/GenerateDeviceDetailPdf/${deviceId}`
                     : `/Report/GenerateDeviceDetailExcel/${deviceId}`;
@@ -363,5 +392,42 @@ else
                 });
             }
         });
+    </script>
+
+
+    <!-- Script per gestire il modal QR Code -->
+    <script>
+        function showQrCodeModal() {
+            const qrUrl = "@Url.Action("GenerateQr", "Device", new { id = Model.Id })";
+            document.getElementById("qrImage").src = qrUrl;
+            document.getElementById("qrDownload").href = qrUrl;
+            const qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+            qrModal.show();
+        }
+    </script>
+
+    <script>
+        function printQrCode() {
+            const qrUrl = document.getElementById("qrImage").src;
+            const printWindow = window.open("", "_blank");
+            printWindow.document.write(`
+            <html lang="it">
+            <head>
+                <title>Stampa QR Code</title>
+                <style>
+                    body { text-align: center; margin: 50px; }
+                    img { max-width: 100%; height: auto; }
+                </style>
+            </head>
+            <body>
+                <img src="` + qrUrl + `" alt="QR Code">
+                <script>
+                    window.onload = function() { window.print(); window.close(); };
+                <\/script>
+            </body>
+            </html>
+        `);
+            printWindow.document.close();
+        }
     </script>
 }
