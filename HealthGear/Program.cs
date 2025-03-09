@@ -48,6 +48,7 @@ builder.Services.AddTransient<EmailSender>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<DeadlineService>();
 builder.Services.AddScoped<InventoryNumberService>();
+builder.Services.AddScoped<QrCodeService>();
 builder.Services.AddScoped<PdfReportGenerator>();
 builder.Services.AddScoped<ExcelReportGenerator>();
 builder.Services.AddSingleton<TemporaryPasswordCacheService>();
@@ -56,6 +57,7 @@ builder.Services.AddSingleton<ThirdPartyService>();
 //
 // 3. Configurazione servizi MVC, Razor Pages e Session/TempData
 //
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 builder.Services.AddControllersWithViews()
     .AddSessionStateTempDataProvider();

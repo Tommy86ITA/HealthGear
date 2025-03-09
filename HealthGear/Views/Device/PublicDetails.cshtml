@@ -1,0 +1,49 @@
+
+@model HealthGear.Models.Device
+
+@{
+    ViewData["Title"] = "Dettagli Dispositivo";
+}
+
+<h2><i class="fas fa-info-circle"></i> Dettagli Dispositivo</h2>
+
+<table class="table">
+    <tr>
+        <th><i class="fas fa-industry"></i> Marca</th>
+        <td>@Model.Brand</td>
+    </tr>
+    <tr>
+        <th><i class="fas fa-cogs"></i> Modello</th>
+        <td>@Model.Model</td>
+    </tr>
+    <tr>
+        <th><i class="fas fa-barcode"></i> Numero di Inventario</th>
+        <td>@Model.InventoryNumber</td>
+    </tr>
+    @if (!string.IsNullOrEmpty(Model.SerialNumber))
+    {
+        <tr>
+            <th><i class="fas fa-hashtag"></i> Numero di Serie</th>
+            <td>@Model.SerialNumber</td>
+        </tr>
+    }
+    <tr>
+        <th><i class="fas fa-wrench"></i> Prossima Manutenzione</th>
+        <td>@(Model.NextMaintenanceDue?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+    </tr>
+    <tr>
+        <th><i class="fas fa-bolt"></i> Prossima Verifica Elettrica</th>
+        <td>@(Model.NextElectricalTestDue?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+    </tr>
+    @if (Model.RequiresPhysicalInspection)
+    {
+        <tr>
+            <th><i class="fas fa-radiation"></i> Prossima Verifica Fisica</th>
+            <td>@(Model.NextPhysicalInspectionDue?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+        </tr>
+    }
+</table>
+
+<div class="alert alert-info">
+    ⚠️ Per visualizzare ulteriori dettagli e gestire il dispositivo, <a href="/Identity/Account/Login">effettua il login</a>.
+</div>
