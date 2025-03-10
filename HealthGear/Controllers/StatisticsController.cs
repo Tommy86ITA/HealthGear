@@ -1,4 +1,5 @@
 using HealthGear.Data;
+using HealthGear.Models;
 using HealthGear.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,50 +16,73 @@ public class StatisticsController : Controller
     }
 
     /// <summary>
-    ///     Mostra la dashboard delle statistiche generali degli interventi
+    /// Mostra la dashboard delle statistiche generali degli interventi.
     /// </summary>
     public async Task<IActionResult> Index()
     {
-        var totalInterventions = await _context.Interventions.CountAsync();
+        var interventions = await _context.Interventions
+            .Include(i => i.Device) // Assicura che il dispositivo sia caricato
+            .ToListAsync();
 
-        var interventionsByType = await _context.Interventions
+        // Debug: Verifica se i dati dei dispositivi sono presenti
+        foreach (var intervention in interventions)
+        {
+            if (intervention.Device != null)
+            {
+                Console.WriteLine($"DEBUG: Device ID: {intervention.Device.Id}, Brand: {intervention.Device.Brand}, Model: {intervention.Device.Model}, Name: {intervention.Device.Name}");
+            }
+        }
+
+        var totalInterventions = interventions.Count;
+
+        var interventionsByType = interventions
             .GroupBy(i => i.Type)
-            .Select(g => new { Type = g.Key.ToString(), Count = g.Count() }) // Conversione esplicita di enum
-            .ToDictionaryAsync(g => g.Type, g => g.Count);
+            .ToDictionary(g => g.Key.ToString(), g => g.Count());
 
-        var topDevices = await _context.Interventions
-            .Where(i => i.Device != null) // Assicura che Device non sia null
-            .GroupBy(i => i.Device!.Name)
+        var correctiveInterventions = interventions
+            .Where(i => i.Type == InterventionType.Maintenance && i.MaintenanceCategory == MaintenanceType.Corrective)
+            .ToList();
+
+        var topDevices = correctiveInterventions
+            .Where(i => i.Device != null)
+            .GroupBy(i => new { i.Device!.Id, i.Device!.Name, i.Device!.Brand, i.Device!.Model }) // Raggruppa per ID, Nome, Brand e Model
             .OrderByDescending(g => g.Count())
             .Take(5)
-            .Select(g => new DeviceInterventionCount
+            .Select(g => new StatisticsViewModel.DeviceCorrectiveMaintenanceStats
             {
-                DeviceName = g.Key, // Se null, usa valore predefinito
-                InterventionCount = g.Count()
+                DeviceId = g.Key.Id, // Adesso otteniamo l'ID corretto del dispositivo
+                DeviceName = g.Key.Name ?? "Sconosciuto",
+                DeviceBrand = g.Key.Brand ?? "Sconosciuto",
+                DeviceModel = g.Key.Model ?? "Sconosciuto",
+                CorrectiveMaintenanceCount = g.Count()
             })
-            .ToListAsync();
+            .ToList();
 
-        var recentInterventions = await _context.Interventions
+        // Debug: Controlla se i dati vengono passati correttamente al ViewModel
+        foreach (var device in topDevices)
+        {
+            Console.WriteLine($"DEBUG: ViewModel - ID: {device.DeviceId}, Brand: {device.DeviceBrand}, Model: {device.DeviceModel}, Name: {device.DeviceName}");
+        }
+
+        var recentInterventions = interventions
             .OrderByDescending(i => i.Date)
             .Take(10)
-            .Select(i => new InterventionSummary
+            .Select(i => new StatisticsViewModel.InterventionSummary
             {
                 Date = i.Date,
-                DeviceName = i.Device != null ? i.Device.Name : "Sconosciuto", // Gestione esplicita di null
-                Type = i.Type.ToString(), // Conversione enum in stringa
+                DeviceName = i.Device?.Name ?? "Sconosciuto",
+                Type = i.Type.ToString(),
                 Status = i.Passed.HasValue
                     ? i.Passed.Value ? "Superato" : "Non Superato"
-                    : "N/D" // Gestione bool nullable
+                    : "N/D"
             })
-            .ToListAsync();
-
-        var interventions = await _context.Interventions.ToListAsync();
+            .ToList();
 
         var viewModel = new StatisticsViewModel(interventions)
         {
             TotalInterventions = totalInterventions,
             InterventionsByType = interventionsByType,
-            TopDevicesByInterventions = topDevices,
+            DevicesWithMostCorrectiveMaintenances = topDevices,
             RecentInterventions = recentInterventions
         };
 
