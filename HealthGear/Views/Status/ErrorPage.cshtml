@@ -1,0 +1,17 @@
+@{
+    var errorIcon = ViewBag.ErrorCode switch
+    {
+        "403" => "fas fa-ban", // 🚫 Accesso Negato
+        "404" => "fas fa-search", // 🔍 Pagina Non Trovata
+        "500" => "fas fa-exclamation-triangle", // ⚠ Errore Server
+        _ => "fas fa-exclamation-circle" // ❗ Altro Errore
+    };
+}
+
+<div class="container mt-5 text-center">
+    <h1 class="text-danger">
+        <i class="@errorIcon"></i> Errore @ViewBag.ErrorCode
+    </h1>
+    <p class="lead">@ViewBag.ErrorMessage</p>
+    <a class="btn btn-primary" href="/">Torna alla Home</a>
+</div>

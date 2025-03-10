@@ -107,6 +107,28 @@ public class Device
                 .FirstOrDefault()
             : null;
 
+    /// <summary>
+    ///     Restituisce la data dell'ultima verifica elettrica, se disponibile.
+    /// </summary>
+    [NotMapped]
+    public DateTime? LastElectricalTest =>
+        Interventions?
+            .Where(i => i.Type == InterventionType.ElectricalTest)
+            .OrderByDescending(i => i.Date)
+            .Select(i => i.Date)
+            .FirstOrDefault();
+
+    /// <summary>
+    ///     Restituisce la data dell'ultima verifica fisica, se disponibile.
+    /// </summary>
+    [NotMapped]
+    public DateTime? LastPhysicalInspection =>
+        Interventions?
+            .Where(i => i.Type == InterventionType.PhysicalInspection)
+            .OrderByDescending(i => i.Date)
+            .Select(i => i.Date)
+            .FirstOrDefault();
+
     // 📌 SCADENZE PROGRAMMATE
 
     /// <summary>Prossima scadenza della manutenzione preventiva.</summary>

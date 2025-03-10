@@ -2,11 +2,13 @@ using HealthGear.Data;
 using HealthGear.Models;
 using HealthGear.Models.ReportTemplates;
 using HealthGear.Services.Reports;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Controllers;
 
+[Authorize]
 [Route("Report")]
 public class ReportController(
     ApplicationDbContext context,
@@ -75,5 +77,20 @@ public class ReportController(
 
         return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"Report_{device.Name}.xlsx");
+    }
+
+    // 📌 Genera il report riepilogativo in PDF
+    [HttpGet("GenerateSummaryReportPdf")]
+    public async Task<IActionResult> GenerateSummaryReportPdf()
+    {
+        var devices = await context.Devices
+            .Include(d => d.Interventions)
+            .ToListAsync();
+
+        if (!devices.Any())
+            return NotFound("Nessun dispositivo trovato per generare il report.");
+
+        var pdfBytes = SummaryReportPdf.Generate(devices);
+        return File(pdfBytes, "application/pdf", "Report_Riepilogativo.pdf");
     }
 }

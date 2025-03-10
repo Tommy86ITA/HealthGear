@@ -4,6 +4,15 @@
 
 <h1 class="mb-4">Benvenuto in HealthGear!</h1>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+
 <div class="row mb-4">
     <div class="col-md-6">
         <div class="card text-white bg-primary mb-3">
@@ -11,7 +20,8 @@
             <div class="card-body">
                 <h5 class="card-title">@Model.NumberOfDevices dispositivi registrati</h5>
                 <p class="card-text">Gestisci i dispositivi presenti nel sistema.</p>
-                <a href="/Device" class="btn btn-light">Vai ai dispositivi</a>
+                <a href="/Device" class="btn btn-light" title="Visualizza e gestisci i dispositivi registrati">Vai ai
+                    dispositivi</a>
             </div>
         </div>
     </div>
@@ -21,7 +31,8 @@
             <div class="card-body">
                 <h5 class="card-title">@Model.NumberOfInterventions interventi registrati</h5>
                 <p class="card-text">Analizza e consulta le statistiche sugli interventi.</p>
-                <a href="/Statistics/Index" class="btn btn-light">Vai alle statistiche</a>
+                <a href="/Statistics/Index" class="btn btn-light" title="Consulta le statistiche sugli interventi">Vai
+                    alle statistiche</a>
             </div>
         </div>
     </div>
@@ -43,7 +54,8 @@
             {
                 <tr>
                     <td>
-                        <a asp-action="Details" asp-controller="Device" asp-route-id="@device.Id">
+                        <a asp-action="Details" asp-controller="Device" asp-route-id="@device.Id"
+                           title='Clicca per visualizzare i dettagli del dispositivo'>
                             @device.Brand @device.Model (@device.Name)
                         </a>
                     </td>
@@ -59,12 +71,12 @@
                                 if (device.NextMaintenanceDue.Value < today)
                                 {
                                     // Scaduto
-                                    scadenze.Add($"<span class='text-danger'><i class='fas fa-exclamation-circle'></i> Manutenzione Preventiva scaduta ({device.NextMaintenanceDue.Value:dd/MM/yyyy})</span>");
+                                    scadenze.Add($"<span class='text-danger' title='Manutenzione preventiva scaduta'><i class='fas fa-exclamation-circle'></i> Manutenzione Preventiva scaduta ({device.NextMaintenanceDue.Value:dd/MM/yyyy})</span>");
                                 }
                                 else if (device.NextMaintenanceDue.Value <= threshold)
                                 {
                                     // In scadenza
-                                    scadenze.Add($"<span class='text-warning'><i class='fas fa-exclamation-triangle'></i> Manutenzione Preventiva in scadenza ({device.NextMaintenanceDue.Value:dd/MM/yyyy})</span>");
+                                    scadenze.Add($"<span class='text-warning' title='Manutenzione preventiva in scadenza'><i class='fas fa-exclamation-triangle'></i> Manutenzione Preventiva in scadenza ({device.NextMaintenanceDue.Value:dd/MM/yyyy})</span>");
                                 }
                             }
 
@@ -73,11 +85,11 @@
                             {
                                 if (device.NextElectricalTestDue.Value < today)
                                 {
-                                    scadenze.Add($"<span class='text-danger'><i class='fas fa-exclamation-circle'></i> Verifica Elettrica scaduta ({device.NextElectricalTestDue.Value:dd/MM/yyyy})</span>");
+                                    scadenze.Add($"<span class='text-danger' title='Verifica elettrica scaduta'><i class='fas fa-exclamation-circle'></i> Verifica Elettrica scaduta ({device.NextElectricalTestDue.Value:dd/MM/yyyy})</span>");
                                 }
                                 else if (device.NextElectricalTestDue.Value <= threshold)
                                 {
-                                    scadenze.Add($"<span class='text-warning'><i class='fas fa-exclamation-triangle'></i> Verifica Elettrica in scadenza ({device.NextElectricalTestDue.Value:dd/MM/yyyy})</span>");
+                                    scadenze.Add($"<span class='text-warning' title='Verifica elettrica in scadenza'><i class='fas fa-exclamation-triangle'></i> Verifica Elettrica in scadenza ({device.NextElectricalTestDue.Value:dd/MM/yyyy})</span>");
                                 }
                             }
 
@@ -86,11 +98,11 @@
                             {
                                 if (device.NextPhysicalInspectionDue.Value < today)
                                 {
-                                    scadenze.Add($"<span class='text-danger'><i class='fas fa-exclamation-circle'></i> Verifica Fisica scaduta ({device.NextPhysicalInspectionDue.Value:dd/MM/yyyy})</span>");
+                                    scadenze.Add($"<span class='text-danger' title='Verifica fisica scaduta'><i class='fas fa-exclamation-circle'></i> Verifica Fisica scaduta ({device.NextPhysicalInspectionDue.Value:dd/MM/yyyy})</span>");
                                 }
                                 else if (device.NextPhysicalInspectionDue.Value <= threshold)
                                 {
-                                    scadenze.Add($"<span class='text-warning'><i class='fas fa-exclamation-triangle'></i> Verifica Fisica in scadenza ({device.NextPhysicalInspectionDue.Value:dd/MM/yyyy})</span>");
+                                    scadenze.Add($"<span class='text-warning' title='Verifica fisica in scadenza'><i class='fas fa-exclamation-triangle'></i> Verifica Fisica in scadenza ({device.NextPhysicalInspectionDue.Value:dd/MM/yyyy})</span>");
                                 }
                             }
 
@@ -141,7 +153,8 @@ else
                     <td>
                         <a asp-action="Details"
                            asp-controller="Device"
-                           asp-route-id="@intervention.Device?.Id">
+                           asp-route-id="@intervention.Device?.Id"
+                           title='Clicca per visualizzare i dettagli del dispositivo'>
                             @intervention.Device!.Brand @intervention.Device.Model (@intervention.Device?.Name)
                         </a>
                     </td>
@@ -177,7 +190,7 @@ else
                                asp-controller="Intervention"
                                asp-route-id="@intervention.Id"
                                class="btn btn-info btn-sm"
-                               title="Dettagli Intervento">
+                               title="Visualizza i dettagli dell'intervento">
                                 <i class="fas fa-eye"></i>
                             </a>
                         </div>

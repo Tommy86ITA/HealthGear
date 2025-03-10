@@ -31,7 +31,8 @@
     <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom shadow-sm mb-3">
         <div class="container-fluid">
             <!-- Brand: Link alla Home -->
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Home">HealthGear</a>
+            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Home" data-bs-toggle="tooltip"
+               title="Torna alla Dashboard">HealthGear</a>
             <!-- Pulsante per il collapse della navbar sui dispositivi mobili -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,13 +43,29 @@
                 <ul class="navbar-nav flex-grow-1">
                     @if (User.Identity is { IsAuthenticated: true })
                     {
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Home">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Device" asp-action="Index">
-                                Gestione Dispositivi
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="deviceManagementDropdown"
+                               role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-gears"></i> Gestione dispositivi
                             </a>
+                            <ul class="dropdown-menu" aria-labelledby="deviceManagementDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Device" asp-action="Index"
+                                       data-bs-toggle="tooltip"
+                                       title="Visualizza l'elenco completo dei dispositivi registrati nel sistema">
+                                        <i class="fas fa-list"></i> Elenco dispositivi
+                                    </a>
+                                </li>
+                                <!-- Nuovo pulsante per il report -->
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Report"
+                                       asp-action="GenerateSummaryReportPdf" data-bs-toggle="tooltip"
+                                       title="Scarica un report riassuntivo con le scadenze e i dettagli principali dei dispositivi">
+                                        <i class="fas fa-file-alt"></i> Genera Report Riassuntivo
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     }
                     @if (User.IsInRole(Roles.Admin))
@@ -60,12 +77,16 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                                 <li>
-                                    <a class="dropdown-item" asp-controller="Settings" asp-action="Index">
+                                    <a class="dropdown-item" asp-controller="Settings" asp-action="Index"
+                                       data-bs-toggle="tooltip"
+                                       title="Configura le impostazioni generali dell'applicazione">
                                         <i class="fas fa-sliders-h"></i> Impostazioni
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index">
+                                    <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"
+                                       data-bs-toggle="tooltip"
+                                       title="Gestisci gli account utente e i permessi nel sistema">
                                         <i class="fas fa-users-cog"></i> Gestione Utenti
                                     </a>
                                 </li>
@@ -149,6 +170,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="@Url.Content("~/js/site.js")" asp-append-version="true"></script>
+
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>
+
 @*<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <script
     src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.it.min.js"></script>*@

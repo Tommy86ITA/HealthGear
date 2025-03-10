@@ -15,9 +15,7 @@ Batteries.Init();
 
 var builder = WebApplication.CreateBuilder(args);
 
-//
-// 1. Configurazione DbContext e Identity
-//
+// 1. Configurazione del database e Identity per la gestione degli utenti
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -38,9 +36,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddDefaultTokenProviders()
     .AddErrorDescriber<ItalianIdentityErrorDescriber>();
 
-//
 // 2. Registrazione dei servizi applicativi custom
-//
 builder.Services.AddSingleton<PasswordGenerator>();
 builder.Services.AddScoped<PasswordValidator>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -54,41 +50,37 @@ builder.Services.AddScoped<ExcelReportGenerator>();
 builder.Services.AddSingleton<TemporaryPasswordCacheService>();
 builder.Services.AddSingleton<ThirdPartyService>();
 
-//
-// 3. Configurazione servizi MVC, Razor Pages e Session/TempData
-//
+// 3. Configurazione dei servizi MVC, Razor Pages e gestione della sessione
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
-builder.Services.AddControllersWithViews()
-    .AddSessionStateTempDataProvider();
+builder.Services.AddControllersWithViews().AddSessionStateTempDataProvider();
 builder.Services.AddRazorPages();
 
 Settings.License = LicenseType.Community;
 
-//
-// 4. Configurazione logging (utile per debug su console di Rider o terminale)
-//
+// 4. Configurazione del logging per la console di debug
 builder.Services.AddLogging(logging =>
 {
     logging.ClearProviders();
     logging.AddConsole();
 });
 
-//
-// 5. Costruzione applicazione
-//
+// 10. Configurazione dei percorsi di autenticazione e accesso negato
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/StatusPages/AccessDenied";
+});
+
+// 5. Creazione dell'applicazione
 var app = builder.Build();
 
-//
-// 6. Configurazione Cultura (italiana)
-//
+// 6. Impostazione della cultura italiana come predefinita
 var cultureInfo = new CultureInfo("it-IT");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-//
-// 7. Middleware per ambienti di sviluppo/produzione
-//
+// 7. Configurazione middleware per ambienti di sviluppo e produzione
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -99,35 +91,41 @@ else
     app.UseHsts();
 }
 
+// 8. Configurazione globale dei middleware
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
-//
-// 8. Log globale di debug per intercettare TUTTE le richieste
-//
-/*app.Use(async (context, next) =>
-{
-    Console.WriteLine($"[DEBUG] Richiesta: {context.Request.Method} {context.Request.Path}");
-    await next();
-});*/
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 
-//
-// 9. Configurazione rotte principali
-//
+// 9. Gestione delle pagine di errore (403 Accesso Negato)
+app.UseStatusCodePages(async context =>
+{
+    var response = context.HttpContext.Response;
+    switch (response.StatusCode)
+    {
+        case 403:
+            response.Redirect("/StatusPages/AccessDenied");
+            break;
+        case 404:
+            response.Redirect("/StatusPages/NotFound");
+            break;
+        default:
+            response.Redirect("/StatusPages/Error");
+            break;
+    }
+
+    await Task.CompletedTask;
+});
+
+// 11. Configurazione delle rotte principali
 app.MapControllerRoute(
     "default",
     "{controller=Home}/{action=Home}/{id?}");
-
 app.MapRazorPages();
 
-//
-// 10. Redirect di default (se l'utente è autenticato, va a /Home/Home, altrimenti al login)
-//
+// 12. Redirect automatico all'accesso
 app.MapGet("/", async context =>
 {
     if (context.User.Identity?.IsAuthenticated ?? false)
@@ -138,9 +136,7 @@ app.MapGet("/", async context =>
     await Task.CompletedTask;
 });
 
-//
-// 11. Inizializzazione database e seeding
-//
+// 13. Inizializzazione del database e seeding dei dati
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -167,8 +163,5 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-//
-// 12. Avvio applicazione
-//
-
+// 14. Avvio dell'applicazione
 app.Run();
