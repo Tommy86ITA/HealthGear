@@ -105,7 +105,6 @@ public class DeviceController(
     // 📌 GET: /Device/Details/{id}
     [HttpGet("Details/{id:int}")]
     [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
-    [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
         var device = await context.Devices
@@ -241,45 +240,58 @@ public class DeviceController(
     [HttpPost("Delete/{id:int}")]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.Admin)]
-    public async Task<IActionResult> Delete(int id, string confirmName)
+    public async Task<IActionResult> Delete(int id, string confirmName, [FromServices] ILogger<DeviceController> logger)
     {
-        var device = await context.Devices.Include(d => d.Interventions).Include(device => device.FileAttachments)
+        var device = await context.Devices
+            .Include(d => d.Interventions)
+            .Include(d => d.FileAttachments)
             .FirstOrDefaultAsync(d => d.Id == id);
-        if (device == null) return NotFound();
 
-        if (device.Interventions.Count > 0)
+        if (device == null)
+        {
+            TempData["ErrorMessage"] = "Il dispositivo non esiste o è già stato eliminato.";
+            return RedirectToAction("Index");
+        }
+
+        // Controlla se il dispositivo ha interventi registrati
+        if (device.Interventions.Any())
         {
             TempData["ErrorMessage"] = "Il dispositivo ha interventi registrati e non può essere eliminato.";
             return RedirectToAction("Details", new { id });
         }
 
+        // Controllo del nome per confermare l'eliminazione
         if (!string.Equals(confirmName, device.Name, StringComparison.Ordinal))
         {
             TempData["ErrorMessage"] = "Il nome del dispositivo non corrisponde. Riprova.";
             return RedirectToAction("Details", new { id });
         }
 
-        // ✅ Eliminazione definitiva del dispositivo
-        // Rimuovi i record dei file dal database
-
+        // ✅ Eliminazione file allegati
         foreach (var attachment in device.FileAttachments)
         {
             var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
-            if (System.IO.File.Exists(filePath))
-                try
+            try
+            {
+                if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
-                    Console.WriteLine($"File eliminato: {filePath}");
+                    logger.LogInformation($"File eliminato con successo: {filePath}");
                 }
-                catch (Exception ex)
+                else
                 {
-                    // Log dell'errore; potresti anche decidere di interrompere l'operazione se è critico
-                    await Console.Error.WriteLineAsync($"Errore eliminando file {attachment.FileName}: {ex.Message}");
+                    logger.LogWarning($"Tentativo di eliminazione fallito: file non trovato ({filePath})");
                 }
-            else
-                Console.WriteLine($"File non trovato: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Errore eliminando file {attachment.FileName}: {ex.Message}");
+                TempData["ErrorMessage"] = $"Errore eliminando file {attachment.FileName}.";
+                return RedirectToAction("Details", new { id });
+            }
         }
 
+        // Rimuove i record dei file e il dispositivo dal database
         context.FileAttachments.RemoveRange(device.FileAttachments);
         context.Devices.Remove(device);
         await context.SaveChangesAsync();
@@ -291,7 +303,7 @@ public class DeviceController(
     // 📌 GET: /Device/GenerateQr/{id}
     // Genera il QR Code per il dispositivo con l'ID specificato
     [HttpGet("GenerateQr/{id:int}")]
-    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
     public IActionResult GenerateQr(int id, [FromServices] QrCodeService qrCodeService)
     {
         var device = context.Devices.Find(id);

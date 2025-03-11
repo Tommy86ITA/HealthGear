@@ -35,7 +35,10 @@
 
         <form method="post" class="mt-3">
             <input type="hidden" asp-for="Email"/>
-            <input type="hidden" asp-for="Token"/>
+            @if (User.Identity is { IsAuthenticated: false })
+            {
+                <input type="hidden" asp-for="Token"/>
+            }
 
             <div class="mb-3">
                 <label for="NewPassword" class="form-label">Nuova Password</label>

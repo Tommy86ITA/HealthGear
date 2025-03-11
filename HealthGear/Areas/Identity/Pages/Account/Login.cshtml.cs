@@ -12,17 +12,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace HealthGear.Areas.Identity.Pages.Account;
 
-public class LoginModel : PageModel
+public class LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+    : PageModel
 {
-    private readonly ILogger<LoginModel> _logger;
-    private readonly SignInManager<ApplicationUser> _signInManager;
-
-    public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
-    {
-        _signInManager = signInManager;
-        _logger = logger;
-    }
-
     /// <summary>
     ///     Modello dei dati di input per il login.
     /// </summary>
@@ -54,7 +46,7 @@ public class LoginModel : PageModel
         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
         // Carica i provider di autenticazione esterni (se configurati)
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
         ReturnUrl = returnUrl;
     }
@@ -66,20 +58,35 @@ public class LoginModel : PageModel
     {
         returnUrl ??= Url.Content("~/");
 
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
         if (!ModelState.IsValid) return Page();
-        // Prova il login usando UserName anziché Email
-        var result =
-            await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, false);
+
+        var user = await signInManager.UserManager.FindByNameAsync(Input.UserName);
+        if (user == null)
+        {
+            ModelState.AddModelError(string.Empty, "Nome utente o password errati.");
+            return Page();
+        }
+
+        var result = await signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, false);
+
         if (result.Succeeded)
         {
-            _logger.LogInformation("User logged in.");
-            // Recupera l'utente e aggiorna LastLoginDate
-            var user = await _signInManager.UserManager.FindByNameAsync(Input.UserName);
-            if (user == null) return LocalRedirect(returnUrl);
+            logger.LogInformation("User {UserName} logged in.", user.UserName);
+            logger.LogInformation($"[DEBUG] MustChangePassword per {user.UserName}: {user.MustChangePassword}");
+
+            if (user.MustChangePassword)
+            {
+                //_logger.LogInformation("User {UserName} is required to change password on first login.");
+                logger.LogInformation("Reindirizzamento a FirstLogin per userId: {UserId}", user.Id);
+                return RedirectToAction("Index", "FirstLogin", new { userId = user.Id });
+            }
+
             user.LastLoginDate = DateTime.UtcNow;
-            await _signInManager.UserManager.UpdateAsync(user);
+            await signInManager.UserManager.UpdateAsync(user);
+
+            logger.LogInformation("Reindirizzamento a {ReturnUrl}", returnUrl);
             return LocalRedirect(returnUrl);
         }
 
@@ -88,13 +95,11 @@ public class LoginModel : PageModel
 
         if (result.IsLockedOut)
         {
-            _logger.LogWarning("User account locked out.");
+            logger.LogWarning("User account locked out.");
             return RedirectToPage("./Lockout");
         }
 
         ModelState.AddModelError(string.Empty, "Tentativo di accesso non valido.");
-
-        // Se qualcosa è andato storto, rispedisce l'utente alla pagina con i messaggi di errore.
         return Page();
     }
 

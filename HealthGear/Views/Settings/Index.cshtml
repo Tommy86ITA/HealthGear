@@ -1,0 +1,81 @@
+@model HealthGear.Models.Settings.MaintenanceSettings
+
+@{
+    ViewData["Title"] = "Impostazioni";
+}
+
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4"><i class="fas fa-cogs"></i> Configurazione Periodicità Manutenzioni</h2>
+
+    <form asp-action="Index" method="post" class="needs-validation" novalidate>
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label asp-for="MaintenanceIntervalMonths" class="form-label fw-bold">Intervallo Manutenzione (mesi)</label>
+                    <input asp-for="MaintenanceIntervalMonths" class="form-control" placeholder="Es. 12" required/>
+                    <span asp-validation-for="MaintenanceIntervalMonths" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label asp-for="ElectricalTestIntervalMonths" class="form-label fw-bold">Intervallo Verifica Elettrica (mesi)</label>
+                    <input asp-for="ElectricalTestIntervalMonths" class="form-control" placeholder="Es. 24" required/>
+                    <span asp-validation-for="ElectricalTestIntervalMonths" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label asp-for="PhysicalInspectionIntervalMonths" class="form-label fw-bold">Intervallo Controllo Fisico (mesi)</label>
+                    <input asp-for="PhysicalInspectionIntervalMonths" class="form-control" placeholder="Es. 12" required/>
+                    <span asp-validation-for="PhysicalInspectionIntervalMonths" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label asp-for="MammographyInspectionIntervalMonths" class="form-label fw-bold">Intervallo Controllo Fisico Mammografo (mesi)</label>
+                    <input asp-for="MammographyInspectionIntervalMonths" class="form-control" placeholder="Es. 6" required/>
+                    <span asp-validation-for="MammographyInspectionIntervalMonths" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> Salva Impostazioni</button>
+            <a href="@Url.Action("Home", "Home")" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Torna alla Dashboard
+            </a>
+        </div>
+    </form>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3 fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Validazione lato client con Bootstrap
+        (function () {
+            'use strict';
+            window.addEventListener('load', function () {
+                const forms = document.getElementsByClassName('needs-validation');
+                Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+    </script>
+}

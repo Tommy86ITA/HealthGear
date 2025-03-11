@@ -1,7 +1,9 @@
 #region
 
+using HealthGear.Constants;
 using HealthGear.Data;
 using HealthGear.Models.Settings;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Controllers;
 
+[Authorize(Roles = Roles.Admin)]
 public class SettingsController(ApplicationDbContext context) : Controller
 {
     public async Task<IActionResult> Index()
@@ -23,6 +26,7 @@ public class SettingsController(ApplicationDbContext context) : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(MaintenanceSettings settings)
     {
         if (!ModelState.IsValid) return View(settings);

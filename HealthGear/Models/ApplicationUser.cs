@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
+// ReSharper disable EntityFramework.ModelValidation.UnlimitedStringLength
 
 namespace HealthGear.Models;
 
@@ -20,7 +21,7 @@ public class ApplicationUser : IdentityUser
     ///     Indica se l'account è attivo.
     /// </summary>
     [Required]
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
 
     /// <summary>
     ///     Data di registrazione.
@@ -42,4 +43,19 @@ public class ApplicationUser : IdentityUser
     /// </summary>
     [MaxLength(250)]
     public string? DeactivationReason { get; set; }
+    
+    /// <summary>
+    /// Indica se l'utente deve cambiare la password al prossimo accesso.
+    /// </summary>
+    public bool MustChangePassword { get; set; } = true;
+
+    /// <summary>
+    /// Token di reset della password memorizzato per la verifica.
+    /// </summary>
+    public string? StoredResetToken { get; set; }
+
+    /// <summary>
+    /// Timestamp dell'ultima richiesta di reset della password.
+    /// </summary>
+    public DateTime? LastPasswordResetRequest { get; set; }
 }

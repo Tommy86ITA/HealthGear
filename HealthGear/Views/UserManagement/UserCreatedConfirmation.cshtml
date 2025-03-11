@@ -5,23 +5,35 @@
 }
 
 <div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
+    <div class="card shadow" style="max-width: 500px; margin: auto;">
+        <div class="card-header bg-success text-white text-center">
             <h5 class="mb-0">Utente Creato con Successo!</h5>
         </div>
         <div class="card-body">
-            <p class="mb-3">L'utente <strong>@userName</strong> è stato creato correttamente.</p>
+            <p class="mb-3 text-center">L'utente <strong>@userName</strong> è stato creato correttamente.</p>
 
             @if (!string.IsNullOrEmpty(generatedPassword))
             {
-                <div class="alert alert-warning" role="alert">
+                <div class="alert alert-warning text-center" role="alert">
                     <strong>Attenzione:</strong> Questa è la password generata automaticamente per il nuovo utente.
                     Assicurati di comunicarla all'utente in modo sicuro.
-                    <div class="mt-2">
-                        <code
-                            style="font-size: 1.25rem; padding: 0.5rem; display: inline-block; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+                </div>
+
+                <div class="d-flex justify-content-center align-items-center mt-3">
+                    <div class="d-flex flex-column align-items-center">
+                        <code id="generatedPassword"
+                            style="font-size: 1.5rem; padding: 1.5rem 1rem; background-color: #f8f9fa; border: 2px solid #ced4da; border-radius: 5px;">
                             @generatedPassword
                         </code>
+                        <hr class="mt-3">
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyPassword()" title="Copia negli appunti">
+                                <i class="fas fa-copy"></i> Copia
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="printPassword()" title="Stampa questa password">
+                                <i class="fas fa-print"></i> Stampa
+                            </button>
+                        </div>
                     </div>
                 </div>
             }
@@ -35,8 +47,30 @@
             <hr/>
 
             <div class="d-flex justify-content-end">
-                <a asp-action="Index" class="btn btn-primary me-2">Torna alla lista utenti</a>
+                <a asp-action="Index" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> Torna alla lista utenti</a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function copyPassword() {
+    const passwordText = document.getElementById("generatedPassword").innerText;
+    navigator.clipboard.writeText(passwordText).then(() => {
+        alert("Password copiata negli appunti!");
+    }).catch(err => {
+        console.error("Errore nel copiare la password: ", err);
+    });
+}
+
+function printPassword() {
+    const passwordText = document.getElementById("generatedPassword").innerText;
+    const newWin = window.open("", "_blank");
+    newWin.document.write("<html><head><title>Stampa Password</title></head><body>");
+    newWin.document.write("<h3>Password Generata:</h3>");
+    newWin.document.write("<p style='font-size: 1.5rem; border: 2px solid #000; padding: 10px; display: inline-block;'>" + passwordText + "</p>");
+    newWin.document.write("<script>window.onload = function() { window.print(); setTimeout(() => { window.close(); }, 1000); }<\/script>");
+    newWin.document.write("</body></html>");
+    newWin.document.close();
+}
+</script>

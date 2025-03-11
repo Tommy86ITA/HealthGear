@@ -56,7 +56,8 @@ public class FileAttachmentsController(
                 return Json(new { success = false, errorMessage = "Nessun file selezionato." });
 
             // Costruiamo il percorso per il salvataggio dei file (wwwroot/uploads)
-            var uploadsPath = Path.Combine(env.WebRootPath, UploadsFolder);
+            var subFolder = deviceId.HasValue ? "devices" : interventionId.HasValue ? "interventions" : "misc";
+            var uploadsPath = Path.Combine(env.WebRootPath, UploadsFolder, subFolder);
             if (!Directory.Exists(uploadsPath))
                 Directory.CreateDirectory(uploadsPath);
 
@@ -84,17 +85,14 @@ public class FileAttachmentsController(
                 }
                 catch (Exception exFile)
                 {
-                    // In caso di errore durante il salvataggio, logghiamo l'errore e passiamo al file successivo
-                    await Console.Error.WriteLineAsync("Errore durante la copia del file " + file.FileName + ": " +
-                                                       exFile);
-                    continue;
+                    return Json(new { success = false, errorMessage = $"Errore durante il caricamento di {file.FileName}: {exFile.Message}" });
                 }
 
                 // Crea il record FileAttachment con le informazioni del file
                 var attachment = new FileAttachment
                 {
                     FileName = file.FileName,
-                    FilePath = "/" + UploadsFolder + "/" + uniqueFileName,
+                    FilePath = "/" + UploadsFolder + "/" + subFolder + "/" + uniqueFileName,
                     ContentType = file.ContentType,
                     UploadDate = DateTime.UtcNow,
                     DocumentType = documentType, // Salva il tipo documento come stringa
@@ -116,17 +114,15 @@ public class FileAttachmentsController(
             IEnumerable<FileAttachment> updatedAttachments;
             if (deviceId.HasValue)
             {
-                var device = await context.Devices
-                    .Include(d => d.FileAttachments)
-                    .FirstOrDefaultAsync(d => d.Id == deviceId.Value);
-                updatedAttachments = device?.FileAttachments ?? Enumerable.Empty<FileAttachment>();
+                updatedAttachments = await context.FileAttachments
+                    .Where(f => f.DeviceId == deviceId.Value)
+                    .ToListAsync();
             }
             else if (interventionId.HasValue)
             {
-                var intervention = await context.Interventions
-                    .Include(i => i.Attachments)
-                    .FirstOrDefaultAsync(i => i.Id == interventionId.Value);
-                updatedAttachments = intervention?.Attachments ?? Enumerable.Empty<FileAttachment>();
+                updatedAttachments = await context.FileAttachments
+                    .Where(f => f.InterventionId == interventionId.Value)
+                    .ToListAsync();
             }
             else
             {
@@ -207,16 +203,17 @@ public class FileAttachmentsController(
         {
             // Se il file esiste, lo elimina dal filesystem
             if (System.IO.File.Exists(filePath))
+            {
                 System.IO.File.Delete(filePath);
+            }
             else
-                // Se il file non esiste, logga un warning e procedi comunque
-                await Console.Error.WriteLineAsync(
-                    $"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
+            {
+                Console.Error.WriteLine($"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
+            }
         }
         catch (Exception ex)
         {
-            return Json(new
-                { success = false, errorMessage = "Errore durante l'eliminazione del file: " + ex.Message });
+            return Json(new { success = false, errorMessage = $"Errore durante l'eliminazione del file: {ex.Message}" });
         }
 
         // Rimuove il record dal database

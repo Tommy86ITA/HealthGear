@@ -7,37 +7,42 @@ using Microsoft.AspNetCore.Mvc;
 namespace HealthGear.Controllers;
 
 /// <summary>
-///     Controller per la gestione del reset della password tramite token inviato via email.
+/// Controller per la gestione del reset della password tramite token inviato via email.
 /// </summary>
+[Route("[controller]/Reset")]
 public class ResetPasswordController : Controller
 {
     private readonly ILogger<ResetPasswordController> _logger;
     private readonly PasswordValidator _passwordValidator;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
     /// <summary>
-    ///     Inizializza una nuova istanza del <see cref="ResetPasswordController" />.
+    /// Inizializza una nuova istanza del <see cref="ResetPasswordController"/>.
     /// </summary>
     /// <param name="userManager">Gestore degli utenti.</param>
     /// <param name="logger">Logger per il tracciamento delle operazioni.</param>
     /// <param name="passwordValidator">Servizio per la validazione delle password.</param>
+    /// <param name="signInManager">Gestore delle autenticazioni.</param>
     public ResetPasswordController(
         UserManager<ApplicationUser> userManager,
         ILogger<ResetPasswordController> logger,
-        PasswordValidator passwordValidator)
+        PasswordValidator passwordValidator,
+        SignInManager<ApplicationUser> signInManager)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _passwordValidator = passwordValidator ?? throw new ArgumentNullException(nameof(passwordValidator));
+        _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
     }
 
     /// <summary>
-    ///     Mostra la schermata di reset password.
+    /// Mostra la schermata di reset password con il modulo di inserimento.
     /// </summary>
     /// <param name="email">L'email dell'utente.</param>
     /// <param name="token">Il token di reset ricevuto via email.</param>
     /// <returns>La view di reset password.</returns>
-    [HttpGet]
+    [HttpGet("")]
     public IActionResult Reset(string email, string token)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
@@ -45,6 +50,8 @@ public class ResetPasswordController : Controller
             _logger.LogWarning("Tentativo di accesso a Reset senza email o token validi.");
             return BadRequest("Richiesta non valida.");
         }
+
+        _logger.LogInformation("Tentativo di reset password con email: {Email} e token: {Token}", email, token);
 
         var model = new ResetPasswordViewModel
         {
@@ -56,28 +63,37 @@ public class ResetPasswordController : Controller
     }
 
     /// <summary>
-    ///     Processa il reset della password inviato dal form.
+    /// Processa la richiesta di reset della password inviata dall'utente.
     /// </summary>
-    /// <param name="model">Il modello con i dati inseriti dall'utente.</param>
-    /// <returns>Redirect alla login in caso di successo, altrimenti torna alla view.</returns>
-    [HttpPost]
+    /// <param name="model">Il modello contenente i dati inseriti dall'utente.</param>
+    /// <returns>
+    /// Redirect alla pagina di login in caso di successo; altrimenti ritorna alla view con messaggi di errore.
+    /// </returns>
+    [HttpPost("")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reset(ResetPasswordViewModel model)
     {
         if (!ModelState.IsValid)
+        {
             return View(model);
+        }
 
-        // Validazione formato token (base64-url - opzionale ma consigliato)
+        // Validazione del formato del token
         if (!IsTokenValidFormat(model.Token))
         {
+            _logger.LogWarning("Formato del token non valido: {Token}", model.Token);
             ModelState.AddModelError(string.Empty, "Il token di reset non è valido.");
             return View(model);
         }
 
-        // Validazione password tramite il nuovo servizio centralizzato
-        var validationResult = PasswordValidator.Validate(model.NewPassword);
+        // Validazione password con il servizio centralizzato
+        var validationResult = _passwordValidator.Validate(model.NewPassword);
         if (!validationResult.IsValid)
         {
-            foreach (var error in validationResult.Errors) ModelState.AddModelError(string.Empty, error);
+            foreach (var error in validationResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
             return View(model);
         }
 
@@ -89,27 +105,33 @@ public class ResetPasswordController : Controller
             return View(model);
         }
 
-        var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
-        if (result.Succeeded)
+        _logger.LogDebug("Ricerca utente per reset password: {Email}", model.Email);
+
+        // Reset della password tramite token
+        var resetResult = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+        if (resetResult.Succeeded)
         {
-            TempData["SuccessMessage"] = "Password reimpostata con successo. Ora puoi accedere con la nuova password.";
-            return Redirect("/Identity/Account/Login");
+            return RedirectToAction("Login", "Account");
         }
 
-        // Mostriamo eventuali errori di Identity (es. token non valido o scaduto)
-        foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description);
+        if (!resetResult.Succeeded)
+        {
+            _logger.LogError("Errore nel reset della password per l'utente {Email}: {Errors}", user.Email, string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+        }
 
-        _logger.LogWarning("Errore reset password per utente {UserId}: {Errors}", user.Id,
-            string.Join(", ", result.Errors.Select(e => e.Description)));
+        foreach (var error in resetResult.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
 
         return View(model);
     }
 
     /// <summary>
-    ///     Valida il formato del token (controlla che sia base64-url valido).
+    /// Verifica se il token di reset ha un formato valido (base64-url).
     /// </summary>
     /// <param name="token">Il token da validare.</param>
-    /// <returns>true se il token è valido, altrimenti false.</returns>
+    /// <returns><c>true</c> se il token è valido, altrimenti <c>false</c>.</returns>
     private static bool IsTokenValidFormat(string token)
     {
         try

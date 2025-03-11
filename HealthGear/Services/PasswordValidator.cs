@@ -10,7 +10,7 @@ public class PasswordValidator
     /// </summary>
     /// <param name="password">La password da validare.</param>
     /// <returns>Un oggetto ValidationResult che indica se la password è valida e contiene eventuali errori.</returns>
-    public static ValidationResult Validate(string password)
+    public ValidationResult Validate(string password)
     {
         var result = new ValidationResult { IsValid = true };
 

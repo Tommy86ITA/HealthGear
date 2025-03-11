@@ -54,10 +54,14 @@ public class EmailSender : IEmailSender
             if (!File.Exists(templatePath))
                 throw new FileNotFoundException($"Il template email '{templatePath}' non è stato trovato.");
 
-            // Lettura e sostituzione placeholder
+            // Lettura del file HTML
             var body = await File.ReadAllTextAsync(templatePath);
 
-            foreach (var placeholder in placeholders) body = body.Replace(placeholder.Key, placeholder.Value);
+            // Sostituzione dei placeholder nel template
+            foreach (var placeholder in placeholders)
+            {
+                body = body.Replace(placeholder.Key, placeholder.Value);
+            }
 
             // Composizione messaggio
             var message = new MimeMessage();

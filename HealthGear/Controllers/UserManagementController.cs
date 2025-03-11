@@ -72,8 +72,9 @@ public class UserManagementController(
             UserName = model.UserName,
             FullName = model.FullName,
             Email = model.Email,
-            IsActive = model.IsActive,
-            RegistrationDate = DateTime.UtcNow
+            IsActive = true,
+            RegistrationDate = DateTime.UtcNow,
+            MustChangePassword = true // Forziamo il cambio password al primo login
         };
 
         var generatedPassword = passwordGenerator.Generate();
