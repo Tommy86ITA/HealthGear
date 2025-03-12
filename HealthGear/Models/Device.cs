@@ -98,36 +98,39 @@ public class Device
     /// </summary>
     [NotMapped]
     public DateTime? LastOrdinaryMaintenance =>
-        Interventions.Count != 0
+        Interventions.Any(i => i.Type == InterventionType.Maintenance && i.MaintenanceCategory == MaintenanceType.Preventive)
             ? Interventions
-                .Where(i => i is
-                    { Type: InterventionType.Maintenance, MaintenanceCategory: MaintenanceType.Preventive })
+                .Where(i => i.Type == InterventionType.Maintenance && i.MaintenanceCategory == MaintenanceType.Preventive)
                 .OrderByDescending(i => i.Date)
                 .Select(i => i.Date)
                 .FirstOrDefault()
-            : null;
+            : DataCollaudo;
 
     /// <summary>
     ///     Restituisce la data dell'ultima verifica elettrica, se disponibile.
     /// </summary>
     [NotMapped]
     public DateTime? LastElectricalTest =>
-        Interventions?
-            .Where(i => i.Type == InterventionType.ElectricalTest)
-            .OrderByDescending(i => i.Date)
-            .Select(i => i.Date)
-            .FirstOrDefault();
+        Interventions.Any(i => i.Type == InterventionType.ElectricalTest)
+            ? Interventions
+                .Where(i => i.Type == InterventionType.ElectricalTest)
+                .OrderByDescending(i => i.Date)
+                .Select(i => i.Date)
+                .FirstOrDefault()
+            : FirstElectricalTest;
 
     /// <summary>
     ///     Restituisce la data dell'ultima verifica fisica, se disponibile.
     /// </summary>
     [NotMapped]
     public DateTime? LastPhysicalInspection =>
-        Interventions?
-            .Where(i => i.Type == InterventionType.PhysicalInspection)
-            .OrderByDescending(i => i.Date)
-            .Select(i => i.Date)
-            .FirstOrDefault();
+        Interventions.Any(i => i.Type == InterventionType.PhysicalInspection)
+            ? Interventions
+                .Where(i => i.Type == InterventionType.PhysicalInspection)
+                .OrderByDescending(i => i.Date)
+                .Select(i => i.Date)
+                .FirstOrDefault()
+            : FirstPhysicalInspection;
 
     // 📌 SCADENZE PROGRAMMATE
 

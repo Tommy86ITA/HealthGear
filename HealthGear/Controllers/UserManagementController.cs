@@ -372,7 +372,6 @@ public class UserManagementController(
     /// <param name="userName">Lo username dell'utente di cui è stata resettata la password.</param>
     /// <returns>Un <see cref="IActionResult" /> che visualizza la pagina di conferma.</returns>
     [HttpGet]
-    [HttpGet]
     public IActionResult PasswordResetConfirmation(string userName)
     {
         var newPassword = _passwordCacheService.RetrievePassword(userName);

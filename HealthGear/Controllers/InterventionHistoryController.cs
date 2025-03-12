@@ -13,10 +13,23 @@ using X.PagedList;
 
 namespace HealthGear.Controllers;
 
-public class InterventionHistoryController(ApplicationDbContext context) : Controller
+public class InterventionHistoryController(ApplicationDbContext context, ILogger<InterventionHistoryController> logger)
+    : Controller
 {
     private const int PageSize = 10;
 
+    /// <summary>
+    /// Lists the interventions for a specific device with optional filters and sorting.
+    /// </summary>
+    /// <param name="deviceId">The ID of the device.</param>
+    /// <param name="searchQuery">Optional search query for intervention notes.</param>
+    /// <param name="typeFilter">Optional filter for intervention type.</param>
+    /// <param name="passedFilter">Optional filter for intervention outcome (passed).</param>
+    /// <param name="dateFrom">Optional start date for filtering interventions.</param>
+    /// <param name="dateTo">Optional end date for filtering interventions.</param>
+    /// <param name="sortBy">Optional sorting parameter.</param>
+    /// <param name="page">The page number for pagination.</param>
+    /// <returns>A view with the list of interventions.</returns>
     [HttpGet("Index")]
     [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico + "," + Roles.Office)]
     public async Task<IActionResult> List(
@@ -29,6 +42,9 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         string? sortBy,
         int page = 1)
     {
+        if (deviceId <= 0)
+            return BadRequest("ID dispositivo non valido.");
+
         // Recupera il dispositivo (solo i campi necessari per il titolo)
         var device = await context.Devices
             .Where(d => d.Id == deviceId)
@@ -54,48 +70,45 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
         {
             var pattern = $"%{searchQuery.Trim()}%";
             query = query.Where(i => EF.Functions.Like(i.Notes, pattern));
-            Console.WriteLine($"[DEBUG] Filtro Note: {searchQuery.Trim()}");
+            logger.LogDebug($"Filtro Note: {searchQuery.Trim()}");
         }
 
         // Filtra per tipo di intervento
         if (!string.IsNullOrEmpty(typeFilter))
         {
             query = query.Where(i => i.Type.ToString() == typeFilter);
-            Console.WriteLine($"[DEBUG] Filtro Tipo: {typeFilter}");
+            logger.LogDebug($"Filtro Tipo: {typeFilter}");
         }
 
         // Filtra per esito (passed)
         if (!string.IsNullOrEmpty(passedFilter) && bool.TryParse(passedFilter, out var passedValue))
         {
             query = query.Where(i => i.Passed == passedValue);
-            Console.WriteLine($"[DEBUG] Filtro Esito: {passedValue}");
+            logger.LogDebug($"Filtro Esito: {passedValue}");
         }
 
         // Filtra per intervallo di date
         if (dateFrom.HasValue)
         {
             query = query.Where(i => i.Date >= dateFrom.Value);
-            Console.WriteLine($"[DEBUG] Filtro Data Da: {dateFrom.Value}");
+            logger.LogDebug($"Filtro Data Da: {dateFrom.Value}");
         }
 
         if (dateTo.HasValue)
         {
             query = query.Where(i => i.Date <= dateTo.Value);
-            Console.WriteLine($"[DEBUG] Filtro Data A: {dateTo.Value}");
+            logger.LogDebug($"Filtro Data A: {dateTo.Value}");
         }
 
         // Ordinamento: se sortBy non viene passato, ordina per data decrescente
-        if (string.IsNullOrEmpty(sortBy))
-            query = query.OrderByDescending(i => i.Date);
-        else
-            query = sortBy switch
-            {
-                "Date" => query.OrderBy(i => i.Date),
-                "-Date" => query.OrderByDescending(i => i.Date),
-                "Type" => query.OrderBy(i => i.Type),
-                "Passed" => query.OrderBy(i => i.Passed),
-                _ => query.OrderByDescending(i => i.Date)
-            };
+        query = string.IsNullOrEmpty(sortBy) ? query.OrderByDescending(i => i.Date) : sortBy switch
+        {
+            "Date" => query.OrderBy(i => i.Date),
+            "-Date" => query.OrderByDescending(i => i.Date),
+            "Type" => query.OrderBy(i => i.Type),
+            "Passed" => query.OrderBy(i => i.Passed),
+            _ => query.OrderByDescending(i => i.Date)
+        };
 
         // Calcola il totale degli interventi
         var totalItems = await query.CountAsync();
@@ -106,7 +119,7 @@ public class InterventionHistoryController(ApplicationDbContext context) : Contr
             .Take(PageSize)
             .ToListAsync();
 
-        Console.WriteLine($"[DEBUG] Risultati Totali: {totalItems}");
+        logger.LogDebug($"Risultati Totali: {totalItems}");
 
         // Crea il ViewModel con la lista paginata
         var viewModel = new InterventionHistoryViewModel

@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HealthGear.Controllers;
 
+/// <summary>
+/// Gestisce il cambio password obbligatorio al primo accesso.
+/// </summary>
 [Authorize]
 [Route("FirstLogin")]
 public class FirstLoginController(
@@ -17,6 +20,11 @@ public class FirstLoginController(
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
+    /// <summary>
+    /// Gestisce la visualizzazione della pagina di primo accesso.
+    /// </summary>
+    /// <param name="userId">L'ID dell'utente che deve cambiare la password.</param>
+    /// <returns>La view per il cambio password o il reindirizzamento alla home se non necessario.</returns>
     [HttpGet]
     public async Task<IActionResult> Index(string userId)
     {
@@ -38,6 +46,11 @@ public class FirstLoginController(
         return View("~/Views/UserManagement/FirstLogin.cshtml", model);
     }
 
+    /// <summary>
+    /// Gestisce il cambio della password per l'utente al primo accesso.
+    /// </summary>
+    /// <param name="model">Il modello contenente la nuova password e l'ID dell'utente.</param>
+    /// <returns>La view per il cambio password o il reindirizzamento alla home se il cambio è avvenuto con successo.</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(FirstLoginViewModel model)

@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+// <summary>
+// Controller per la gestione delle impostazioni di manutenzione.
+// </summary>
 #endregion
 
 namespace HealthGear.Controllers;
@@ -14,6 +17,11 @@ namespace HealthGear.Controllers;
 [Authorize(Roles = Roles.Admin)]
 public class SettingsController(ApplicationDbContext context) : Controller
 {
+    /// <summary>
+    /// Mostra la pagina delle impostazioni e carica i dati esistenti dal database.
+    /// Se non esistono impostazioni, ne crea una nuova.
+    /// </summary>
+    /// <returns>La vista con le impostazioni di manutenzione.</returns>
     public async Task<IActionResult> Index()
     {
         var settings = await context.MaintenanceSettings.FirstOrDefaultAsync();
@@ -25,6 +33,11 @@ public class SettingsController(ApplicationDbContext context) : Controller
         return View(settings);
     }
 
+    /// <summary>
+    /// Salva le impostazioni di manutenzione aggiornate.
+    /// </summary>
+    /// <param name="settings">Le impostazioni di manutenzione aggiornate.</param>
+    /// <returns>La vista delle impostazioni o un reindirizzamento alla stessa pagina dopo il salvataggio.</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(MaintenanceSettings settings)

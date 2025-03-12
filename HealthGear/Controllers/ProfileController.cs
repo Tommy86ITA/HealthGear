@@ -71,6 +71,7 @@ public class ProfileController : Controller
     /// <param name="model">Modello con i dati aggiornati.</param>
     /// <returns>Ritorna alla pagina di modifica profilo.</returns>
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateProfile(EditProfileViewModel model)
     {
         if (!ModelState.IsValid)
@@ -120,6 +121,7 @@ public class ProfileController : Controller
     /// <param name="confirmPassword">Conferma nuova password.</param>
     /// <returns>Ritorna alla pagina di modifica profilo.</returns>
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
     {
         if (newPassword != confirmPassword)

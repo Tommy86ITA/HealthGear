@@ -33,6 +33,7 @@ else if (TempData["ErrorMessage"] != null)
             <div class="card-header">Informazioni Profilo</div>
             <div class="card-body">
                 <form asp-action="UpdateProfile" method="post">
+                @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                     <div class="mb-3">
@@ -59,6 +60,7 @@ else if (TempData["ErrorMessage"] != null)
             <div class="card-header">Cambia Password</div>
             <div class="card-body">
                 <form asp-action="ChangePassword" method="post">
+                @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                     <div class="mb-3">

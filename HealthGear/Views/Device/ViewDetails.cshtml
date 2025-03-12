@@ -242,6 +242,7 @@ else
         @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Tecnico))
         {
             <form asp-action="Archive" asp-controller="Device" asp-route-id="@Model.Id" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
                 <button type="submit" class="btn @(Model.Status == DeviceStatus.Dismesso ? "btn-success" : "btn-dark")">
                     <i class="fas @(Model.Status == DeviceStatus.Dismesso ? "fas fa-undo" : "fa-archive")"></i>
                     @(Model.Status == DeviceStatus.Dismesso ? "Riattiva Dispositivo" : "Archivia Dispositivo")

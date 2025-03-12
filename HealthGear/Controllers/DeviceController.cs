@@ -17,8 +17,8 @@ namespace HealthGear.Controllers;
 [Route("Device")]
 public class DeviceController(
     ApplicationDbContext context,
-    DeadlineService deadlineService,
     InventoryNumberService inventoryNumberService,
+    DeadlineService deadlineService,
     IWebHostEnvironment env)
     : Controller
 
@@ -129,7 +129,7 @@ public class DeviceController(
         return View("Add");
     }
 
-// POST: /Device/Add
+    // POST: /Device/Add
     [HttpPost("Add")]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.Admin + "," + Roles.Tecnico)]
@@ -208,14 +208,8 @@ public class DeviceController(
         // Se il dispositivo è attivo, stiamo per dismetterlo
         if (device.Status != DeviceStatus.Dismesso)
         {
-            // Qui potresti inserire la logica per chiedere conferma all'utente (ad esempio, tramite un modal nella view)
-            // Se la conferma arriva, impostiamo lo stato su Dismesso e registriamo la Data di Dismissione.
             device.Status = DeviceStatus.Dismesso;
             device.DataDismissione = DateTime.Now;
-            // Opzionalmente, puoi decidere di non aggiornare le scadenze oppure di cancellarle, ad es.:
-            // device.NextMaintenanceDue = null;
-            // device.NextElectricalTestDue = null;
-            // device.NextPhysicalInspectionDue = null;
         }
         else
         {
@@ -240,7 +234,7 @@ public class DeviceController(
     [HttpPost("Delete/{id:int}")]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.Admin)]
-    public async Task<IActionResult> Delete(int id, string confirmName, [FromServices] ILogger<DeviceController> logger)
+    public async Task<IActionResult> Delete(int id, string confirmName)
     {
         var device = await context.Devices
             .Include(d => d.Interventions)
@@ -276,16 +270,10 @@ public class DeviceController(
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
-                    logger.LogInformation($"File eliminato con successo: {filePath}");
-                }
-                else
-                {
-                    logger.LogWarning($"Tentativo di eliminazione fallito: file non trovato ({filePath})");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                logger.LogError($"Errore eliminando file {attachment.FileName}: {ex.Message}");
                 TempData["ErrorMessage"] = $"Errore eliminando file {attachment.FileName}.";
                 return RedirectToAction("Details", new { id });
             }

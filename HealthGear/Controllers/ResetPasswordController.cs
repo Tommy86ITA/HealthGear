@@ -4,6 +4,7 @@ using HealthGear.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace HealthGear.Controllers;
 
 /// <summary>
@@ -15,7 +16,6 @@ public class ResetPasswordController : Controller
     private readonly ILogger<ResetPasswordController> _logger;
     private readonly PasswordValidator _passwordValidator;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
 
     /// <summary>
     /// Inizializza una nuova istanza del <see cref="ResetPasswordController"/>.
@@ -23,17 +23,14 @@ public class ResetPasswordController : Controller
     /// <param name="userManager">Gestore degli utenti.</param>
     /// <param name="logger">Logger per il tracciamento delle operazioni.</param>
     /// <param name="passwordValidator">Servizio per la validazione delle password.</param>
-    /// <param name="signInManager">Gestore delle autenticazioni.</param>
     public ResetPasswordController(
         UserManager<ApplicationUser> userManager,
         ILogger<ResetPasswordController> logger,
-        PasswordValidator passwordValidator,
-        SignInManager<ApplicationUser> signInManager)
+        PasswordValidator passwordValidator)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _passwordValidator = passwordValidator ?? throw new ArgumentNullException(nameof(passwordValidator));
-        _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
     }
 
     /// <summary>
@@ -109,14 +106,13 @@ public class ResetPasswordController : Controller
 
         // Reset della password tramite token
         var resetResult = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
-        if (resetResult.Succeeded)
+        switch (resetResult.Succeeded)
         {
-            return RedirectToAction("Login", "Account");
-        }
-
-        if (!resetResult.Succeeded)
-        {
-            _logger.LogError("Errore nel reset della password per l'utente {Email}: {Errors}", user.Email, string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+            case true:
+                return Redirect("~/Identity/Account/Login");
+            case false:
+                _logger.LogError("Errore nel reset della password per l'utente {Email}: {Errors}", user.Email, string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+                break;
         }
 
         foreach (var error in resetResult.Errors)
@@ -136,7 +132,7 @@ public class ResetPasswordController : Controller
     {
         try
         {
-            var bytes = Convert.FromBase64String(token.Replace('-', '+').Replace('_', '/'));
+            _ = Convert.FromBase64String(token.Replace('-', '+').Replace('_', '/')); // Modificato per evitare warning
             return true;
         }
         catch (FormatException)

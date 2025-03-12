@@ -208,7 +208,7 @@ public class FileAttachmentsController(
             }
             else
             {
-                Console.Error.WriteLine($"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
+                await Console.Error.WriteLineAsync($"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
             }
         }
         catch (Exception ex)
@@ -269,10 +269,11 @@ public class FileAttachmentsController(
         var removedCount = 0;
 
         // Per ogni record, controlla se il file esiste nel filesystem
-        foreach (var attachment in allAttachments)
+        foreach (var attachment in from attachment in allAttachments
+                 let filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'))
+                 where !System.IO.File.Exists(filePath)
+                 select attachment)
         {
-            var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
-            if (System.IO.File.Exists(filePath)) continue;
             // Se il file non esiste, rimuovi il record
             context.FileAttachments.Remove(attachment);
             removedCount++;

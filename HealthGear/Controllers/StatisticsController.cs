@@ -1,26 +1,21 @@
 using HealthGear.Data;
 using HealthGear.Models;
 using HealthGear.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Controllers;
 
-public class StatisticsController : Controller
+[Authorize]
+public class StatisticsController(ApplicationDbContext context) : Controller
 {
-    private readonly ApplicationDbContext _context;
-
-    public StatisticsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     /// <summary>
     /// Mostra la dashboard delle statistiche generali degli interventi.
     /// </summary>
     public async Task<IActionResult> Index()
     {
-        var interventions = await _context.Interventions
+        var interventions = await context.Interventions
             .Include(i => i.Device) // Assicura che il dispositivo sia caricato
             .ToListAsync();
 
@@ -40,7 +35,7 @@ public class StatisticsController : Controller
             .ToDictionary(g => g.Key.ToString(), g => g.Count());
 
         var correctiveInterventions = interventions
-            .Where(i => i.Type == InterventionType.Maintenance && i.MaintenanceCategory == MaintenanceType.Corrective)
+            .Where(i => i is { Type: InterventionType.Maintenance, MaintenanceCategory: MaintenanceType.Corrective })
             .ToList();
 
         var topDevices = correctiveInterventions
@@ -51,9 +46,9 @@ public class StatisticsController : Controller
             .Select(g => new StatisticsViewModel.DeviceCorrectiveMaintenanceStats
             {
                 DeviceId = g.Key.Id, // Adesso otteniamo l'ID corretto del dispositivo
-                DeviceName = g.Key.Name ?? "Sconosciuto",
-                DeviceBrand = g.Key.Brand ?? "Sconosciuto",
-                DeviceModel = g.Key.Model ?? "Sconosciuto",
+                DeviceName = g.Key.Name,
+                DeviceBrand = g.Key.Brand,
+                DeviceModel = g.Key.Model,
                 CorrectiveMaintenanceCount = g.Count()
             })
             .ToList();
