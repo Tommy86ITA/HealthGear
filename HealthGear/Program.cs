@@ -17,7 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 1. Configurazione del database e Identity per la gestione degli utenti
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), opt =>
+        opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
 var passwordRules = new PasswordRules();
 builder.Configuration.GetSection("PasswordRules").Bind(passwordRules);
