@@ -74,4 +74,8 @@
         <Folder Include="wwwroot\uploads\"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\HealthGearConfig\HealthGearConfig.csproj" />
+    </ItemGroup>
+
 </Project>
