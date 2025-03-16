@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0-windows</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <NoWarn>NU1608</NoWarn>
@@ -72,10 +72,6 @@
 
     <ItemGroup>
         <Folder Include="wwwroot\uploads\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\HealthGearConfig\HealthGearConfig.csproj" />
     </ItemGroup>
 
 </Project>
