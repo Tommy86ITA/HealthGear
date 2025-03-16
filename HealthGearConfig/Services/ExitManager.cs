@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using HealthGearConfig.Services;
-using System.Windows.Forms;
 
 namespace HealthGearConfig
 {

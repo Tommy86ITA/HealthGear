@@ -1,10 +1,5 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
-using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Principal;
-using System.Windows.Forms;
 
 namespace HealthGearConfig
 {
@@ -18,21 +13,31 @@ namespace HealthGearConfig
             {
                 try
                 {
-                    // 🔄 Riavvia l'app con privilegi di amministratore
-                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    ProcessStartInfo startInfo = new()
                     {
                         FileName = Application.ExecutablePath,
-                        Verb = "runas" // 🔥 Questo forza l'elevazione dei privilegi
+                        Verb = "runas",
+                        UseShellExecute = true // 🛠 Necessario per l'UAC
                     };
 
                     Process.Start(startInfo);
-                    return; // ❌ Esce dall'istanza corrente
                 }
                 catch
                 {
                     MessageBox.Show("Devi eseguire questa applicazione come amministratore.", "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
                 }
+
+                // 🛑 Esce immediatamente dal processo corrente
+                Environment.Exit(0);
+                return;
+            }
+
+            // 🛠 Previeni esecuzioni multiple
+            using Mutex mutex = new(true, "HealthGearConfigMutex", out bool createdNew);
+            if (!createdNew)
+            {
+                MessageBox.Show("L'app è già in esecuzione.", "Attenzione", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
             Application.EnableVisualStyles();
@@ -46,7 +51,7 @@ namespace HealthGearConfig
         private static bool IsRunningAsAdministrator()
         {
             using WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            WindowsPrincipal principal = new(identity);
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
     }

@@ -4,8 +4,6 @@
 using HealthGearConfig.Settings;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.IO;
 
 namespace HealthGearConfig.Services
 {

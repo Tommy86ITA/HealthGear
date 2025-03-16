@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Newtonsoft.Json;
-using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -21,7 +19,7 @@ namespace HealthGearConfig.Services
             if (environment == "production")
             {
                 // 🚀 In produzione, leggiamo solo da variabile d’ambiente
-                string envKey = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
+                string? envKey = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
                 if (!string.IsNullOrEmpty(envKey))
                 {
                     return envKey;
@@ -36,7 +34,13 @@ namespace HealthGearConfig.Services
                     try
                     {
                         var json = File.ReadAllText(configPath);
-                        dynamic config = JsonConvert.DeserializeObject(json);
+                        var config = JsonConvert.DeserializeObject<EncryptionConfig>(json);
+
+                        if (config == null || string.IsNullOrEmpty(config.EncryptionKey))
+                        {
+                            throw new Exception("❌ La chiave di crittografia nel file è null o non valida.");
+                        }
+
                         return config.EncryptionKey;
                     }
                     catch (Exception ex)
@@ -44,10 +48,10 @@ namespace HealthGearConfig.Services
                         Console.WriteLine($"❌ Errore nel caricamento della chiave dal file: {ex.Message}");
                     }
                 }
+
                 throw new Exception("❌ Nessuna chiave di crittografia trovata!");
             }
         }
-
 
         /// <summary>
         /// Crittografa un testo con AES.
@@ -84,4 +88,13 @@ namespace HealthGearConfig.Services
             return reader.ReadToEnd();
         }
     }
+
+    /// <summary>
+    /// Configurazione per la chiave crittografica.
+    /// </summary>
+    public class EncryptionConfig
+    {
+        public string EncryptionKey { get; set; } = string.Empty;
+    }
+
 }

@@ -1,10 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Net;
 using System.Net.Mail;
-using System.Windows.Forms;
 
 namespace HealthGearConfig.Services
 {
@@ -27,7 +25,7 @@ namespace HealthGearConfig.Services
             try
             {
                 // 📧 Configura il client SMTP
-                using (SmtpClient client = new SmtpClient(host, port))
+                using (SmtpClient client = new(host, port))
                 {
                     client.Credentials = new NetworkCredential(username, password);
                     client.EnableSsl = useSSL;

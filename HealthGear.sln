@@ -1,8 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthGear", "HealthGear\HealthGear.csproj", "{A200ABFA-8FCF-4970-987C-22F783796DCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthGearConfig", "HealthGearConfig\HealthGearConfig.csproj", "{2C81E0A3-6945-4062-903F-3E16542E3C5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthGearConfig", "HealthGearConfig\HealthGearConfig.csproj", "{2685E7E7-6A0B-5BE3-2A7B-85C88DF58D44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,9 +17,15 @@ Global
 		{A200ABFA-8FCF-4970-987C-22F783796DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A200ABFA-8FCF-4970-987C-22F783796DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A200ABFA-8FCF-4970-987C-22F783796DCC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2C81E0A3-6945-4062-903F-3E16542E3C5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2C81E0A3-6945-4062-903F-3E16542E3C5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2C81E0A3-6945-4062-903F-3E16542E3C5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2C81E0A3-6945-4062-903F-3E16542E3C5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2685E7E7-6A0B-5BE3-2A7B-85C88DF58D44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2685E7E7-6A0B-5BE3-2A7B-85C88DF58D44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2685E7E7-6A0B-5BE3-2A7B-85C88DF58D44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2685E7E7-6A0B-5BE3-2A7B-85C88DF58D44}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6C9D5239-CE8D-4813-AA69-01F4730E3D2A}
 	EndGlobalSection
 EndGlobal

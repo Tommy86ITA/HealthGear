@@ -3,10 +3,6 @@
 
 using HealthGearConfig.Services;
 using HealthGearConfig.Settings;
-using System;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
 
 namespace HealthGearConfig
 {
@@ -60,7 +56,7 @@ namespace HealthGearConfig
         /// Gestisce il click sul pulsante "Avvia Servizio".
         /// Avvia il servizio e aggiorna la UI in base al nuovo stato.
         /// </summary>
-        private void buttonStartService_Click(object sender, EventArgs e)
+        private void buttonStartService_Click(object? sender, EventArgs e)
         {
             if (ServiceManager.StartService())
             {
@@ -76,7 +72,7 @@ namespace HealthGearConfig
         /// Gestisce il click sul pulsante "Ferma Servizio".
         /// Arresta il servizio e aggiorna la UI in base al nuovo stato.
         /// </summary>
-        private void buttonStopService_Click(object sender, EventArgs e)
+        private void buttonStopService_Click(object? sender, EventArgs e)
         {
             if (ServiceManager.StopService())
             {
@@ -95,17 +91,17 @@ namespace HealthGearConfig
         /// <summary>
         /// Gestione logica dei folder browser per la selezione del percorso del database, cartella di upload e log.
         /// <summay/>
-        private void buttonBrowseDBFolderPath_Click(object sender, EventArgs e)
+        private void buttonBrowseDBFolderPath_Click(object? sender, EventArgs e)
         {
             BrowseDatabasePath_Click(sender, e);
         }
 
-        private void buttonBrowseUploadPath_Click(object sender, EventArgs e)
+        private void buttonBrowseUploadPath_Click(object? sender, EventArgs e)
         {
             BrowseFileUploadPath_Click(sender, e);
         }
 
-        private void buttonBrowseLoggingPath_Click(object sender, EventArgs e)
+        private void buttonBrowseLoggingPath_Click(object? sender, EventArgs e)
         {
             BrowseLogPath_Click(sender, e);
         }
@@ -117,7 +113,7 @@ namespace HealthGearConfig
         /// <summary>
         /// Apre una finestra di dialogo per selezionare la cartella in cui verrà salvato il database.
         /// </summary>
-        private void BrowseDatabasePath_Click(object sender, EventArgs e)
+        private void BrowseDatabasePath_Click(object? sender, EventArgs e)
         {
             using FolderBrowserDialog dialog = new();
             dialog.Description = "Seleziona la cartella dove verrà salvato il database";
@@ -130,7 +126,7 @@ namespace HealthGearConfig
         /// <summary>
         /// Apre una finestra di dialogo per selezionare la cartella per il caricamento dei file.
         /// </summary>
-        private void BrowseFileUploadPath_Click(object sender, EventArgs e)
+        private void BrowseFileUploadPath_Click(object? sender, EventArgs e)
         {
             using FolderBrowserDialog dialog = new();
             dialog.Description = "Seleziona la cartella per il salvataggio dei file caricati";
@@ -143,7 +139,7 @@ namespace HealthGearConfig
         /// <summary>
         /// Apre una finestra di dialogo per selezionare la cartella di logging.
         /// </summary>
-        private void BrowseLogPath_Click(object sender, EventArgs e)
+        private void BrowseLogPath_Click(object? sender, EventArgs e)
         {
             using FolderBrowserDialog dialog = new();
             dialog.Description = "Seleziona la cartella di logging";
@@ -156,32 +152,32 @@ namespace HealthGearConfig
         ///--------------------------------------------------------------------------------
         /// Gestione dei pulsanti per l'esportazione, importazione e reset delle impostazioni
         ///--------------------------------------------------------------------------------
-        private void buttonExportSettings_Click(object sender, EventArgs e)
+        private void buttonExportSettings_Click(object? sender, EventArgs e)
         {
             ExportSettings(); // ✅ Esporta le impostazioni
         }
 
-        private void buttonImportSettings_Click(object sender, EventArgs e)
+        private void buttonImportSettings_Click(object? sender, EventArgs e)
         {
             ImportSettings();
         }
 
-        private void buttonApplyImportedSettings_Click(object sender, EventArgs e)
+        private void buttonApplyImportedSettings_Click(object? sender, EventArgs e)
         {
             ApplyImportedSettings();
         }
 
-        private void buttonDiscardImportedSettings_Click(object sender, EventArgs e)
+        private void buttonDiscardImportedSettings_Click(object? sender, EventArgs e)
         {
             DiscardImportedSettings();
         }
 
-        private void buttonSave_Click(object sender, EventArgs e)
+        private void buttonSave_Click(object? sender, EventArgs e)
         {
             SaveSettings(); // ✅ Salva le impostazioni
         }
 
-        private void buttonResetSettings_Click(object sender, EventArgs e)
+        private void buttonResetSettings_Click(object? sender, EventArgs e)
         {
             ResetSettings(); // ✅ Ripristina le impostazioni predefinite
         }
@@ -261,7 +257,7 @@ namespace HealthGearConfig
         /// Richiamato quando le impostazioni vengono modificate
         /// <!-- Aggiunge un flag per segnalare che le impostazioni sono state modificate -->
         /// </summary>
-        private void SettingsChanged(object sender, EventArgs e)
+        private void SettingsChanged(object? sender, EventArgs e)
         {
             settingsModified = true;
         }
@@ -322,7 +318,7 @@ namespace HealthGearConfig
                 },
                 Logging = new LoggingSettings
                 {
-                    LogLevel = comboBoxLogLevel.SelectedItem.ToString(),
+                    LogLevel = comboBoxLogLevel.SelectedItem?.ToString() ?? "Verbose",
                     LogPath = textBoxLogPath.Text
                 }
             };
@@ -337,25 +333,23 @@ namespace HealthGearConfig
         /// </summary>
         private void ExportSettings()
         {
-            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            using SaveFileDialog saveFileDialog = new();
+            saveFileDialog.Filter = "File JSON (*.json)|*.json";
+            saveFileDialog.Title = "Esporta Configurazione";
+            saveFileDialog.FileName = "HealthGearConfig_Export.json";
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                saveFileDialog.Filter = "File JSON (*.json)|*.json";
-                saveFileDialog.Title = "Esporta Configurazione";
-                saveFileDialog.FileName = "HealthGearConfig_Export.json";
+                var settings = ConfigManager.LoadSettings(); // 📌 Carica le impostazioni attuali
+                bool success = ConfigManager.ExportSettings(saveFileDialog.FileName, settings);
 
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                if (success)
                 {
-                    var settings = ConfigManager.LoadSettings(); // 📌 Carica le impostazioni attuali
-                    bool success = ConfigManager.ExportSettings(saveFileDialog.FileName, settings);
-
-                    if (success)
-                    {
-                        _ = MessageBox.Show("Esportazione completata con successo!", "Esportazione", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        _ = MessageBox.Show("Errore durante l'esportazione delle impostazioni.", "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    _ = MessageBox.Show("Esportazione completata con successo!", "Esportazione", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    _ = MessageBox.Show("Errore durante l'esportazione delle impostazioni.", "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -365,40 +359,38 @@ namespace HealthGearConfig
         /// </summary>
         private void ImportSettings()
         {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            using OpenFileDialog openFileDialog = new();
+            openFileDialog.Filter = "File JSON (*.json)|*.json";
+            openFileDialog.Title = "Importa Configurazione";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                openFileDialog.Filter = "File JSON (*.json)|*.json";
-                openFileDialog.Title = "Importa Configurazione";
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                try
                 {
-                    try
+                    var importedSettings = ConfigManager.ImportSettings(openFileDialog.FileName);
+
+                    if (importedSettings == null)
                     {
-                        var importedSettings = ConfigManager.ImportSettings(openFileDialog.FileName);
-
-                        if (importedSettings == null)
-                        {
-                            throw new Exception("Il file selezionato non contiene una configurazione valida.");
-                        }
-
-                        // 📌 Se il JSON è valido, aggiorniamo l'anteprima e abilitiamo i pulsanti
-                        textBoxPreview.Text = File.ReadAllText(openFileDialog.FileName);
-                        buttonApplyImportedSettings.Enabled = true;
-                        buttonDiscardImportedSettings.Enabled = true;
-
-                        _ = MessageBox.Show("Impostazioni importate con successo! Controlla l'anteprima prima di applicarle.",
-                            "Importazione completata", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        throw new Exception("Il file selezionato non contiene una configurazione valida.");
                     }
-                    catch (Exception ex)
-                    {
-                        _ = MessageBox.Show($"Errore: Il file selezionato non è valido per HealthGear.\n\nDettagli: {ex.Message}",
-                            "Errore di Importazione", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                        // 📌 Disabilitiamo i pulsanti perché il file non è valido
-                        buttonApplyImportedSettings.Enabled = false;
-                        buttonDiscardImportedSettings.Enabled = false;
-                        textBoxPreview.Clear();
-                    }
+                    // 📌 Se il JSON è valido, aggiorniamo l'anteprima e abilitiamo i pulsanti
+                    textBoxPreview.Text = File.ReadAllText(openFileDialog.FileName);
+                    buttonApplyImportedSettings.Enabled = true;
+                    buttonDiscardImportedSettings.Enabled = true;
+
+                    _ = MessageBox.Show("Impostazioni importate con successo! Controlla l'anteprima prima di applicarle.",
+                        "Importazione completata", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    _ = MessageBox.Show($"Errore: Il file selezionato non è valido per HealthGear.\n\nDettagli: {ex.Message}",
+                        "Errore di Importazione", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    // 📌 Disabilitiamo i pulsanti perché il file non è valido
+                    buttonApplyImportedSettings.Enabled = false;
+                    buttonDiscardImportedSettings.Enabled = false;
+                    textBoxPreview.Clear();
                 }
             }
         }
@@ -486,7 +478,7 @@ namespace HealthGearConfig
         /// <summary>
         /// Gestisce la chiusura dell'applicazione quando l'utente clicca sulla "X" o preme ALT+F4.
         /// </summary>
-        private void Form1_OnFormClosing(object sender, FormClosingEventArgs e)
+        private void Form1_OnFormClosing(object? sender, FormClosingEventArgs e)
         {
             if (!exitConfirmed) // ✅ Se non è stato già confermato, chiedi conferma
             {

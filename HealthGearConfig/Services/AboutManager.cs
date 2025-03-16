@@ -2,10 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Reflection;
-using System.Windows.Forms;
 
 namespace HealthGearConfig.Services
 {
