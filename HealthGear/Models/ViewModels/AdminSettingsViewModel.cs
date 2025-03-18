@@ -1,5 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using HealthGear.Models.Config;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace HealthGear.Models.ViewModels;
 
@@ -41,12 +42,14 @@ public class AdminSettingsViewModel
     /// <summary>
     ///     Impostazioni SMTP.
     /// </summary>
-    [Required]
+    [BindProperty]
+    [BindRequired]
     public required SmtpConfig Smtp { get; set; }
 
     /// <summary>
     ///     Impostazioni di logging.
     /// </summary>
-    [Required]
+    [BindProperty]
+    [BindRequired]
     public required LoggingConfig Logging { get; set; }
 }

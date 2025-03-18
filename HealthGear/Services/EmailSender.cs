@@ -114,6 +114,9 @@ public class EmailSender : IEmailSender
             throw new InvalidOperationException("Configurazione SMTP non valida.");
         }
 
+        // Le credenziali SMTP vengono decriptate qui una volta sola e memorizzate in _smtpConfig.
+        // I getter delle credenziali NON eseguono la decrittazione automaticamente.
+        // Dopo questa chiamata, Username e Password saranno già in chiaro per l'uso nei metodi di EmailSender.
         var secureStorage = _serviceProvider.GetRequiredService<SecureStorage>();
         config.Smtp.Username = secureStorage.DecryptUsername(config.Smtp.Username); // 🔓 Decrittografa Username
         config.Smtp.Password = secureStorage.DecryptPassword(config.Smtp.Password); // 🔓 Decrittografa Password
@@ -125,5 +128,43 @@ public class EmailSender : IEmailSender
         if (!string.IsNullOrWhiteSpace(_smtpConfig.Host) && _smtpConfig.Port != 0) return;
         _logger.LogCritical("Le impostazioni SMTP non sono valide. Verifica il database.");
         throw new InvalidOperationException("Configurazione SMTP non valida.");
+    }
+    /// <summary>
+    ///     Testa la connessione al server SMTP utilizzando i parametri passati dalla View.
+    /// </summary>
+    public async Task<bool> TestSmtpConnectionAsync(string host, int port, string username, string password, bool useSsl, bool requiresAuth)
+    {
+        _logger.LogInformation("🔍 Avvio test connessione SMTP con parametri personalizzati...");
+
+        try
+        {
+            using var smtp = new SmtpClient();
+            _logger.LogInformation("🌐 Connessione a {Host}:{Port}...", host, port);
+
+            await smtp.ConnectAsync(host, port, useSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
+
+            if (requiresAuth)
+            {
+                if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                {
+                    _logger.LogInformation("🔑 Tentativo di autenticazione per l'utente {Username}...", username);
+                    await smtp.AuthenticateAsync(username, password);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ L'autenticazione è richiesta, ma non sono state fornite credenziali valide.");
+                    throw new InvalidOperationException("Autenticazione richiesta, ma credenziali non valide.");
+                }
+            }
+
+            await smtp.DisconnectAsync(true);
+            _logger.LogInformation("✅ Connessione SMTP riuscita con i parametri forniti.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Errore durante il test di connessione SMTP.");
+            return false;
+        }
     }
 }

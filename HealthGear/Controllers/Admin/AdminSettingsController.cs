@@ -80,8 +80,31 @@ public class AdminSettingsController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(AdminSettingsViewModel model)
     {
+        logger.LogInformation("🔍 Ricevuti dati da form: Host={Host}, Porta={Port}, Username={Username}, Password={Password}, SenderName={SenderName}, SenderEmail={SenderEmail}, UseSsl={UseSsl}, RequiresAuthentication={RequiresAuth}, LogLevel={LogLevel}",
+            model?.Smtp?.Host,
+            model?.Smtp?.Port,
+            model?.Smtp?.Username,
+            model?.Smtp?.Password,
+            model?.Smtp?.SenderName,
+            model?.Smtp?.SenderEmail,
+            model?.Smtp?.UseSsl,
+            model?.Smtp?.RequiresAuthentication,
+            model?.Logging?.LogLevel
+        );
+
         if (!ModelState.IsValid)
+        {
+            logger.LogWarning("⚠️ Il modello non è valido!");
+            foreach (var key in ModelState.Keys)
+            {
+                var errors = ModelState[key].Errors;
+                foreach (var error in errors)
+                {
+                    logger.LogWarning("❌ Errore nel campo {Key}: {ErrorMessage}", key, error.ErrorMessage);
+                }
+            }
             return View("Index", model);
+        }
 
         logger.LogInformation("🔍 Stato iniziale password ricevuta dal form: {Password}", model.Smtp.Password);
 
@@ -127,7 +150,45 @@ public class AdminSettingsController(
         logger.LogInformation("Valore Username salvato nel DB: {Username}", model.Smtp.Username);
 
         await dbContext.SaveChangesAsync();
-        TempData["Success"] = "Impostazioni aggiornate con successo!";
-        return RedirectToAction("Index");
+        return Json(new { success = true, title = "Successo", message = "Impostazioni salvate con successo!" });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TestSmtp([FromBody] SmtpConfig smtpConfig, [FromServices] EmailSender emailSender)
+    {
+        if (!ModelState.IsValid)
+        {
+            logger.LogWarning("⚠️ Parametri SMTP non validi per il test.");
+            foreach (var key in ModelState.Keys)
+            {
+                var errors = ModelState[key].Errors;
+                foreach (var error in errors)
+                {
+                    logger.LogWarning("❌ Errore nel campo {Key}: {ErrorMessage}", key, error.ErrorMessage);
+                }
+            }
+            return Json(new { success = false, message = "I parametri inseriti non sono validi." });
+        }
+
+        logger.LogInformation("🔍 Avvio test connessione SMTP con i parametri ricevuti...");
+
+        var success = await emailSender.TestSmtpConnectionAsync(
+            smtpConfig.Host,
+            smtpConfig.Port,
+            smtpConfig.Username,
+            smtpConfig.Password,
+            smtpConfig.UseSsl,
+            smtpConfig.RequiresAuthentication
+        );
+
+        if (success)
+        {
+            logger.LogInformation("✅ Test connessione SMTP riuscito.");
+            return Json(new { success = true, message = "Connessione SMTP riuscita!" });
+        }
+
+        logger.LogWarning("❌ Test connessione SMTP fallito.");
+        return Json(new { success = false, message = "Errore nella connessione SMTP. Controlla i parametri e riprova." });
     }
 }

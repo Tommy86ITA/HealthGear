@@ -4,13 +4,14 @@
 }
 
 <h2 class="mb-4"><i class="fas fa-cogs"></i> Configurazione Generale</h2>
+<div id="resultMessageContainer"></div>
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success mb-4" style="margin-top: 20px; padding: 15px;">@TempData["Success"]</div>
 }
 
-<form method="post" asp-action="Update">
+<form id="settingsForm" method="post" asp-action="Update">
     @Html.AntiForgeryToken()
     <div class="row">
 
@@ -23,34 +24,34 @@
                 <div class="card-body">
                     <div class="form-group">
                         <label><i class="fas fa-server"></i> Host:</label>
-                        <input asp-for="Smtp.Host" class="form-control"/>
+                        <input asp-for="Smtp.Host" name="Smtp.Host" class="form-control" id="Smtp.Host"/>
                         <span asp-validation-for="Smtp.Host" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-plug"></i> Porta SMTP:</label>
-                        <input asp-for="Smtp.Port" class="form-control"/>
+                        <input asp-for="Smtp.Port" name="Smtp.Port" class="form-control" id="Smtp.Port"/>
                         <span asp-validation-for="Smtp.Port" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-at"></i> Email Mittente:</label>
-                        <input asp-for="Smtp.SenderEmail" class="form-control"/>
+                        <input asp-for="Smtp.SenderEmail" name="Smtp.SenderEmail" class="form-control" id="Smtp.SenderEmail"/>
                         <span asp-validation-for="Smtp.SenderEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-user"></i> Nome Mittente:</label>
-                        <input asp-for="Smtp.SenderName" class="form-control"/>
+                        <input asp-for="Smtp.SenderName" name="Smtp.SenderName" class="form-control" id="Smtp.SenderName"/>
                         <span asp-validation-for="Smtp.SenderName" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-user-lock"></i> Username SMTP:</label>
-                        <input asp-for="Smtp.Username" class="form-control"/>
+                        <input asp-for="Smtp.Username" name="Smtp.Username" class="form-control" id="Smtp.Username"/>
                         <span asp-validation-for="Smtp.Username" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-key"></i> Password SMTP:</label>
                         <div class="input-group">
-                            <input asp-for="Smtp.Password" type="password" class="form-control" id="smtpPassword"
-                                   autocomplete="new-password"/>
+                            <input asp-for="Smtp.Password" name="Smtp.Password" type="password" class="form-control" id="smtpPassword"
+                                   autocomplete="new-password" value="@Model.Smtp.Password"/>
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-outline-secondary" id="passwordToggleBtn">
                                     <i class="fas fa-eye" id="passwordToggleIcon"></i>
@@ -60,12 +61,13 @@
                         <span asp-validation-for="Smtp.Password" class="text-danger"></span>
                     </div>
                     <div class="form-check">
-                        <input asp-for="Smtp.UseSsl" class="form-check-input" type="checkbox" id="smtpUseSSL"/>
+                        <input type="hidden" name="Smtp.UseSsl" value="false"/>
+                        <input asp-for="Smtp.UseSsl" name="Smtp.UseSsl" class="form-check-input" type="checkbox" value="true" id="smtpUseSSL"/>
                         <label class="form-check-label" for="smtpUseSSL">Usa SSL/TLS</label>
                     </div>
                     <div class="form-check mb-3">
-                        <input asp-for="Smtp.RequiresAuthentication" class="form-check-input" type="checkbox"
-                               id="smtpRequiresAuthentication"/>
+                        <input type="hidden" name="Smtp.RequiresAuthentication" value="false"/>
+                        <input asp-for="Smtp.RequiresAuthentication" name="Smtp.RequiresAuthentication" class="form-check-input" type="checkbox" value="true" id="smtpRequiresAuthentication"/>
                         <label class="form-check-label" for="smtpRequiresAuthentication">Richiede Autenticazione</label>
                     </div>
                     <div class="form-group mt-3">
@@ -108,26 +110,50 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        let passwordField = document.getElementById("smtpPassword");
-        let passwordToggleBtn = document.getElementById("passwordToggleBtn");
-        let passwordToggleIcon = document.getElementById("passwordToggleIcon");
+        let form = document.getElementById("settingsForm");
+        let saveButton = form.querySelector("button[type='submit']");
 
-        passwordToggleBtn.addEventListener("click", function () {
-            if (passwordField.type === "password") {
-                passwordField.type = "text";
-                passwordToggleIcon.classList.remove("fa-eye");
-                passwordToggleIcon.classList.add("fa-eye-slash");
-            } else {
-                passwordField.type = "password";
-                passwordToggleIcon.classList.remove("fa-eye-slash");
-                passwordToggleIcon.classList.add("fa-eye");
-            }
+        form.addEventListener("submit", function (event) {
+            event.preventDefault(); // Previene il reload della pagina
+
+            let formData = new FormData(form);
+            let messageContainer = document.getElementById("resultMessageContainer");
+            messageContainer.innerHTML = ""; // Puliamo eventuali messaggi precedenti
+
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvataggio...';
+
+            fetch('/AdminSettings/Update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fas fa-save"></i> Salva Impostazioni';
+
+                let resultMessage = document.createElement("div");
+                resultMessage.className = "alert mt-3";
+                resultMessage.innerHTML = data.message;
+                resultMessage.classList.add(data.success ? "alert-success" : "alert-danger");
+
+                messageContainer.appendChild(resultMessage);
+
+                setTimeout(() => resultMessage.remove(), 5000); // Rimuove il messaggio dopo 5s
+            })
+            .catch(error => {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fas fa-save"></i> Salva Impostazioni';
+
+                let resultMessage = document.createElement("div");
+                resultMessage.className = "alert mt-3";
+                resultMessage.innerHTML = 'Errore durante il salvataggio!';
+                resultMessage.classList.add("alert-danger");
+                messageContainer.appendChild(resultMessage);
+
+                setTimeout(() => resultMessage.remove(), 5000);
+            });
         });
-
-        // Evita che il campo password risulti vuoto all'avvio
-        if (!passwordField.value.trim()) {
-            passwordField.value = "@Html.Raw(Model.Smtp.Password)";
-        }
     });
 </script>
 
@@ -136,17 +162,54 @@
         let resultIcon = document.getElementById("smtpTestResult");
         resultIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Test in corso...';
 
-        fetch('/AdminSettings/TestSmtp', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    resultIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i> Connessione riuscita';
-                } else {
-                    resultIcon.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Errore: ' + data.message;
-                }
-            })
-            .catch(error => {
-                resultIcon.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Errore durante il test';
-            });
+        let smtpData = {
+            Host: document.getElementById("Smtp.Host").value,
+            Port: document.getElementById("Smtp.Port").value,
+            SenderEmail: document.getElementById("Smtp.SenderEmail").value,
+            SenderName: document.getElementById("Smtp.SenderName").value,
+            Username: document.getElementById("Smtp.Username").value,
+            Password: document.getElementById("smtpPassword").value,
+            UseSsl: document.getElementById("smtpUseSSL").checked,
+            RequiresAuthentication: document.getElementById("smtpRequiresAuthentication").checked
+        };
+
+        fetch('/AdminSettings/TestSmtp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify(smtpData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resultIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i> Connessione riuscita';
+            } else {
+                resultIcon.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Errore: ' + data.message;
+            }
+        })
+        .catch(error => {
+            resultIcon.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Errore durante il test';
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let passwordField = document.getElementById("smtpPassword");
+        let toggleButton = document.getElementById("passwordToggleBtn");
+        let toggleIcon = document.getElementById("passwordToggleIcon");
+
+        toggleButton.addEventListener("click", function () {
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordField.type = "password";
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            }
+        });
     });
 </script>
