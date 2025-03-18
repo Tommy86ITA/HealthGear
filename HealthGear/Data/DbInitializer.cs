@@ -1,5 +1,7 @@
 using HealthGear.Constants;
 using HealthGear.Models;
+using HealthGear.Models.Config;
+using HealthGear.Services;
 using Microsoft.AspNetCore.Identity;
 
 namespace HealthGear.Data;
@@ -20,6 +22,7 @@ public static class DbInitializer
     /// </summary>
     public static async Task SeedDataAsync(IServiceProvider serviceProvider, IConfiguration configuration)
     {
+        await SeedSettingsAsync(serviceProvider);
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
@@ -39,19 +42,14 @@ public static class DbInitializer
                     : $"❌ Errore nella creazione del ruolo {roleName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
 
-            var adminConfig = new AdminConfig();
-            configuration.GetSection("DefaultAdmin").Bind(adminConfig);
-
-            // Controlla che tutti i valori richiesti siano presenti nei User Secrets
-            if (string.IsNullOrWhiteSpace(adminConfig.UserName) ||
-                string.IsNullOrWhiteSpace(adminConfig.Email) ||
-                string.IsNullOrWhiteSpace(adminConfig.Password) ||
-                string.IsNullOrWhiteSpace(adminConfig.Role) ||
-                string.IsNullOrWhiteSpace(adminConfig.FullName))
+            var adminConfig = new AdminConfig
             {
-                Console.WriteLine("⚠️ Configurazione Admin incompleta nei User Secrets. Verifica i valori.");
-                return;
-            }
+                UserName = "Admin",
+                FullName = "Administrator",
+                Email = "admin.default@healthgear.local",
+                Role = Roles.Admin,
+                Password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "Password123!"
+            };
 
             var adminUser = await userManager.FindByEmailAsync(adminConfig.Email);
             if (adminUser == null)
@@ -63,7 +61,8 @@ public static class DbInitializer
                     Email = adminConfig.Email,
                     IsActive = true,
                     RegistrationDate = DateTime.UtcNow,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    MustChangePassword = false
                 };
 
                 var createAdmin = await userManager.CreateAsync(adminUser, adminConfig.Password);
@@ -98,5 +97,48 @@ public static class DbInitializer
     private static async Task<bool> RoleExists(RoleManager<IdentityRole> roleManager, string roleName)
     {
         return await roleManager.RoleExistsAsync(roleName);
+    }
+
+    /// <summary>
+    /// Seeding del db delle impostazioni
+    /// </summary>
+    /// <param name="serviceProvider"></param>
+    private static async Task SeedSettingsAsync(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var settingsContext = scope.ServiceProvider.GetRequiredService<SettingsDbContext>();
+        var secureStorage = scope.ServiceProvider.GetRequiredService<SecureStorage>();
+
+        if (!settingsContext.Configurations.Any())
+        {
+            var defaultSmtpConfig = new SmtpConfig(secureStorage)
+            {
+                Host = "smtp.example.com",
+                Port = 587,
+                UseSsl = true,
+                RequiresAuthentication = true
+            };
+
+            // Crittografiamo solo se SecureStorage è valido e i dati non sono già crittografati
+            if (secureStorage != null)
+            {
+                defaultSmtpConfig.Username = SecureStorage.IsEncrypted("admin@healthgear.local")
+                    ? "admin@healthgear.local"
+                    : secureStorage.EncryptUsername("admin@healthgear.local");
+
+                defaultSmtpConfig.Password = SecureStorage.IsEncrypted("Example123!")
+                    ? "Example123!"
+                    : secureStorage.EncryptPassword("Example123!");
+            }
+
+            var defaultConfig = new AppConfig
+            {
+                Smtp = defaultSmtpConfig,
+                Logging = new LoggingConfig { LogLevel = "Information" }
+            };
+
+            settingsContext.Configurations.Add(defaultConfig);
+            await settingsContext.SaveChangesAsync();
+        }
     }
 }

@@ -12,7 +12,6 @@ public class AdminController : Controller
     [Authorize(Roles = "Admin")]
     public IActionResult AdminTasks()
     {
-        // Potresti passare un modello alla view se desideri
         return View();
     }
 }

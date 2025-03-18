@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HealthGear.Controllers;
 
 /// <summary>
-/// Controller per la gestione della procedura di recupero password tramite invio di un'email con codice di verifica.
+///     Controller per la gestione della procedura di recupero password tramite invio di un'email con codice di verifica.
 /// </summary>
 [Route("[controller]/Index")]
 public class ForgotPasswordController(
@@ -16,14 +16,17 @@ public class ForgotPasswordController(
     IEmailSender emailSender)
     : Controller
 {
-    private readonly IEmailSender _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
-    private readonly ILogger<ForgotPasswordController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly UserManager<ApplicationUser> _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-
     private static readonly Dictionary<string, DateTime> ResetRequestTracker = new();
+    private readonly IEmailSender _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
+
+    private readonly ILogger<ForgotPasswordController> _logger =
+        logger ?? throw new ArgumentNullException(nameof(logger));
+
+    private readonly UserManager<ApplicationUser> _userManager =
+        userManager ?? throw new ArgumentNullException(nameof(userManager));
 
     /// <summary>
-    /// Carica la view per l'inserimento dell'email per il recupero della password.
+    ///     Carica la view per l'inserimento dell'email per il recupero della password.
     /// </summary>
     /// <returns>La vista per il recupero della password.</returns>
     [HttpGet("")]
@@ -33,7 +36,7 @@ public class ForgotPasswordController(
     }
 
     /// <summary>
-    /// Elabora la richiesta di recupero password con protezione avanzata, limitando il numero di richieste.
+    ///     Elabora la richiesta di recupero password con protezione avanzata, limitando il numero di richieste.
     /// </summary>
     /// <param name="model">Il modello contenente l'email dell'utente.</param>
     /// <returns>Reindirizza alla pagina di richiesta con un messaggio di conferma o errore.</returns>
@@ -41,10 +44,7 @@ public class ForgotPasswordController(
     [ValidateAntiForgeryToken] // 🔒 Protezione CSRF
     public async Task<IActionResult> Index(ForgotPasswordViewModel model)
     {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
+        if (!ModelState.IsValid) return View(model);
 
         if (IsRateLimited(model.Email))
         {
@@ -106,19 +106,16 @@ public class ForgotPasswordController(
     }
 
     /// <summary>
-    /// Limita le richieste di reset password per evitare spam e brute-force.
+    ///     Limita le richieste di reset password per evitare spam e brute-force.
     /// </summary>
     /// <param name="email">L'email dell'utente per cui si sta verificando il rate-limiting.</param>
     /// <returns>True se la richiesta è limitata, altrimenti false.</returns>
     private static bool IsRateLimited(string email)
     {
         if (ResetRequestTracker.TryGetValue(email, out var lastRequest))
-        {
             if ((DateTime.UtcNow - lastRequest).TotalMinutes < 5)
-            {
                 return true;
-            }
-        }
+
         ResetRequestTracker[email] = DateTime.UtcNow;
         return false;
     }

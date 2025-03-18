@@ -19,7 +19,7 @@ public class InterventionHistoryController(ApplicationDbContext context, ILogger
     private const int PageSize = 10;
 
     /// <summary>
-    /// Lists the interventions for a specific device with optional filters and sorting.
+    ///     Lists the interventions for a specific device with optional filters and sorting.
     /// </summary>
     /// <param name="deviceId">The ID of the device.</param>
     /// <param name="searchQuery">Optional search query for intervention notes.</param>
@@ -101,14 +101,16 @@ public class InterventionHistoryController(ApplicationDbContext context, ILogger
         }
 
         // Ordinamento: se sortBy non viene passato, ordina per data decrescente
-        query = string.IsNullOrEmpty(sortBy) ? query.OrderByDescending(i => i.Date) : sortBy switch
-        {
-            "Date" => query.OrderBy(i => i.Date),
-            "-Date" => query.OrderByDescending(i => i.Date),
-            "Type" => query.OrderBy(i => i.Type),
-            "Passed" => query.OrderBy(i => i.Passed),
-            _ => query.OrderByDescending(i => i.Date)
-        };
+        query = string.IsNullOrEmpty(sortBy)
+            ? query.OrderByDescending(i => i.Date)
+            : sortBy switch
+            {
+                "Date" => query.OrderBy(i => i.Date),
+                "-Date" => query.OrderByDescending(i => i.Date),
+                "Type" => query.OrderBy(i => i.Type),
+                "Passed" => query.OrderBy(i => i.Passed),
+                _ => query.OrderByDescending(i => i.Date)
+            };
 
         // Calcola il totale degli interventi
         var totalItems = await query.CountAsync();

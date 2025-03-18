@@ -4,11 +4,10 @@ using HealthGear.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-
 namespace HealthGear.Controllers;
 
 /// <summary>
-/// Controller per la gestione del reset della password tramite token inviato via email.
+///     Controller per la gestione del reset della password tramite token inviato via email.
 /// </summary>
 [Route("[controller]/Reset")]
 public class ResetPasswordController : Controller
@@ -18,7 +17,7 @@ public class ResetPasswordController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
 
     /// <summary>
-    /// Inizializza una nuova istanza del <see cref="ResetPasswordController"/>.
+    ///     Inizializza una nuova istanza del <see cref="ResetPasswordController" />.
     /// </summary>
     /// <param name="userManager">Gestore degli utenti.</param>
     /// <param name="logger">Logger per il tracciamento delle operazioni.</param>
@@ -34,7 +33,7 @@ public class ResetPasswordController : Controller
     }
 
     /// <summary>
-    /// Mostra la schermata di reset password con il modulo di inserimento.
+    ///     Mostra la schermata di reset password con il modulo di inserimento.
     /// </summary>
     /// <param name="email">L'email dell'utente.</param>
     /// <param name="token">Il token di reset ricevuto via email.</param>
@@ -60,20 +59,17 @@ public class ResetPasswordController : Controller
     }
 
     /// <summary>
-    /// Processa la richiesta di reset della password inviata dall'utente.
+    ///     Processa la richiesta di reset della password inviata dall'utente.
     /// </summary>
     /// <param name="model">Il modello contenente i dati inseriti dall'utente.</param>
     /// <returns>
-    /// Redirect alla pagina di login in caso di successo; altrimenti ritorna alla view con messaggi di errore.
+    ///     Redirect alla pagina di login in caso di successo; altrimenti ritorna alla view con messaggi di errore.
     /// </returns>
     [HttpPost("")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reset(ResetPasswordViewModel model)
     {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
+        if (!ModelState.IsValid) return View(model);
 
         // Validazione del formato del token
         if (!IsTokenValidFormat(model.Token))
@@ -84,13 +80,10 @@ public class ResetPasswordController : Controller
         }
 
         // Validazione password con il servizio centralizzato
-        var validationResult = _passwordValidator.Validate(model.NewPassword);
+        var validationResult = PasswordValidator.Validate(model.NewPassword);
         if (!validationResult.IsValid)
         {
-            foreach (var error in validationResult.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error);
-            }
+            foreach (var error in validationResult.Errors) ModelState.AddModelError(string.Empty, error);
             return View(model);
         }
 
@@ -111,20 +104,18 @@ public class ResetPasswordController : Controller
             case true:
                 return Redirect("~/Identity/Account/Login");
             case false:
-                _logger.LogError("Errore nel reset della password per l'utente {Email}: {Errors}", user.Email, string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+                _logger.LogError("Errore nel reset della password per l'utente {Email}: {Errors}", user.Email,
+                    string.Join(", ", resetResult.Errors.Select(e => e.Description)));
                 break;
         }
 
-        foreach (var error in resetResult.Errors)
-        {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
+        foreach (var error in resetResult.Errors) ModelState.AddModelError(string.Empty, error.Description);
 
         return View(model);
     }
 
     /// <summary>
-    /// Verifica se il token di reset ha un formato valido (base64-url).
+    ///     Verifica se il token di reset ha un formato valido (base64-url).
     /// </summary>
     /// <param name="token">Il token da validare.</param>
     /// <returns><c>true</c> se il token è valido, altrimenti <c>false</c>.</returns>

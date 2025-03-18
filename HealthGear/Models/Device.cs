@@ -98,9 +98,11 @@ public class Device
     /// </summary>
     [NotMapped]
     public DateTime? LastOrdinaryMaintenance =>
-        Interventions.Any(i => i.Type == InterventionType.Maintenance && i.MaintenanceCategory == MaintenanceType.Preventive)
+        Interventions.Any(i =>
+            i is { Type: InterventionType.Maintenance, MaintenanceCategory: MaintenanceType.Preventive })
             ? Interventions
-                .Where(i => i.Type == InterventionType.Maintenance && i.MaintenanceCategory == MaintenanceType.Preventive)
+                .Where(i => i is
+                    { Type: InterventionType.Maintenance, MaintenanceCategory: MaintenanceType.Preventive })
                 .OrderByDescending(i => i.Date)
                 .Select(i => i.Date)
                 .FirstOrDefault()

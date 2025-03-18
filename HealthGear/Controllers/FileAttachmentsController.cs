@@ -85,7 +85,11 @@ public class FileAttachmentsController(
                 }
                 catch (Exception exFile)
                 {
-                    return Json(new { success = false, errorMessage = $"Errore durante il caricamento di {file.FileName}: {exFile.Message}" });
+                    return Json(new
+                    {
+                        success = false,
+                        errorMessage = $"Errore durante il caricamento di {file.FileName}: {exFile.Message}"
+                    });
                 }
 
                 // Crea il record FileAttachment con le informazioni del file
@@ -113,21 +117,15 @@ public class FileAttachmentsController(
             // Recupera la lista aggiornata degli allegati in base al contesto
             IEnumerable<FileAttachment> updatedAttachments;
             if (deviceId.HasValue)
-            {
                 updatedAttachments = await context.FileAttachments
                     .Where(f => f.DeviceId == deviceId.Value)
                     .ToListAsync();
-            }
             else if (interventionId.HasValue)
-            {
                 updatedAttachments = await context.FileAttachments
                     .Where(f => f.InterventionId == interventionId.Value)
                     .ToListAsync();
-            }
             else
-            {
                 updatedAttachments = Array.Empty<FileAttachment>();
-            }
 
             // Costruisce un modello anonimo con le proprietà attese dalla partial
             var model = new
@@ -203,17 +201,15 @@ public class FileAttachmentsController(
         {
             // Se il file esiste, lo elimina dal filesystem
             if (System.IO.File.Exists(filePath))
-            {
                 System.IO.File.Delete(filePath);
-            }
             else
-            {
-                await Console.Error.WriteLineAsync($"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
-            }
+                await Console.Error.WriteLineAsync(
+                    $"Warning: Il file '{filePath}' non esiste, ma il record verrà rimosso.");
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, errorMessage = $"Errore durante l'eliminazione del file: {ex.Message}" });
+            return Json(new
+                { success = false, errorMessage = $"Errore durante l'eliminazione del file: {ex.Message}" });
         }
 
         // Rimuove il record dal database

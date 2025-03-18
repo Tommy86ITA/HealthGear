@@ -11,7 +11,7 @@ namespace HealthGear.Controllers;
 public class StatisticsController(ApplicationDbContext context) : Controller
 {
     /// <summary>
-    /// Mostra la dashboard delle statistiche generali degli interventi.
+    ///     Mostra la dashboard delle statistiche generali degli interventi.
     /// </summary>
     public async Task<IActionResult> Index()
     {
@@ -21,12 +21,9 @@ public class StatisticsController(ApplicationDbContext context) : Controller
 
         // Debug: Verifica se i dati dei dispositivi sono presenti
         foreach (var intervention in interventions)
-        {
             if (intervention.Device != null)
-            {
-                Console.WriteLine($"DEBUG: Device ID: {intervention.Device.Id}, Brand: {intervention.Device.Brand}, Model: {intervention.Device.Model}, Name: {intervention.Device.Name}");
-            }
-        }
+                Console.WriteLine(
+                    $"DEBUG: Device ID: {intervention.Device.Id}, Brand: {intervention.Device.Brand}, Model: {intervention.Device.Model}, Name: {intervention.Device.Name}");
 
         var totalInterventions = interventions.Count;
 
@@ -40,7 +37,10 @@ public class StatisticsController(ApplicationDbContext context) : Controller
 
         var topDevices = correctiveInterventions
             .Where(i => i.Device != null)
-            .GroupBy(i => new { i.Device!.Id, i.Device!.Name, i.Device!.Brand, i.Device!.Model }) // Raggruppa per ID, Nome, Brand e Model
+            .GroupBy(i => new
+            {
+                i.Device!.Id, i.Device!.Name, i.Device!.Brand, i.Device!.Model
+            }) // Raggruppa per ID, Nome, Brand e Model
             .OrderByDescending(g => g.Count())
             .Take(5)
             .Select(g => new StatisticsViewModel.DeviceCorrectiveMaintenanceStats
@@ -55,9 +55,8 @@ public class StatisticsController(ApplicationDbContext context) : Controller
 
         // Debug: Controlla se i dati vengono passati correttamente al ViewModel
         foreach (var device in topDevices)
-        {
-            Console.WriteLine($"DEBUG: ViewModel - ID: {device.DeviceId}, Brand: {device.DeviceBrand}, Model: {device.DeviceModel}, Name: {device.DeviceName}");
-        }
+            Console.WriteLine(
+                $"DEBUG: ViewModel - ID: {device.DeviceId}, Brand: {device.DeviceBrand}, Model: {device.DeviceModel}, Name: {device.DeviceName}");
 
         var recentInterventions = interventions
             .OrderByDescending(i => i.Date)

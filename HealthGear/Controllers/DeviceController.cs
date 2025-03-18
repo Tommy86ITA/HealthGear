@@ -248,7 +248,7 @@ public class DeviceController(
         }
 
         // Controlla se il dispositivo ha interventi registrati
-        if (device.Interventions.Any())
+        if (device.Interventions.Count != 0)
         {
             TempData["ErrorMessage"] = "Il dispositivo ha interventi registrati e non può essere eliminato.";
             return RedirectToAction("Details", new { id });
@@ -267,10 +267,7 @@ public class DeviceController(
             var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
             try
             {
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
             }
             catch
             {

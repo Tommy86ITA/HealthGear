@@ -10,14 +10,18 @@
     <!-- Sezione 1: Dati Generali -->
     <div class="col-md-6">
         <div class="card text-white bg-success mb-2" style="">
-            <div class="card-header" data-bs-toggle="tooltip" title="Numero totale di interventi registrati nel sistema">Totale Interventi e Distribuzione <i class="fas fa-chart-pie"></i></div>
+            <div class="card-header" data-bs-toggle="tooltip"
+                 title="Numero totale di interventi registrati nel sistema">Totale Interventi e Distribuzione <i
+                    class="fas fa-chart-pie"></i></div>
             <div class="card-body">
                 <h3 class="card-title">Totale interventi: @Model.TotalInterventions</h3>
                 <ul>
                     <li>Manutenzioni preventive: @Model.PreventiveMaintenances.Sum(m => m.Value)</li>
                     <li>Manutenzioni correttive: @Model.CorrectiveMaintenances.Sum(m => m.Value)</li>
-                    <li>Verifiche elettriche: @(Model.InterventionsByType.ContainsKey("ElectricalTest") ? Model.InterventionsByType["ElectricalTest"] : 0)</li>
-                    <li>Verifiche fisiche: @(Model.InterventionsByType.ContainsKey("PhysicalInspection") ? Model.InterventionsByType["PhysicalInspection"] : 0)</li>
+                    <li>Verifiche
+                        elettriche: @(Model.InterventionsByType.ContainsKey("ElectricalTest") ? Model.InterventionsByType["ElectricalTest"] : 0)</li>
+                    <li>Verifiche
+                        fisiche: @(Model.InterventionsByType.ContainsKey("PhysicalInspection") ? Model.InterventionsByType["PhysicalInspection"] : 0)</li>
                 </ul>
             </div>
         </div>
@@ -25,13 +29,18 @@
 
     <!-- Sezione 2: Analisi Manutenzioni Correttive -->
     <div class="col-md-6">
-    <div class="card text-white bg-warning" style="">
-            <div class="card-header" data-bs-toggle="tooltip" title="Dispositivi con il maggior numero di manutenzioni correttive">Dispositivi con più Manutenzioni Correttive <i class="fas fa-tools"></i></div>
+        <div class="card text-white bg-warning" style="">
+            <div class="card-header" data-bs-toggle="tooltip"
+                 title="Dispositivi con il maggior numero di manutenzioni correttive">Dispositivi con più Manutenzioni
+                Correttive <i class="fas fa-tools"></i></div>
             <div class="card-body">
                 <ul>
                     @foreach (var device in Model.DevicesWithMostCorrectiveMaintenances)
                     {
-                        <li><strong><a href="/Device/Details/@device.DeviceId" style="color: #5a3e1b; text-decoration: underline;">@device.DeviceBrand @device.DeviceModel (@device.DeviceName)</a>:</strong> @device.CorrectiveMaintenanceCount manutenzioni correttive</li>
+                        <li><strong><a href="/Device/Details/@device.DeviceId"
+                                       style="color: #5a3e1b; text-decoration: underline;">@device.DeviceBrand @device.DeviceModel (@device.DeviceName)</a>:</strong> @device.CorrectiveMaintenanceCount manutenzioni
+                            correttive
+                        </li>
                     }
                 </ul>
             </div>
@@ -43,7 +52,9 @@
     <!-- Sezione 3: Manutenzioni Correttive -->
     <div class="col-md-6">
         <div class="card text-white bg-danger mb-2" style="">
-            <div class="card-header" data-bs-toggle="tooltip" title="Numero totale di manutenzioni correttive effettuate">Totale Manutenzioni Correttive <i class="fas fa-exclamation-triangle"></i></div>
+            <div class="card-header" data-bs-toggle="tooltip"
+                 title="Numero totale di manutenzioni correttive effettuate">Totale Manutenzioni Correttive <i
+                    class="fas fa-exclamation-triangle"></i></div>
             <div class="card-body">
                 <h3 class="card-title">@Model.CorrectiveMaintenances.Sum(m => m.Value)</h3>
                 <p class="card-text">Interventi non pianificati effettuati per risolvere guasti.</p>
@@ -54,7 +65,8 @@
     <!-- Sezione 4: Statistiche sui Guasti -->
     <div class="col-md-6">
         <div class="card text-white bg-info mb-2" style="">
-            <div class="card-header" data-bs-toggle="tooltip" title="Frequenza media dei guasti">Frequenza guasti (media) <i class="fas fa-clock"></i></div>
+            <div class="card-header" data-bs-toggle="tooltip" title="Frequenza media dei guasti">Frequenza guasti
+                (media) <i class="fas fa-clock"></i></div>
             <div class="card-body">
                 <h3 class="card-title">@Model.AverageTimeBetweenCorrectiveMaintenances giorni</h3>
                 <p class="card-text">Tempo medio tra un guasto e l'altro.</p>

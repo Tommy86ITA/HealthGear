@@ -7,12 +7,12 @@ using HealthGear.Models;
 namespace HealthGear.Helpers;
 
 /// <summary>
-/// Classe helper per ottenere informazioni testuali e icone sugli interventi.
+///     Classe helper per ottenere informazioni testuali e icone sugli interventi.
 /// </summary>
 public static class InterventionHelper
 {
     /// <summary>
-    /// Restituisce il nome leggibile dell'intervento in base al suo tipo e categoria.
+    ///     Restituisce il nome leggibile dell'intervento in base al suo tipo e categoria.
     /// </summary>
     /// <param name="intervention">L'intervento da analizzare.</param>
     /// <returns>Una stringa che rappresenta il nome dell'intervento.</returns>
@@ -33,7 +33,7 @@ public static class InterventionHelper
     }
 
     /// <summary>
-    /// Restituisce l'icona corrispondente all'intervento in formato HTML.
+    ///     Restituisce l'icona corrispondente all'intervento in formato HTML.
     /// </summary>
     /// <param name="intervention">L'intervento da analizzare.</param>
     /// <returns>Una stringa contenente l'HTML dell'icona associata.</returns>

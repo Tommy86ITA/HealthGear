@@ -1,7 +1,7 @@
 namespace HealthGear.Services;
 
 /// <summary>
-/// Servizio per la gestione temporanea delle password generate, con una durata limitata.
+///     Servizio per la gestione temporanea delle password generate, con una durata limitata.
 /// </summary>
 public class TemporaryPasswordCacheService
 {
@@ -9,7 +9,7 @@ public class TemporaryPasswordCacheService
     private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(2); // Scade dopo 2 minuti
 
     /// <summary>
-    /// Memorizza temporaneamente una password generata per un utente, con una scadenza predefinita.
+    ///     Memorizza temporaneamente una password generata per un utente, con una scadenza predefinita.
     /// </summary>
     /// <param name="userName">Il nome utente associato alla password.</param>
     /// <param name="password">La password temporanea da memorizzare.</param>
@@ -19,7 +19,7 @@ public class TemporaryPasswordCacheService
     }
 
     /// <summary>
-    /// Recupera la password temporanea per un utente, se non è ancora scaduta.
+    ///     Recupera la password temporanea per un utente, se non è ancora scaduta.
     /// </summary>
     /// <param name="userName">Il nome utente per cui recuperare la password.</param>
     /// <returns>La password temporanea se ancora valida, altrimenti null.</returns>

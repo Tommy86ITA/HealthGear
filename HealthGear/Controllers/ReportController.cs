@@ -87,7 +87,7 @@ public class ReportController(
             .Include(d => d.Interventions)
             .ToListAsync();
 
-        if (!devices.Any())
+        if (devices.Count == 0)
             return NotFound("Nessun dispositivo trovato per generare il report.");
 
         var pdfBytes = SummaryReportPdf.Generate(devices);

@@ -6,3 +6,4 @@ riderModule.iml
 defaultAdmin.json
 EmailSettings.txt
 encryption_config.json
+*.db

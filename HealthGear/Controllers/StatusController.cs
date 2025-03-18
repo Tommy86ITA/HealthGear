@@ -8,7 +8,7 @@ namespace HealthGear.Controllers;
 public class StatusController : Controller
 {
     /// <summary>
-    /// Restituisce la pagina di errore per l'accesso negato (403).
+    ///     Restituisce la pagina di errore per l'accesso negato (403).
     /// </summary>
     /// <returns>La vista della pagina di errore.</returns>
     [Route("AccessDenied")]
@@ -20,7 +20,7 @@ public class StatusController : Controller
     }
 
     /// <summary>
-    /// Restituisce la pagina di errore per la risorsa non trovata (404).
+    ///     Restituisce la pagina di errore per la risorsa non trovata (404).
     /// </summary>
     /// <returns>La vista della pagina di errore.</returns>
     [Route("NotFound")]
@@ -32,7 +32,7 @@ public class StatusController : Controller
     }
 
     /// <summary>
-    /// Restituisce la pagina di errore generico (500).
+    ///     Restituisce la pagina di errore generico (500).
     /// </summary>
     /// <returns>La vista della pagina di errore.</returns>
     [Route("Error")]

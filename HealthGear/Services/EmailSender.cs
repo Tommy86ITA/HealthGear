@@ -1,7 +1,6 @@
-using HealthGear.Models.Settings;
+using HealthGear.Models.Config;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Options;
 using MimeKit;
 
 namespace HealthGear.Services;
@@ -11,79 +10,80 @@ namespace HealthGear.Services;
 /// </summary>
 public class EmailSender : IEmailSender
 {
-    private readonly EmailSettings _emailSettings;
     private readonly ILogger<EmailSender> _logger;
+    private readonly IServiceProvider _serviceProvider; // Aggiunto per SecureStorage
+    private readonly SettingsService _settingsService;
+    private SmtpConfig _smtpConfig;
 
     /// <summary>
-    ///     Costruttore che riceve le impostazioni email e il logger.
+    ///     Costruttore che riceve il servizio impostazioni e il logger.
     /// </summary>
-    /// <param name="emailSettings">Le impostazioni SMTP lette da appsettings.json.</param>
+    /// <param name="settingsService">Servizio per il recupero delle impostazioni dal database.</param>
     /// <param name="logger">Logger per registrare eventuali errori o informazioni.</param>
-    public EmailSender(IOptions<EmailSettings> emailSettings, ILogger<EmailSender> logger)
+    /// <param name="serviceProvider">Provider dei servizi per accedere a SecureStorage.</param>
+    /// // Aggiunto parametro
+    public EmailSender(SettingsService settingsService, ILogger<EmailSender> logger,
+        IServiceProvider serviceProvider) // Modificato costruttore
     {
-        _emailSettings = emailSettings.Value;
+        _settingsService = settingsService;
         _logger = logger;
+        _serviceProvider = serviceProvider; // Inizializzato
 
-        _logger.LogInformation("Inizializzazione EmailSender con server {Host} sulla porta {Port}.",
-            _emailSettings.SmtpServer, _emailSettings.Port);
+        // Valori di fallback per evitare problemi in caso di database corrotto o vuoto
+        var secureStorage = serviceProvider.GetRequiredService<SecureStorage>();
+        _smtpConfig = new SmtpConfig(secureStorage)
+        {
+            Host = "smtp.example.com",
+            Port = 587,
+            SenderEmail = "noreply@example.com",
+            SenderName = "HealthGear",
+            Username = "username",
+            Password = "",
+            RequiresAuthentication = true,
+            UseSsl = true
+        };
 
-        if (!string.IsNullOrWhiteSpace(_emailSettings.SmtpServer) && _emailSettings.Port != 0) return;
-        _logger.LogCritical("Le impostazioni SMTP non sono valide. Verifica appsettings.json.");
-        throw new InvalidOperationException("Configurazione SMTP non valida.");
+        LoadSettings().Wait();
     }
 
     /// <summary>
     ///     Invia un'email utilizzando un template HTML con segnaposto.
     /// </summary>
-    /// <param name="toEmail">Indirizzo email del destinatario.</param>
-    /// <param name="subject">Oggetto dell'email.</param>
-    /// <param name="templateName">Nome del template HTML (senza estensione .html).</param>
-    /// <param name="placeholders">Dizionario di segnaposto e valori da sostituire nel template.</param>
     public async Task SendEmailAsync(string toEmail, string subject, string templateName,
         Dictionary<string, string> placeholders)
     {
         _logger.LogInformation(
-            "Preparazione invio email a {Recipient} con oggetto '{Subject}' usando template '{Template}'", toEmail,
-            subject, templateName);
+            "Preparazione invio email a {Recipient} con oggetto '{Subject}' usando template '{Template}'",
+            toEmail, subject, templateName);
 
         try
         {
-            // Percorso completo del template
             var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", $"{templateName}.html");
 
             if (!File.Exists(templatePath))
                 throw new FileNotFoundException($"Il template email '{templatePath}' non è stato trovato.");
 
-            // Lettura del file HTML
             var body = await File.ReadAllTextAsync(templatePath);
+            body = placeholders.Aggregate(body,
+                (current, placeholder) => current.Replace(placeholder.Key, placeholder.Value));
 
-            // Sostituzione dei placeholder nel template
-            foreach (var placeholder in placeholders)
-            {
-                body = body.Replace(placeholder.Key, placeholder.Value);
-            }
-
-            // Composizione messaggio
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(_emailSettings.SenderName, _emailSettings.SenderEmail));
+            message.From.Add(new MailboxAddress(_smtpConfig.SenderName, _smtpConfig.SenderEmail));
             message.To.Add(MailboxAddress.Parse(toEmail));
             message.Subject = subject;
 
             var builder = new BodyBuilder { HtmlBody = body };
             message.Body = builder.ToMessageBody();
 
-            // Invio tramite MailKit
             using var smtp = new SmtpClient();
-            _logger.LogInformation("Connessione al server SMTP {Host}:{Port}...", _emailSettings.SmtpServer,
-                _emailSettings.Port);
+            _logger.LogInformation("Connessione al server SMTP {Host}:{Port}...", _smtpConfig.Host, _smtpConfig.Port);
 
-            await smtp.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.Port, SecureSocketOptions.StartTls);
+            await smtp.ConnectAsync(_smtpConfig.Host, _smtpConfig.Port, SecureSocketOptions.StartTls);
 
-            if (!string.IsNullOrWhiteSpace(_emailSettings.Username) &&
-                !string.IsNullOrWhiteSpace(_emailSettings.Password))
+            if (!string.IsNullOrWhiteSpace(_smtpConfig.Username) && !string.IsNullOrWhiteSpace(_smtpConfig.Password))
             {
-                _logger.LogInformation("Autenticazione in corso per l'utente {Username}...", _emailSettings.Username);
-                await smtp.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
+                _logger.LogInformation("Autenticazione in corso per l'utente {Username}...", _smtpConfig.Username);
+                await smtp.AuthenticateAsync(_smtpConfig.Username, _smtpConfig.Password);
             }
             else
             {
@@ -98,7 +98,32 @@ public class EmailSender : IEmailSender
         catch (Exception ex)
         {
             _logger.LogError(ex, "Errore durante l'invio dell'email a {Recipient}.", toEmail);
-            throw; // Propaga l'errore per gestirlo a livello superiore
+            throw;
         }
+    }
+
+    /// <summary>
+    ///     Carica le impostazioni SMTP dal database.
+    /// </summary>
+    private async Task LoadSettings()
+    {
+        var config = await _settingsService.GetConfigAsync();
+        if (config?.Smtp == null)
+        {
+            _logger.LogCritical("Le impostazioni SMTP non sono valide.");
+            throw new InvalidOperationException("Configurazione SMTP non valida.");
+        }
+
+        var secureStorage = _serviceProvider.GetRequiredService<SecureStorage>();
+        config.Smtp.Username = secureStorage.DecryptUsername(config.Smtp.Username); // 🔓 Decrittografa Username
+        config.Smtp.Password = secureStorage.DecryptPassword(config.Smtp.Password); // 🔓 Decrittografa Password
+        _smtpConfig = config.Smtp;
+
+        _logger.LogInformation("Inizializzazione EmailSender con server {Host} sulla porta {Port}.",
+            _smtpConfig.Host, _smtpConfig.Port);
+
+        if (!string.IsNullOrWhiteSpace(_smtpConfig.Host) && _smtpConfig.Port != 0) return;
+        _logger.LogCritical("Le impostazioni SMTP non sono valide. Verifica il database.");
+        throw new InvalidOperationException("Configurazione SMTP non valida.");
     }
 }

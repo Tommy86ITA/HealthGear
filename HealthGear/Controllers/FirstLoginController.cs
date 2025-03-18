@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HealthGear.Controllers;
 
 /// <summary>
-/// Gestisce il cambio password obbligatorio al primo accesso.
+///     Gestisce il cambio password obbligatorio al primo accesso.
 /// </summary>
 [Authorize]
 [Route("FirstLogin")]
@@ -17,11 +17,11 @@ public class FirstLoginController(
     ILogger<FirstLoginController> logger)
     : Controller
 {
-    private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
+    private readonly UserManager<ApplicationUser> _userManager = userManager;
 
     /// <summary>
-    /// Gestisce la visualizzazione della pagina di primo accesso.
+    ///     Gestisce la visualizzazione della pagina di primo accesso.
     /// </summary>
     /// <param name="userId">L'ID dell'utente che deve cambiare la password.</param>
     /// <returns>La view per il cambio password o il reindirizzamento alla home se non necessario.</returns>
@@ -37,7 +37,8 @@ public class FirstLoginController(
 
         if (!user.MustChangePassword)
         {
-            logger.LogInformation("L'utente {UserName} ha già cambiato la password, reindirizzamento alla Home.", user.UserName);
+            logger.LogInformation("L'utente {UserName} ha già cambiato la password, reindirizzamento alla Home.",
+                user.UserName);
             return RedirectToAction("Home", "Home");
         }
 
@@ -47,7 +48,7 @@ public class FirstLoginController(
     }
 
     /// <summary>
-    /// Gestisce il cambio della password per l'utente al primo accesso.
+    ///     Gestisce il cambio della password per l'utente al primo accesso.
     /// </summary>
     /// <param name="model">Il modello contenente la nuova password e l'ID dell'utente.</param>
     /// <returns>La view per il cambio password o il reindirizzamento alla home se il cambio è avvenuto con successo.</returns>
@@ -57,14 +58,17 @@ public class FirstLoginController(
     {
         if (!ModelState.IsValid)
         {
-            logger.LogWarning("Tentativo di cambio password fallito per l'utente {UserId}: modello non valido.", model.UserId);
+            logger.LogWarning("Tentativo di cambio password fallito per l'utente {UserId}: modello non valido.",
+                model.UserId);
             return View("~/Views/UserManagement/FirstLogin.cshtml", model);
         }
 
         var user = await _userManager.FindByIdAsync(model.UserId);
         if (user == null)
         {
-            logger.LogError("Errore critico: l'utente con ID {UserId} non è stato trovato durante il reset della password.", model.UserId);
+            logger.LogError(
+                "Errore critico: l'utente con ID {UserId} non è stato trovato durante il reset della password.",
+                model.UserId);
             return NotFound();
         }
 
@@ -81,9 +85,10 @@ public class FirstLoginController(
         {
             user.MustChangePassword = false;
             await _userManager.UpdateAsync(user);
-            await _signInManager.SignInAsync(user, isPersistent: false);
+            await _signInManager.SignInAsync(user, false);
 
-            logger.LogInformation("L'utente {UserName} ha cambiato con successo la password al primo accesso.", user.UserName);
+            logger.LogInformation("L'utente {UserName} ha cambiato con successo la password al primo accesso.",
+                user.UserName);
             return RedirectToAction("Home", "Home");
         }
 

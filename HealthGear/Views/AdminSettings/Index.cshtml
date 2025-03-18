@@ -1,0 +1,152 @@
+@model HealthGear.Models.ViewModels.AdminSettingsViewModel
+@{
+    ViewData["Title"] = "Configurazione Generale";
+}
+
+<h2 class="mb-4"><i class="fas fa-cogs"></i> Configurazione Generale</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<form method="post" asp-action="Update">
+    @Html.AntiForgeryToken()
+    <div class="row">
+
+        <!-- Sezione SMTP -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-envelope"></i> Impostazioni SMTP
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label><i class="fas fa-server"></i> Host:</label>
+                        <input asp-for="Smtp.Host" class="form-control"/>
+                        <span asp-validation-for="Smtp.Host" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-plug"></i> Porta SMTP:</label>
+                        <input asp-for="Smtp.Port" class="form-control"/>
+                        <span asp-validation-for="Smtp.Port" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-at"></i> Email Mittente:</label>
+                        <input asp-for="Smtp.SenderEmail" class="form-control"/>
+                        <span asp-validation-for="Smtp.SenderEmail" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Nome Mittente:</label>
+                        <input asp-for="Smtp.SenderName" class="form-control"/>
+                        <span asp-validation-for="Smtp.SenderName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-user-lock"></i> Username SMTP:</label>
+                        <input asp-for="Smtp.Username" class="form-control"/>
+                        <span asp-validation-for="Smtp.Username" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-key"></i> Password SMTP:</label>
+                        <div class="input-group">
+                            <input asp-for="Smtp.Password" type="password" class="form-control" id="smtpPassword"
+                                   autocomplete="new-password"/>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" id="passwordToggleBtn">
+                                    <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <span asp-validation-for="Smtp.Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="Smtp.UseSsl" class="form-check-input" type="checkbox" id="smtpUseSSL"/>
+                        <label class="form-check-label" for="smtpUseSSL">Usa SSL/TLS</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="Smtp.RequiresAuthentication" class="form-check-input" type="checkbox"
+                               id="smtpRequiresAuthentication"/>
+                        <label class="form-check-label" for="smtpRequiresAuthentication">Richiede Autenticazione</label>
+                    </div>
+                    <div class="form-group mt-3">
+                        <button type="button" class="btn btn-info" id="testSmtpBtn">
+                            <i class="fas fa-paper-plane"></i> Test SMTP
+                        </button>
+                        <span id="smtpTestResult" class="ml-2"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione Logging -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-file-alt"></i> Impostazioni Logging
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label><i class="fas fa-clipboard-list"></i> Livello di Log:</label>
+                        <select asp-for="Logging.LogLevel" class="form-control">
+                            <option value="Information">Information</option>
+                            <option value="Warning">Warning</option>
+                            <option value="Error">Error</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottoni -->
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salva Impostazioni</button>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Torna
+            Indietro</a>
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let passwordField = document.getElementById("smtpPassword");
+        let passwordToggleBtn = document.getElementById("passwordToggleBtn");
+        let passwordToggleIcon = document.getElementById("passwordToggleIcon");
+
+        passwordToggleBtn.addEventListener("click", function () {
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                passwordToggleIcon.classList.remove("fa-eye");
+                passwordToggleIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordField.type = "password";
+                passwordToggleIcon.classList.remove("fa-eye-slash");
+                passwordToggleIcon.classList.add("fa-eye");
+            }
+        });
+
+        // Evita che il campo password risulti vuoto all'avvio
+        if (!passwordField.value.trim()) {
+            passwordField.value = "@Html.Raw(Model.Smtp.Password)";
+        }
+    });
+</script>
+
+<script>
+    document.getElementById("testSmtpBtn").addEventListener("click", function () {
+        let resultIcon = document.getElementById("smtpTestResult");
+        resultIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Test in corso...';
+
+        fetch('/AdminSettings/TestSmtp', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i> Connessione riuscita';
+                } else {
+                    resultIcon.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Errore: ' + data.message;
+                }
+            })
+            .catch(error => {
+                resultIcon.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Errore durante il test';
+            });
+    });
+</script>

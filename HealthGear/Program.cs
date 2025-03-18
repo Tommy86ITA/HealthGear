@@ -20,6 +20,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), opt =>
         opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
+builder.Services.AddDbContext<SettingsDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("SettingsConnection")));
+
 var passwordRules = new PasswordRules();
 builder.Configuration.GetSection("PasswordRules").Bind(passwordRules);
 builder.Services.AddSingleton(passwordRules);
@@ -38,6 +41,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddErrorDescriber<ItalianIdentityErrorDescriber>();
 
 // 2. Registrazione dei servizi applicativi custom
+builder.Services.AddScoped<SettingsService>();
 builder.Services.AddSingleton<PasswordGenerator>();
 builder.Services.AddScoped<PasswordValidator>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -50,6 +54,10 @@ builder.Services.AddScoped<PdfReportGenerator>();
 builder.Services.AddScoped<ExcelReportGenerator>();
 builder.Services.AddSingleton<TemporaryPasswordCacheService>();
 builder.Services.AddSingleton<ThirdPartyService>();
+
+// 🔐 Abilita Data Protection per la crittografia sicura delle credenziali SMTP
+builder.Services.AddDataProtection();
+builder.Services.AddSingleton<SecureStorage>();
 
 // 3. Configurazione dei servizi MVC, Razor Pages e gestione della sessione
 builder.Services.AddHttpContextAccessor();
@@ -142,25 +150,42 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var dbContext = services.GetRequiredService<ApplicationDbContext>();
+
+    var settingsDbContext = services.GetRequiredService<SettingsDbContext>();
     var logger = services.GetRequiredService<ILogger<Program>>();
+    var dbPath = scope.ServiceProvider.GetRequiredService<IConfiguration>().GetConnectionString("SettingsConnection");
+    logger.LogInformation($"🗄️ Il database usato per SettingsDbContext è: {dbPath}");
 
     try
     {
-        logger.LogInformation("🔄 Verifica e creazione database se necessario...");
-        dbContext.Database.EnsureCreated(); // Garantisce che il database esista
+        logger.LogInformation("🔄 Applicazione delle migrazioni al database principale...");
+        dbContext.Database.Migrate();
+        logger.LogInformation("✅ Migrazione database principale completata!");
 
-        logger.LogInformation("🔄 Avvio della migrazione del database...");
-        dbContext.Database.Migrate(); // Applica le migrazioni
-        logger.LogInformation("✅ Migrazione completata con successo!");
+        logger.LogInformation("🔄 Applicazione delle migrazioni al database impostazioni...");
+        settingsDbContext.Database.Migrate();
+        logger.LogInformation("✅ Migrazione database impostazioni completata!");
 
         logger.LogInformation("🏁 Avvio del seeding dei dati...");
         await DbInitializer.SeedDataAsync(services, builder.Configuration);
         logger.LogInformation("✅ Seeding completato con successo!");
+
+        // Ottenere il servizio delle impostazioni
+        var settingsService = services.GetRequiredService<SettingsService>();
+
+        // Verifica e carica le impostazioni dal database
+        var config = await settingsService.GetConfigAsync();
+        if (config == null)
+            logger.LogWarning(
+                "⚠️ Nessuna configurazione trovata nel database. Verranno utilizzati i valori di default.");
+        else
+            logger.LogInformation("✅ Configurazione caricata con successo.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "❌ Errore durante l'inizializzazione del database.");
-        throw;
+        logger.LogError(ex, "❌ Errore durante l'inizializzazione dei database.");
+        logger.LogWarning(
+            "⚠️ L'applicazione continuerà l'esecuzione, ma alcune funzionalità potrebbero non essere disponibili.");
     }
 }
 
