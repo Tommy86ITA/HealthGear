@@ -16,3 +16,13 @@
     margin-bottom: 12px;
     text-align: justify;
 }
+
+.accordion-button:not(.collapsed) {
+    background-color: #007bff !important; /* Colore primario di Bootstrap */
+    color: white !important;
+}
+
+.accordion-button {
+    background-color: #6c757d !important; /* Colore secondario */
+    color: white !important;
+}

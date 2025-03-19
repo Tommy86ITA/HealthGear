@@ -15,6 +15,8 @@ public class AppConfig
     /// </summary>
     public AppConfig()
     {
+        Smtp = new SmtpConfig();
+        Logging = new LoggingConfig();
     }
 
     /// <summary>
@@ -23,6 +25,7 @@ public class AppConfig
     public AppConfig(SecureStorage secureStorage)
     {
         Smtp = new SmtpConfig(secureStorage);
+        Logging = new LoggingConfig();
     }
 
     [Key] public int Id { get; set; }
@@ -35,5 +38,5 @@ public class AppConfig
     /// <summary>
     ///     Configurazioni Logging.
     /// </summary>
-    public required LoggingConfig Logging { get; set; } = new();
+    public required LoggingConfig Logging { get; set; }
 }

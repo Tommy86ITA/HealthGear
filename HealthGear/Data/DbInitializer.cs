@@ -100,7 +100,7 @@ public static class DbInitializer
     }
 
     /// <summary>
-    /// Seeding del db delle impostazioni
+    ///     Seeding del db delle impostazioni
     /// </summary>
     /// <param name="serviceProvider"></param>
     private static async Task SeedSettingsAsync(IServiceProvider serviceProvider)
@@ -116,25 +116,20 @@ public static class DbInitializer
                 Host = "smtp.example.com",
                 Port = 587,
                 UseSsl = true,
-                RequiresAuthentication = true
-            };
-
-            // Crittografiamo solo se SecureStorage è valido e i dati non sono già crittografati
-            if (secureStorage != null)
-            {
-                defaultSmtpConfig.Username = SecureStorage.IsEncrypted("admin@healthgear.local")
+                RequiresAuthentication = true,
+                // Crittografiamo solo se SecureStorage è valido e i dati non sono già crittografati
+                Username = SecureStorage.IsEncrypted("admin@healthgear.local")
                     ? "admin@healthgear.local"
-                    : secureStorage.EncryptUsername("admin@healthgear.local");
-
-                defaultSmtpConfig.Password = SecureStorage.IsEncrypted("Example123!")
+                    : secureStorage.EncryptUsername("admin@healthgear.local"),
+                Password = SecureStorage.IsEncrypted("Example123!")
                     ? "Example123!"
-                    : secureStorage.EncryptPassword("Example123!");
-            }
+                    : secureStorage.EncryptPassword("Example123!")
+            };
 
             var defaultConfig = new AppConfig
             {
                 Smtp = defaultSmtpConfig,
-                Logging = new LoggingConfig { LogLevel = "Information" }
+                Logging = new LoggingConfig { LogLevel = LogLevelEnum.Information }
             };
 
             settingsContext.Configurations.Add(defaultConfig);

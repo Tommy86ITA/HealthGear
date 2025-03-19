@@ -16,7 +16,10 @@ public class AdminSettingsViewModel
     public AdminSettingsViewModel()
     {
         Smtp = new SmtpConfig();
-        Logging = new LoggingConfig();
+        Logging = new LoggingConfig
+        {
+            LogLevel = LogLevelEnum.Information // Valore predefinito
+        };
     }
 
     /// <summary>
@@ -36,7 +39,10 @@ public class AdminSettingsViewModel
             Password = config.Smtp.Password
         };
 
-        Logging = config.Logging;
+        Logging = new LoggingConfig
+        {
+            LogLevel = config.Logging.LogLevel // Usa direttamente l'enum
+        };
     }
 
     /// <summary>

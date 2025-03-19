@@ -10,6 +10,10 @@ public class SmtpConfig
 {
     private readonly SecureStorage? _secureStorage;
 
+    private string _password = "examplepassword";
+
+    private string _username = "example";
+
     /// <summary>
     ///     Costruttore che accetta `SecureStorage` e lo utilizza per crittografare/decrittografare i dati.
     /// </summary>
@@ -31,16 +35,12 @@ public class SmtpConfig
 
     [Required] public int Port { get; set; } = 587;
 
-    private string _username = "example";
-
     [Required]
     public string Username
     {
         get => _secureStorage?.DecryptUsername(_username) ?? _username;
         set => _username = _secureStorage?.EncryptUsername(value) ?? value;
     }
-
-    private string _password = "examplepassword";
 
     [Required]
     public string Password

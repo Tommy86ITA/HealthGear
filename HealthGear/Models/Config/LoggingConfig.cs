@@ -13,5 +13,15 @@ public class LoggingConfig
     ///     Livello di dettaglio dei log (Verbose, Warning, Error).
     /// </summary>
     [Required]
-    public string LogLevel { get; set; } = "Verbose";
+    public LogLevelEnum LogLevel { get; set; } = LogLevelEnum.Information;
+}
+
+/// <summary>
+/// Enum per definire i livelli di log ammessi.
+/// </summary>
+public enum LogLevelEnum
+{
+    Information,
+    Warning,
+    Error
 }

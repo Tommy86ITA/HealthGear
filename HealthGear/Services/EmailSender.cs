@@ -76,13 +76,12 @@ public class EmailSender : IEmailSender
             message.Body = builder.ToMessageBody();
 
             using var smtp = new SmtpClient();
-            _logger.LogInformation("Connessione al server SMTP {Host}:{Port}...", _smtpConfig.Host, _smtpConfig.Port);
+            _logger.LogInformation("Connessione al server SMTP...");
 
             await smtp.ConnectAsync(_smtpConfig.Host, _smtpConfig.Port, SecureSocketOptions.StartTls);
 
             if (!string.IsNullOrWhiteSpace(_smtpConfig.Username) && !string.IsNullOrWhiteSpace(_smtpConfig.Password))
             {
-                _logger.LogInformation("Autenticazione in corso per l'utente {Username}...", _smtpConfig.Username);
                 await smtp.AuthenticateAsync(_smtpConfig.Username, _smtpConfig.Password);
             }
             else
@@ -129,37 +128,45 @@ public class EmailSender : IEmailSender
         _logger.LogCritical("Le impostazioni SMTP non sono valide. Verifica il database.");
         throw new InvalidOperationException("Configurazione SMTP non valida.");
     }
+
     /// <summary>
     ///     Testa la connessione al server SMTP utilizzando i parametri passati dalla View.
     /// </summary>
-    public async Task<bool> TestSmtpConnectionAsync(string host, int port, string username, string password, bool useSsl, bool requiresAuth)
+    public async Task<bool> TestSmtpConnectionAsync(string host, int port, string username, string password,
+        bool useSsl, bool requiresAuth)
     {
         _logger.LogInformation("🔍 Avvio test connessione SMTP con parametri personalizzati...");
 
         try
         {
             using var smtp = new SmtpClient();
-            _logger.LogInformation("🌐 Connessione a {Host}:{Port}...", host, port);
-
-            await smtp.ConnectAsync(host, port, useSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
+            
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await smtp.ConnectAsync(host, port, useSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto,
+                cts.Token);
 
             if (requiresAuth)
             {
                 if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
                 {
-                    _logger.LogInformation("🔑 Tentativo di autenticazione per l'utente {Username}...", username);
-                    await smtp.AuthenticateAsync(username, password);
+                    await smtp.AuthenticateAsync(username, password, cts.Token);
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ L'autenticazione è richiesta, ma non sono state fornite credenziali valide.");
+                    _logger.LogWarning(
+                        "⚠️ L'autenticazione è richiesta, ma non sono state fornite credenziali valide.");
                     throw new InvalidOperationException("Autenticazione richiesta, ma credenziali non valide.");
                 }
             }
 
-            await smtp.DisconnectAsync(true);
+            await smtp.DisconnectAsync(true, cts.Token);
             _logger.LogInformation("✅ Connessione SMTP riuscita con i parametri forniti.");
             return true;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("⏳ Test SMTP annullato a causa di timeout.");
+            return false;
         }
         catch (Exception ex)
         {
