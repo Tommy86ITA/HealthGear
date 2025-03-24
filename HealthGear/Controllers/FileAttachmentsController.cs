@@ -1,23 +1,23 @@
 using HealthGear.Constants;
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Models.Config;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+// ReSharper disable NotAccessedField.Local
 
 namespace HealthGear.Controllers;
 
-public class FileAttachmentsController(
-    ApplicationDbContext context,
-    IWebHostEnvironment env,
-    ICompositeViewEngine viewEngine)
-    : Controller
+public class FileAttachmentsController : Controller
 {
-    // Cartella in wwwroot dove verranno salvati i file
-    private const string UploadsFolder = "uploads";
+    private readonly ApplicationDbContext _context;
+    private readonly IWebHostEnvironment _env;
+    private readonly ICompositeViewEngine _viewEngine;
+    private readonly HealthGearConfig _config;
 
     // Limite massimo di dimensione dei file (500 MB)
     private const long MaxFileSize = 500 * 1024 * 1024;
@@ -30,7 +30,19 @@ public class FileAttachmentsController(
         ".zip", ".rar"
     ];
 
-    // I campi context, env e viewEngine vengono passati tramite dependency injection
+    // I campi _context, _env, _viewEngine e _config vengono passati tramite dependency injection
+
+    public FileAttachmentsController(
+        ApplicationDbContext context,
+        IWebHostEnvironment env,
+        ICompositeViewEngine viewEngine,
+        HealthGearConfig config)
+    {
+        _context = context;
+        _env = env;
+        _viewEngine = viewEngine;
+        _config = config;
+    }
 
     /// <summary>
     ///     AjaxUpload: Carica i file inviati via AJAX.
@@ -55,9 +67,9 @@ public class FileAttachmentsController(
             if (files == null || files.Count == 0)
                 return Json(new { success = false, errorMessage = "Nessun file selezionato." });
 
-            // Costruiamo il percorso per il salvataggio dei file (wwwroot/uploads)
+            // Costruiamo il percorso per il salvataggio dei file (_config.UploadFolderPath)
             var subFolder = deviceId.HasValue ? "devices" : interventionId.HasValue ? "interventions" : "misc";
-            var uploadsPath = Path.Combine(env.WebRootPath, UploadsFolder, subFolder);
+            var uploadsPath = Path.Combine(_config.UploadFolderPath, subFolder);
             if (!Directory.Exists(uploadsPath))
                 Directory.CreateDirectory(uploadsPath);
 
@@ -96,7 +108,7 @@ public class FileAttachmentsController(
                 var attachment = new FileAttachment
                 {
                     FileName = file.FileName,
-                    FilePath = "/" + UploadsFolder + "/" + subFolder + "/" + uniqueFileName,
+                    FilePath = Path.Combine(subFolder, uniqueFileName).Replace("\\", "/"),
                     ContentType = file.ContentType,
                     UploadDate = DateTime.UtcNow,
                     DocumentType = documentType, // Salva il tipo documento come stringa
@@ -104,7 +116,7 @@ public class FileAttachmentsController(
                     InterventionId = interventionId
                 };
 
-                context.FileAttachments.Add(attachment);
+                _context.FileAttachments.Add(attachment);
             }
 
             // Se il ModelState non è valido, restituisce un errore JSON
@@ -112,16 +124,16 @@ public class FileAttachmentsController(
                 return Json(new { success = false, errorMessage = "Errore nel caricamento dei file." });
 
             // Salva i record creati nel database
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Recupera la lista aggiornata degli allegati in base al contesto
             IEnumerable<FileAttachment> updatedAttachments;
             if (deviceId.HasValue)
-                updatedAttachments = await context.FileAttachments
+                updatedAttachments = await _context.FileAttachments
                     .Where(f => f.DeviceId == deviceId.Value)
                     .ToListAsync();
             else if (interventionId.HasValue)
-                updatedAttachments = await context.FileAttachments
+                updatedAttachments = await _context.FileAttachments
                     .Where(f => f.InterventionId == interventionId.Value)
                     .ToListAsync();
             else
@@ -159,14 +171,14 @@ public class FileAttachmentsController(
     public async Task<IActionResult> Download(int id)
     {
         // Recupera il record dell'allegato dal database in base all'ID fornito.
-        var attachment = await context.FileAttachments.FindAsync(id);
+        var attachment = await _context.FileAttachments.FindAsync(id);
         if (attachment == null)
             // Se il record non esiste, restituisce un NotFound.
             return NotFound("Il file richiesto non è stato trovato nel database.");
 
-        // Costruisce il percorso fisico del file combinando la root del sito con il percorso salvato,
+        // Costruisce il percorso fisico del file combinando il percorso salvato,
         // rimuovendo eventuali '/' iniziali.
-        var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
+        var filePath = Path.Combine(_config.UploadFolderPath, attachment.FilePath.Replace('/', Path.DirectorySeparatorChar));
 
         // Verifica se il file esiste sul filesystem.
         if (System.IO.File.Exists(filePath)) return PhysicalFile(filePath, attachment.ContentType, attachment.FileName);
@@ -191,12 +203,12 @@ public class FileAttachmentsController(
     public async Task<IActionResult> Delete(int id)
     {
         // Trova il record dell'allegato
-        var attachment = await context.FileAttachments.FindAsync(id);
+        var attachment = await _context.FileAttachments.FindAsync(id);
         if (attachment == null)
             return Json(new { success = false, errorMessage = "File non trovato." });
 
         // Costruisce il percorso fisico del file (rimuovendo eventuali '/' iniziali)
-        var filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'));
+        var filePath = Path.Combine(_config.UploadFolderPath, attachment.FilePath.Replace('/', Path.DirectorySeparatorChar));
         try
         {
             // Se il file esiste, lo elimina dal filesystem
@@ -213,8 +225,8 @@ public class FileAttachmentsController(
         }
 
         // Rimuove il record dal database
-        context.FileAttachments.Remove(attachment);
-        await context.SaveChangesAsync();
+        _context.FileAttachments.Remove(attachment);
+        await _context.SaveChangesAsync();
 
         return Json(new { success = true });
     }
@@ -232,7 +244,7 @@ public class FileAttachmentsController(
         ViewData.Model = model;
 
         await using var sw = new StringWriter();
-        var viewResult = viewEngine.FindView(ControllerContext, viewName, false);
+        var viewResult = _viewEngine.FindView(ControllerContext, viewName, false);
 
         if (viewResult.View == null)
             throw new ArgumentNullException($"{viewName} non trovato.");
@@ -261,22 +273,23 @@ public class FileAttachmentsController(
     public async Task<IActionResult> CleanupOrphanedFilesAjax()
     {
         // Recupera tutti i record di file allegati dal database
-        var allAttachments = await context.FileAttachments.ToListAsync();
+        var allAttachments = await _context.FileAttachments.ToListAsync();
         var removedCount = 0;
 
         // Per ogni record, controlla se il file esiste nel filesystem
-        foreach (var attachment in from attachment in allAttachments
-                 let filePath = Path.Combine(env.WebRootPath, attachment.FilePath.TrimStart('/'))
-                 where !System.IO.File.Exists(filePath)
-                 select attachment)
+        foreach (var attachment in allAttachments)
         {
-            // Se il file non esiste, rimuovi il record
-            context.FileAttachments.Remove(attachment);
-            removedCount++;
+            var filePath = Path.Combine(_config.UploadFolderPath, attachment.FilePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!System.IO.File.Exists(filePath))
+            {
+                // Se il file non esiste, rimuovi il record
+                _context.FileAttachments.Remove(attachment);
+                removedCount++;
+            }
         }
 
         // Salva le modifiche al database
-        await context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
         // Restituisce il report in formato JSON
         return Json(new { totalRecords = allAttachments.Count, removedCount });

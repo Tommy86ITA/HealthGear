@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.Text.Json;
 using HealthGear.Data;
 using HealthGear.Models;
+using HealthGear.Models.Config;
 using HealthGear.Models.Settings;
 using HealthGear.Services;
 using HealthGear.Services.Reports;
@@ -82,6 +84,22 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // 5. Creazione dell'applicazione
+// ✅ Lettura configurazione esterna da healthgear.config.json
+var configPath = Path.Combine(AppContext.BaseDirectory, "healthgear.config.json");
+HealthGearConfig hgConfig;
+
+if (File.Exists(configPath))
+{
+    var json = File.ReadAllText(configPath);
+    hgConfig = JsonSerializer.Deserialize<HealthGearConfig>(json) ?? new HealthGearConfig();
+}
+else
+{
+    hgConfig = new HealthGearConfig(); // fallback
+}
+
+builder.Services.AddSingleton(hgConfig);
+
 var app = builder.Build();
 
 // 6. Impostazione della cultura italiana come predefinita
