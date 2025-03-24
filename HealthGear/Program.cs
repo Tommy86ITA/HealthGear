@@ -16,14 +16,44 @@ using SQLitePCL;
 Batteries.Init();
 
 var builder = WebApplication.CreateBuilder(args);
+var logger = LoggerFactory
+    .Create(b => b.AddConsole())
+    .CreateLogger("Startup");
 
 // 1. Configurazione del database e Identity per la gestione degli utenti
+var configPath = Path.Combine(AppContext.BaseDirectory, "healthgear.config.json");
+HealthGearConfig hgConfig;
+
+if (File.Exists(configPath))
+{
+    try
+    {
+        var json = File.ReadAllText(configPath);
+        hgConfig = JsonSerializer.Deserialize<HealthGearConfig>(json) ?? new HealthGearConfig();
+        logger.LogInformation("✅ Configurazione caricata da healthgear.config.json");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "⚠️ Errore durante la lettura del file di configurazione. Verranno usati i valori di default.");
+        hgConfig = new HealthGearConfig();
+    }
+}
+else
+{
+    logger.LogWarning("⚠️ File di configurazione healthgear.config.json non trovato. Verranno usati i valori di default.");
+    hgConfig = new HealthGearConfig(); // fallback
+}
+
+var settingsDbPath = string.IsNullOrWhiteSpace(hgConfig.SettingsDbPath)
+    ? builder.Configuration.GetConnectionString("SettingsConnection")
+    : $"Data Source={hgConfig.SettingsDbPath}";
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), opt =>
         opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
 builder.Services.AddDbContext<SettingsDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("SettingsConnection")));
+    options.UseSqlite(settingsDbPath));
 
 var passwordRules = new PasswordRules();
 builder.Configuration.GetSection("PasswordRules").Bind(passwordRules);
@@ -84,20 +114,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // 5. Creazione dell'applicazione
-// ✅ Lettura configurazione esterna da healthgear.config.json
-var configPath = Path.Combine(AppContext.BaseDirectory, "healthgear.config.json");
-HealthGearConfig hgConfig;
-
-if (File.Exists(configPath))
-{
-    var json = File.ReadAllText(configPath);
-    hgConfig = JsonSerializer.Deserialize<HealthGearConfig>(json) ?? new HealthGearConfig();
-}
-else
-{
-    hgConfig = new HealthGearConfig(); // fallback
-}
-
 builder.Services.AddSingleton(hgConfig);
 
 var app = builder.Build();
@@ -170,23 +186,27 @@ using (var scope = app.Services.CreateScope())
     var dbContext = services.GetRequiredService<ApplicationDbContext>();
 
     var settingsDbContext = services.GetRequiredService<SettingsDbContext>();
-    var logger = services.GetRequiredService<ILogger<Program>>();
+    var scopedLogger = services.GetRequiredService<ILogger<Program>>();
     var dbPath = scope.ServiceProvider.GetRequiredService<IConfiguration>().GetConnectionString("SettingsConnection");
-    logger.LogInformation($"🗄️ Il database usato per SettingsDbContext è: {dbPath}");
+    scopedLogger.LogInformation($"🗄️ Il database usato per SettingsDbContext è: {dbPath}");
 
     try
     {
-        logger.LogInformation("🔄 Applicazione delle migrazioni al database principale...");
+        scopedLogger.LogInformation("🔄 Applicazione delle migrazioni al database principale...");
         dbContext.Database.Migrate();
-        logger.LogInformation("✅ Migrazione database principale completata!");
+        // Assicura la creazione delle tabelle se non esistono
+        await dbContext.Database.EnsureCreatedAsync();
+        scopedLogger.LogInformation("✅ Migrazione database principale completata!");
 
-        logger.LogInformation("🔄 Applicazione delle migrazioni al database impostazioni...");
+        scopedLogger.LogInformation("🔄 Applicazione delle migrazioni al database impostazioni...");
         settingsDbContext.Database.Migrate();
-        logger.LogInformation("✅ Migrazione database impostazioni completata!");
+        // Assicura la creazione delle tabelle se non esistono
+        await settingsDbContext.Database.EnsureCreatedAsync();
+        scopedLogger.LogInformation("✅ Migrazione database impostazioni completata!");
 
-        logger.LogInformation("🏁 Avvio del seeding dei dati...");
+        scopedLogger.LogInformation("🏁 Avvio del seeding dei dati...");
         await DbInitializer.SeedDataAsync(services, builder.Configuration);
-        logger.LogInformation("✅ Seeding completato con successo!");
+        scopedLogger.LogInformation("✅ Seeding completato con successo!");
 
         // Ottenere il servizio delle impostazioni
         var settingsService = services.GetRequiredService<SettingsService>();
@@ -194,15 +214,15 @@ using (var scope = app.Services.CreateScope())
         // Verifica e carica le impostazioni dal database
         var config = await settingsService.GetConfigAsync();
         if (config == null)
-            logger.LogWarning(
+            scopedLogger.LogWarning(
                 "⚠️ Nessuna configurazione trovata nel database. Verranno utilizzati i valori di default.");
         else
-            logger.LogInformation("✅ Configurazione caricata con successo.");
+            scopedLogger.LogInformation("✅ Configurazione caricata con successo.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "❌ Errore durante l'inizializzazione dei database.");
-        logger.LogWarning(
+        scopedLogger.LogError(ex, "❌ Errore durante l'inizializzazione dei database.");
+        scopedLogger.LogWarning(
             "⚠️ L'applicazione continuerà l'esecuzione, ma alcune funzionalità potrebbero non essere disponibili.");
     }
 }
