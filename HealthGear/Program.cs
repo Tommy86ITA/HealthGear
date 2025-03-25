@@ -21,32 +21,31 @@ var logger = LoggerFactory
     .CreateLogger("Startup");
 
 // 1. Configurazione del database e Identity per la gestione degli utenti
-var configPath = Path.Combine(AppContext.BaseDirectory, "healthgear.config.json");
-HealthGearConfig hgConfig;
+var configPath = Path.Combine(@"C:\ProgramData\HealthGear Suite\HealthGearConfig", "healthgear.config.json");
+HealthGearConfig hgConfig = HealthGearConfig.CreateDefault();
 
 if (File.Exists(configPath))
 {
     try
     {
         var json = File.ReadAllText(configPath);
-        hgConfig = JsonSerializer.Deserialize<HealthGearConfig>(json) ?? new HealthGearConfig();
+        hgConfig = JsonSerializer.Deserialize<HealthGearConfig>(json) ?? HealthGearConfig.CreateDefault();;
         logger.LogInformation("✅ Configurazione caricata da healthgear.config.json");
     }
     catch (Exception ex)
     {
         logger.LogWarning(ex, "⚠️ Errore durante la lettura del file di configurazione. Verranno usati i valori di default.");
-        hgConfig = new HealthGearConfig();
+        hgConfig = HealthGearConfig.CreateDefault();
     }
 }
 else
 {
     logger.LogWarning("⚠️ File di configurazione healthgear.config.json non trovato. Verranno usati i valori di default.");
-    hgConfig = new HealthGearConfig(); // fallback
 }
 
-var settingsDbPath = string.IsNullOrWhiteSpace(hgConfig.SettingsDbPath)
-    ? builder.Configuration.GetConnectionString("SettingsConnection")
-    : $"Data Source={hgConfig.SettingsDbPath}";
+ApplyConnectionStrings();
+
+var settingsDbPath = $"Data Source={hgConfig.SettingsDbPath}";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), opt =>
@@ -187,21 +186,19 @@ using (var scope = app.Services.CreateScope())
 
     var settingsDbContext = services.GetRequiredService<SettingsDbContext>();
     var scopedLogger = services.GetRequiredService<ILogger<Program>>();
-    var dbPath = scope.ServiceProvider.GetRequiredService<IConfiguration>().GetConnectionString("SettingsConnection");
+    var mainDbPath = hgConfig.DatabasePath;
+    scopedLogger.LogInformation($"🗄️ Il database usato per ApplicationDbContext è: {mainDbPath}");
+    var dbPath = hgConfig.SettingsDbPath;
     scopedLogger.LogInformation($"🗄️ Il database usato per SettingsDbContext è: {dbPath}");
 
     try
     {
         scopedLogger.LogInformation("🔄 Applicazione delle migrazioni al database principale...");
         dbContext.Database.Migrate();
-        // Assicura la creazione delle tabelle se non esistono
-        await dbContext.Database.EnsureCreatedAsync();
         scopedLogger.LogInformation("✅ Migrazione database principale completata!");
 
         scopedLogger.LogInformation("🔄 Applicazione delle migrazioni al database impostazioni...");
         settingsDbContext.Database.Migrate();
-        // Assicura la creazione delle tabelle se non esistono
-        await settingsDbContext.Database.EnsureCreatedAsync();
         scopedLogger.LogInformation("✅ Migrazione database impostazioni completata!");
 
         scopedLogger.LogInformation("🏁 Avvio del seeding dei dati...");
@@ -229,3 +226,15 @@ using (var scope = app.Services.CreateScope())
 
 // 14. Avvio dell'applicazione
 app.Run();
+
+void ApplyConnectionStrings()
+{
+    if (string.IsNullOrWhiteSpace(hgConfig.DatabasePath))
+        hgConfig.DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "healthgear.db");
+
+    if (string.IsNullOrWhiteSpace(hgConfig.SettingsDbPath))
+        hgConfig.SettingsDbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.db");
+
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = $"Data Source={hgConfig.DatabasePath}";
+    builder.Configuration["ConnectionStrings:SettingsConnection"] = $"Data Source={hgConfig.SettingsDbPath}";
+}

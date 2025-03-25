@@ -3,6 +3,7 @@ using HealthGear.Models;
 using HealthGear.Models.Config;
 using HealthGear.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthGear.Data;
 
@@ -105,35 +106,55 @@ public static class DbInitializer
     /// <param name="serviceProvider"></param>
     private static async Task SeedSettingsAsync(IServiceProvider serviceProvider)
     {
-        using var scope = serviceProvider.CreateScope();
-        var settingsContext = scope.ServiceProvider.GetRequiredService<SettingsDbContext>();
-        var secureStorage = scope.ServiceProvider.GetRequiredService<SecureStorage>();
-
-        if (!settingsContext.Configurations.Any())
+        try
         {
-            var defaultSmtpConfig = new SmtpConfig(secureStorage)
-            {
-                Host = "smtp.example.com",
-                Port = 587,
-                UseSsl = true,
-                RequiresAuthentication = true,
-                // Crittografiamo solo se SecureStorage è valido e i dati non sono già crittografati
-                Username = SecureStorage.IsEncrypted("admin@healthgear.local")
-                    ? "admin@healthgear.local"
-                    : secureStorage.EncryptUsername("admin@healthgear.local"),
-                Password = SecureStorage.IsEncrypted("Example123!")
-                    ? "Example123!"
-                    : secureStorage.EncryptPassword("Example123!")
-            };
+            using var scope = serviceProvider.CreateScope();
+            var settingsContext = scope.ServiceProvider.GetRequiredService<SettingsDbContext>();
+            var secureStorage = scope.ServiceProvider.GetRequiredService<SecureStorage>();
 
-            var defaultConfig = new AppConfig
-            {
-                Smtp = defaultSmtpConfig,
-                Logging = new LoggingConfig { LogLevel = LogLevelEnum.Information }
-            };
+            var tableExists = await settingsContext.Database.ExecuteSqlRawAsync(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='AppConfig';") > 0;
 
-            settingsContext.Configurations.Add(defaultConfig);
-            await settingsContext.SaveChangesAsync();
+            if (!tableExists)
+            {
+                Console.WriteLine("⚠️ La tabella 'AppConfig' non esiste. Applicazione delle migrazioni...");
+                await settingsContext.Database.MigrateAsync();
+            }
+
+            if (!settingsContext.Configurations.Any())
+            {
+                var defaultSmtpConfig = new SmtpConfig(secureStorage)
+                {
+                    Host = "smtp.example.com",
+                    Port = 587,
+                    UseSsl = true,
+                    RequiresAuthentication = true,
+                    Username = SecureStorage.IsEncrypted("admin@healthgear.local")
+                        ? "admin@healthgear.local"
+                        : secureStorage.EncryptUsername("admin@healthgear.local"),
+                    Password = SecureStorage.IsEncrypted("Example123!")
+                        ? "Example123!"
+                        : secureStorage.EncryptPassword("Example123!")
+                };
+
+                var defaultConfig = new AppConfig
+                {
+                    Smtp = defaultSmtpConfig,
+                    Logging = new LoggingConfig { LogLevel = LogLevelEnum.Information }
+                };
+
+                settingsContext.Configurations.Add(defaultConfig);
+                await settingsContext.SaveChangesAsync();
+                Console.WriteLine("✅ Configurazione iniziale inserita con successo.");
+            }
+            else
+            {
+                Console.WriteLine("ℹ️ Configurazione già presente.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Errore durante il seeding delle impostazioni: {ex.Message}");
         }
     }
 }
