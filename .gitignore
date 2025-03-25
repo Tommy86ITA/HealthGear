@@ -4,6 +4,7 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 defaultAdmin.json
+.vs/
 EmailSettings.txt
 encryption_config.json
 *.db

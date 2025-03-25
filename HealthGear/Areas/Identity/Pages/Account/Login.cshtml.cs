@@ -58,7 +58,7 @@ public class LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<Lo
     {
         returnUrl ??= Url.Content("~/");
 
-        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        ExternalLogins = [.. (await signInManager.GetExternalAuthenticationSchemesAsync())];
 
         if (!ModelState.IsValid) return Page();
 

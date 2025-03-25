@@ -40,7 +40,7 @@ public class HealthGearConfig
     {
         bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         string basePath = isWindows
-            ? @"C:\ProgramData\HealthGear"
+            ? @"C:\ProgramData\HealthGear Suite\HealthGear\"
             : AppContext.BaseDirectory.TrimEnd('/');
 
         return new HealthGearConfig
@@ -49,7 +49,7 @@ public class HealthGearConfig
             DatabasePath = Path.Combine(basePath, "healthgear.db"),
             SettingsDbPath = Path.Combine(basePath, "settings.db"),
             UploadFolderPath = isWindows
-                ? @"C:\HealthGear\Uploads"
+                ? @"C:\ProgramData\HealthGear Suite\Uploads"
                 : Path.Combine(basePath, "uploads"),
             AllowedHosts = "localhost,0.0.0.0,[::]"
         };

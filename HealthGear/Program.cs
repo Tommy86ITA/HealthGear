@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text.Json;
 using HealthGear.Data;
 using HealthGear.Models;
 using HealthGear.Models.Config;
@@ -8,9 +6,13 @@ using HealthGear.Services;
 using HealthGear.Services.Reports;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+#if !DESIGN_TIME
 using QuestPDF;
 using QuestPDF.Infrastructure;
+#endif
 using SQLitePCL;
+using System.Globalization;
+using System.Text.Json;
 
 // Inizializzazione necessaria per SQLite su Linux/macOS
 Batteries.Init();
@@ -29,7 +31,7 @@ if (File.Exists(configPath))
     try
     {
         var json = File.ReadAllText(configPath);
-        hgConfig = JsonSerializer.Deserialize<HealthGearConfig>(json) ?? HealthGearConfig.CreateDefault();;
+        hgConfig = JsonSerializer.Deserialize<HealthGearConfig>(json) ?? HealthGearConfig.CreateDefault();
         logger.LogInformation("✅ Configurazione caricata da healthgear.config.json");
     }
     catch (Exception ex)
@@ -96,7 +98,9 @@ builder.Services.AddSession();
 builder.Services.AddControllersWithViews().AddSessionStateTempDataProvider();
 builder.Services.AddRazorPages();
 
+#if !DESIGN_TIME
 Settings.License = LicenseType.Community;
+#endif
 
 // 4. Configurazione del logging per la console di debug
 builder.Services.AddLogging(logging =>
@@ -210,11 +214,15 @@ using (var scope = app.Services.CreateScope())
 
         // Verifica e carica le impostazioni dal database
         var config = await settingsService.GetConfigAsync();
-        if (config == null)
+        if (config != null)
+        {
+            scopedLogger.LogInformation("✅ Configurazione caricata con successo.");
+        }
+        else
+        {
             scopedLogger.LogWarning(
                 "⚠️ Nessuna configurazione trovata nel database. Verranno utilizzati i valori di default.");
-        else
-            scopedLogger.LogInformation("✅ Configurazione caricata con successo.");
+        }
     }
     catch (Exception ex)
     {
@@ -229,6 +237,16 @@ app.Run();
 
 void ApplyConnectionStrings()
 {
+    // 🛠️ Verifica e crea le directory dei file .db, se non esistono
+    var dbDir = Path.GetDirectoryName(hgConfig.DatabasePath);
+    if (!string.IsNullOrWhiteSpace(dbDir) && !Directory.Exists(dbDir))
+        Directory.CreateDirectory(dbDir);
+
+    var settingsDir = Path.GetDirectoryName(hgConfig.SettingsDbPath);
+    if (!string.IsNullOrWhiteSpace(settingsDir) && !Directory.Exists(settingsDir))
+        Directory.CreateDirectory(settingsDir);
+
+    // 🧱 Applica valori di fallback se mancano
     if (string.IsNullOrWhiteSpace(hgConfig.DatabasePath))
         hgConfig.DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "healthgear.db");
 
