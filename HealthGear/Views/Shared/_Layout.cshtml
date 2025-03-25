@@ -31,8 +31,12 @@
     <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom shadow-sm mb-3">
         <div class="container-fluid">
             <!-- Brand: Link alla Home -->
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Home" data-bs-toggle="tooltip"
-               title="Torna alla Dashboard">HealthGear</a>
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Home" data-bs-toggle="tooltip"
+                   title="Torna alla Dashboard">
+                    <img src="~/img/logo-healthgear-resized.png" alt="HealthGear Logo" width="32" height="32" class="d-inline-block" />
+                    <span class="fw-bold" style="color: DodgerBlue;">HealthGear™</span>
+                </a>
+
             <!-- Pulsante per il collapse della navbar sui dispositivi mobili -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -166,11 +170,13 @@
 </div>
 
 <!-- Footer -->
-<footer class="border-top footer text-muted text-center mt-4">
-    <div class="container">
-        &copy; 2025 - HealthGear - <a asp-controller="Home" asp-action="About">About</a>
-    </div>
-</footer>
+    <footer class="border-top footer text-muted text-center mt-4">
+        <div class="container d-flex justify-content-center align-items-center gap-2">
+           @*  <span style="color: Red;">Preview version </span> *@
+            <img src="/img/logo-healthgear-resized.png" alt="Logo HealthGear" style="height: 24px;" />
+            <span>&copy; 2025 - HealthGear™ - <a asp-controller="Home" asp-action="About">About</a></span>
+        </div>
+    </footer>
 
 <!-- JavaScript: jQuery, Bootstrap e altri script personalizzati -->
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>

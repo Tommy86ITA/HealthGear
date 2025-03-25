@@ -7,11 +7,15 @@
 
 <div class="container d-flex align-items-center justify-content-center vh-60">
     <div class="card p-4 shadow-lg" style="width: 100%; max-width: 500px;">
-        <div class="card-body">
-            <h3 class="card-title text-center">
+        <div class="card-body text-center">
+
+            <!-- Logo -->
+            <img src="~/img/logo-healthgear-resized.png" alt="Logo HealthGear" class="mb-3" style="width: 64px; height: 64px;" />
+
+            <h3 class="card-title">
                 <i class="fas fa-sign-in-alt"></i> Login
             </h3>
-            <p class="text-center text-muted">Inserisci le tue credenziali per accedere al sistema HealthGear.</p>
+            <p class="text-muted">Inserisci le tue credenziali per accedere al sistema HealthGear.</p>
 
             <form id="account" method="post">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
@@ -30,7 +34,7 @@
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
 
-                <div class="form-check mb-3">
+                <div class="form-check mb-3 text-start">
                     <input class="form-check-input" asp-for="Input.RememberMe">
                     <label class="form-check-label" asp-for="Input.RememberMe">Ricordami</label>
                 </div>
@@ -50,5 +54,5 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial"/>
+    <partial name="_ValidationScriptsPartial" />
 }

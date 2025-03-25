@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 
 namespace HealthGear.Models.ViewModels;
 
@@ -9,9 +10,24 @@ namespace HealthGear.Models.ViewModels;
 public class AboutViewModel
 {
     /// <summary>
-    ///     Versione attuale dell'applicazione, recuperata automaticamente da GitVersion.
+    ///     Versione in formato semplificato (es. 1.0.0).
     /// </summary>
-    public string Versione { get; set; } = GetGitVersion();
+    public string Versione { get; set; }
+
+    /// <summary>
+    ///     Tag della versione completo (es. 1.0.0-preview.1).
+    /// </summary>
+    public string TagVersione { get; set; }
+
+    /// <summary>
+    ///     Hash completo del commit corrente.
+    /// </summary>
+    public string Build { get; set; }
+
+    /// <summary>
+    ///     Hash breve del commit corrente (per visualizzazione compatta).
+    /// </summary>
+    public string ShortBuild => Build.Length >= 7 ? Build[..7] : Build;
 
     /// <summary>
     ///     Data di build dell'applicazione.
@@ -23,33 +39,18 @@ public class AboutViewModel
     /// </summary>
     public List<ThirdPartyComponent> ThirdPartyComponents { get; set; } = [];
 
-    /// <summary>
-    ///     Recupera il numero di versione dell'applicazione utilizzando GitVersion.
-    /// </summary>
-    /// <returns>Il numero di versione in formato SemVer, oppure "Versione non disponibile" in caso di errore.</returns>
-    private static string GetGitVersion()
+    public AboutViewModel()
     {
-        try
-        {
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "dotnet",
-                    Arguments = "gitversion /showvariable SemVer",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-            process.Start();
-            var output = process.StandardOutput.ReadToEnd().Trim();
-            process.WaitForExit();
-            return output;
-        }
-        catch
-        {
-            return "Versione non disponibile";
-        }
+        var versionInfo = Assembly
+            .GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? "Versione non disponibile";
+
+        // Es. "1.0.0-preview.1+e7ab1195e46..."
+        var parts = versionInfo.Split('+'); // es. 1.0.0-preview+e7ab119
+        Versione = parts[0]; // 1.0.0-preview
+        Build = parts.Length > 1 ? parts[1] : "N/A";
+
+        DataBuild = File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location);
     }
 }

@@ -47,3 +47,13 @@ button.accept-policy {
     white-space: nowrap;
     line-height: 60px;
 }
+
+.preview-badge {
+    background-color: #dc3545; /* rosso bootstrap */
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+}

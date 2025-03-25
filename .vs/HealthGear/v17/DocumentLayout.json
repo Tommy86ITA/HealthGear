@@ -3,24 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\views\\home\\about.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\views\\home\\about.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\factories\\settingsdbcontextfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\factories\\settingsdbcontextfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\models\\viewmodels\\aboutviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\models\\viewmodels\\aboutviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\factories\\applicationdbcontextfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\factories\\applicationdbcontextfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|c:\\users\\aivlasoft efb v2\\source\\repos\\tommy86ita\\healthgear\\healthgear\\models\\config\\healthgearconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A200ABFA-8FCF-4970-987C-22F783796DCC}|HealthGear\\HealthGear.csproj|solutionrelative:healthgear\\models\\config\\healthgearconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9DF70304-0A22-CE1E-AA12-D5904EE55694}|Elementi di soluzione{9DF70304-0A22-CE1E-AA12-D5904EE55694}|C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\GitVersion.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{9DF70304-0A22-CE1E-AA12-D5904EE55694}|Elementi di soluzione{9DF70304-0A22-CE1E-AA12-D5904EE55694}|solutionrelative:GitVersion.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 250,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -39,66 +35,53 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "SettingsDbContextFactory.cs",
-              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Factories\\SettingsDbContextFactory.cs",
-              "RelativeDocumentMoniker": "HealthGear\\Factories\\SettingsDbContextFactory.cs",
-              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Factories\\SettingsDbContextFactory.cs",
-              "RelativeToolTip": "HealthGear\\Factories\\SettingsDbContextFactory.cs",
-              "ViewState": "AgIAAAMAAADYZ2ZmZuYcwCwAAAABAAAAAAAAAA==",
+              "Title": "AboutViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Models\\ViewModels\\AboutViewModel.cs",
+              "RelativeDocumentMoniker": "HealthGear\\Models\\ViewModels\\AboutViewModel.cs",
+              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Models\\ViewModels\\AboutViewModel.cs*",
+              "RelativeToolTip": "HealthGear\\Models\\ViewModels\\AboutViewModel.cs*",
+              "ViewState": "AgIAAAIAAABAPjMzMzMMwDMAAAA0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-25T13:16:10.426Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "ApplicationDbContextFactory.cs",
-              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Factories\\ApplicationDbContextFactory.cs",
-              "RelativeDocumentMoniker": "HealthGear\\Factories\\ApplicationDbContextFactory.cs",
-              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Factories\\ApplicationDbContextFactory.cs",
-              "RelativeToolTip": "HealthGear\\Factories\\ApplicationDbContextFactory.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-25T13:15:12.846Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Data\\ApplicationDbContext.cs",
-              "RelativeDocumentMoniker": "HealthGear\\Data\\ApplicationDbContext.cs",
-              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Data\\ApplicationDbContext.cs",
-              "RelativeToolTip": "HealthGear\\Data\\ApplicationDbContext.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAADwvzMAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-25T13:02:41.818Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "HealthGearConfig.cs",
-              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Models\\Config\\HealthGearConfig.cs",
-              "RelativeDocumentMoniker": "HealthGear\\Models\\Config\\HealthGearConfig.cs",
-              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Models\\Config\\HealthGearConfig.cs",
-              "RelativeToolTip": "HealthGear\\Models\\Config\\HealthGearConfig.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADgAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-25T11:55:29.91Z",
+              "WhenOpened": "2025-03-25T21:54:11.435Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Program.cs",
-              "RelativeDocumentMoniker": "HealthGear\\Program.cs",
-              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Program.cs",
-              "RelativeToolTip": "HealthGear\\Program.cs",
-              "ViewState": "AgIAAEsAAAAAAAAAAAAwwGYAAAAGAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-25T11:07:50.764Z",
+              "Title": "About.cshtml",
+              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Views\\Home\\About.cshtml",
+              "RelativeDocumentMoniker": "HealthGear\\Views\\Home\\About.cshtml",
+              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Views\\Home\\About.cshtml*",
+              "RelativeToolTip": "HealthGear\\Views\\Home\\About.cshtml*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-03-25T21:48:12.768Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "HealthGear\\Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\HealthGear\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "HealthGear\\Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAKQAAAAAODMzMzP7v60AAABWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-03-25T21:33:26.337Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "GitVersion.yml",
+              "DocumentMoniker": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\GitVersion.yml",
+              "RelativeDocumentMoniker": "GitVersion.yml",
+              "ToolTip": "C:\\Users\\Aivlasoft EFB v2\\source\\repos\\Tommy86ITA\\HealthGear\\GitVersion.yml",
+              "RelativeToolTip": "GitVersion.yml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
+              "WhenOpened": "2025-03-25T21:29:27.585Z",
               "EditorCaption": ""
             }
           ]
