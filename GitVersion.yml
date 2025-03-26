@@ -1,19 +1,16 @@
-next-version: 1.0.0-preview
+﻿next-version: 1.0.0-preview
 mode: ContinuousDeployment
-
 branches:
   main:
     regex: ^main$
     increment: Patch
-    label: preview
+    tag: preview
   master:
     regex: ^master$
     increment: Patch
-    label: preview
   develop:
     regex: ^dev(elop)?(ment)?$
     increment: Minor
-    label: preview
   feature:
     regex: ^feature[/-]
     increment: Minor
@@ -26,6 +23,5 @@ branches:
   pull-request:
     regex: ^(pull|pr)[/-]
     increment: Inherit
-
 ignore:
   sha: []

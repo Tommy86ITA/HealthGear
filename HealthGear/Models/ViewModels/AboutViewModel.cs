@@ -10,14 +10,19 @@ namespace HealthGear.Models.ViewModels;
 public class AboutViewModel
 {
     /// <summary>
-    ///     Versione in formato semplificato (es. 1.0.0).
+    ///     Versione semantica completa (es. 1.2.0-preview.3).
     /// </summary>
     public string Versione { get; set; }
 
     /// <summary>
-    ///     Tag della versione completo (es. 1.0.0-preview.1).
+    ///     Tag della versione (es. 1.2.0-preview.3), equivalente a Versione.
     /// </summary>
     public string TagVersione { get; set; }
+
+    /// <summary>
+    ///     Canale della release (es. preview, beta, rc, stable).
+    /// </summary>
+    public string Canale { get; set; }
 
     /// <summary>
     ///     Hash completo del commit corrente.
@@ -46,10 +51,16 @@ public class AboutViewModel
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion ?? "Versione non disponibile";
 
-        // Es. "1.0.0-preview.1+e7ab1195e46..."
-        var parts = versionInfo.Split('+'); // es. 1.0.0-preview+e7ab119
-        Versione = parts[0]; // 1.0.0-preview
+        // Esempio: "1.2.0-preview.3+abc123def456"
+        var parts = versionInfo.Split('+');
+        TagVersione = parts[0]; // 1.2.0-preview.3
+        Versione = TagVersione;
         Build = parts.Length > 1 ? parts[1] : "N/A";
+
+        // Canale (preview, beta, rc, stable)
+        Canale = Versione.Contains('-')
+            ? Versione.Split('-')[1].Split('.')[0]
+            : "stable";
 
         DataBuild = File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location);
     }

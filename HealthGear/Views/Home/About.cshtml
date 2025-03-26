@@ -12,8 +12,17 @@
 
                     <!-- Informazioni Versione e Build -->
                     <div class="mb-3">
-                        <strong>Versione:</strong> @Model.Versione<br />
-                        <strong>Build:</strong> @Model.Build.Substring(0, 7)<br />
+                        <strong>Versione:</strong> @Model.Versione
+
+                        @if (Model.Canale != "stable")
+                        {
+                            <span class="badge bg-secondary text-uppercase ms-2">
+                                @Model.Canale
+                            </span>
+                        }
+                        <br />
+
+                        <strong>Build:</strong> @Model.ShortBuild<br />
                         <strong>Data build:</strong> @Model.DataBuild.ToShortDateString()
                     </div>
 
